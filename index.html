@@ -1,0 +1,2966 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumière — 預約系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Firebase loaded at bottom of body -->
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ── SHARED VARIABLES ── */
+:root{
+  --cream:#FAFAFA;--bg-card:#FFFFFF;--gold:#111;--gold-light:#999;
+  --charcoal:#111;--mid:#666;--light:#aaa;--rose:#D4A5A5;
+  --shadow:0 2px 16px rgba(0,0,0,0.06);
+  /* admin */
+  --abg:#F5F0EA;--apanel:#FEFCF9;--apanel2:#F0EBE3;--aborder:#E0D8CE;
+  --agold-dim:rgba(184,136,90,0.12);--agold-border:rgba(184,136,90,0.35);
+  --atext:#3A3028;--amid:#6A5E54;--alight:#7A6E64;--red:#C0614A;--green:#5A9E72;
+}
+
+body{font-family:'DM Sans',sans-serif;margin:0;font-size:16px;font-weight:400;color:#3A3028}
+
+/* ══════════════════════════════════════════
+   APP SHELL
+══════════════════════════════════════════ */
+#appShell{min-height:100vh;display:flex;flex-direction:column}
+
+/* ── TOP NAV ── */
+.app-nav{display:flex;background:#fff;border-bottom:1px solid #E8E8E8;padding:0 28px;height:56px;align-items:center;justify-content:space-between;flex-shrink:0}
+.app-logo{font-family:'Noto Serif TC','Cormorant Garamond',serif;font-size:18px;font-weight:300;color:#111;letter-spacing:6px;cursor:pointer}
+.app-logo span{font-style:normal;color:#111}
+.nav-btns{display:flex;gap:4px}
+.nav-btn{padding:6px 14px;font-size:11px;letter-spacing:1px;border:1px solid #ccc;background:none;color:#555;font-weight:500;cursor:pointer;border-radius:0;transition:all 0.2s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.nav-btn.active{background:#111;color:#fff;border-color:#111}
+.nav-btn:hover:not(.active){border-color:#111;color:#111}
+
+/* ── VIEWS ── */
+#viewFront{display:block}
+#viewAdmin{display:none}
+
+/* ══════════════════════════════════════════
+   FRONT — BOOKING
+══════════════════════════════════════════ */
+.front-wrap{background:#fff;flex:1}
+
+/* progress */
+.progress-wrap{background:#fff;border-bottom:1px solid #E8E8E8;padding:0 40px 16px}
+.steps{display:flex;align-items:center;max-width:680px}
+.step{display:flex;align-items:center;gap:9px;flex:1}
+.step-num{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--mid);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--mid);transition:all 0.4s;flex-shrink:0}
+.step.active .step-num{border-color:var(--gold);background:var(--gold);color:var(--charcoal);font-weight:500}
+.step.done .step-num{border-color:var(--gold);color:var(--gold)}
+.step-label{font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#999;font-weight:500;transition:color 0.3s;white-space:nowrap}
+.step.active .step-label{color:#111;font-weight:700}
+.step.done .step-label{color:#111}
+.step-line{flex:1;height:1px;background:#E0E0E0;margin:0 8px}
+
+/* front content */
+.front-content{max-width:840px;margin:0 auto;padding:48px 32px 88px}
+.f-page{display:none;animation:fadeUp 0.4s ease both}
+.f-page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.sec-title{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;margin-bottom:8px;line-height:1.1;color:#111}
+.sec-title em{font-style:italic;color:#111;border-bottom:2px solid #111;padding-bottom:1px}
+.sec-sub{font-size:14px;color:#888;font-weight:400;margin-bottom:28px}
+
+/* front tabs */
+.f-tabs{display:flex;border-bottom:1px solid #E8E8E8;margin-bottom:36px}
+.f-tab{padding:12px 20px;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;background:none;color:#999;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;font-family:'DM Sans',sans-serif;font-weight:500}
+.f-tab.active{color:#111;border-bottom-color:#111;font-weight:700}
+
+/* service cards */
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1px;margin-bottom:40px;border:1px solid #E8E8E8}
+.svc-card{background:#fff;border:none;border-right:1px solid #E8E8E8;border-bottom:1px solid #E8E8E8;padding:24px 20px;cursor:pointer;transition:all 0.2s;position:relative}
+
+.svc-card:hover{background:#fafafa}
+
+.svc-card.selected{background:#f5f5f5;outline:2px solid #111;outline-offset:-1px}
+.svc-name{font-family:'Noto Serif TC','Cormorant Garamond',serif;font-size:17px;margin-bottom:6px;color:#111;font-weight:300;letter-spacing:1px}
+.svc-desc{font-size:12px;color:#aaa;font-weight:400;margin-bottom:14px;line-height:1.7;letter-spacing:0.3px}
+.svc-meta{display:flex;justify-content:space-between;align-items:center}
+.svc-dur{font-size:11px;color:#ccc;font-weight:400;letter-spacing:0.5px}
+.svc-price{font-size:14px;color:#111;font-family:'DM Sans',sans-serif;font-weight:500;letter-spacing:0.5px}
+
+/* stylist cards */
+.styl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1px;margin-bottom:40px;border:1px solid #E8E8E8}
+.styl-card{background:#fff;border:none;border-right:1px solid #E8E8E8;border-bottom:1px solid #E8E8E8;padding:28px 16px;cursor:pointer;transition:all 0.2s;text-align:center}
+.styl-card:hover{background:#fafafa}
+.styl-card.selected{background:#f5f5f5;outline:2px solid #111;outline-offset:-1px}
+.styl-avatar{width:56px;height:56px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-family:'Cormorant Garamond',serif;border:1.5px solid #EDE8E1;background:var(--cream);transition:border-color 0.3s}
+.styl-card.selected .styl-avatar{border-color:#111;background:#eee}
+.styl-name{font-family:'Noto Serif TC','Cormorant Garamond',serif;font-size:16px;margin-bottom:4px;color:#111;font-weight:300;letter-spacing:1px}
+.styl-title{font-size:11px;color:#bbb;font-weight:400;letter-spacing:1px;margin-bottom:10px;text-transform:uppercase}
+.styl-tags{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
+.styl-tag{font-size:10px;background:#f5f5f5;color:#888;padding:2px 8px;border-radius:0;font-weight:400;letter-spacing:0.5px}
+.anyone-card{background:#fafafa;border:1px dashed #ccc !important}
+
+/* calendar layout */
+.cal-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px}
+.cal-wrap{background:#fff;border:1px solid #E8E8E8;border-radius:0;padding:24px}
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.cal-mon{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300}
+.cal-nav-btn{background:none;border:1px solid #ddd;color:#888;width:30px;height:30px;border-radius:0;cursor:pointer;font-size:14px;transition:all 0.2s;display:flex;align-items:center;justify-content:center}
+.cal-nav-btn:hover{border-color:#111;color:#111}
+.cal-wkdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:5px}
+.cal-wkday{font-size:12px;letter-spacing:1px;color:#7A6E64;font-weight:600;text-transform:uppercase;padding:4px 0}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;cursor:pointer;border-radius:50%;transition:all 0.2s;border:1.5px solid transparent;position:relative}
+.cal-day:hover:not(.dis):not(.emp){border-color:#111;background:#f5f5f5}
+.cal-day.sel{background:#111;color:#fff;border-color:#111}
+.cal-day.tod{border-color:#111;color:#111;font-weight:700}
+.cal-day.dis{color:#DDD;cursor:not-allowed}
+.cal-day.hol::after{content:'';width:4px;height:4px;background:var(--rose);border-radius:50%;position:absolute;bottom:2px;left:50%;transform:translateX(-50%)}
+.cal-day.sel.hol::after{background:#fff}
+.time-wrap{background:#fff;border:1px solid #E8E8E8;border-radius:0;padding:24px}
+.time-wrap h3{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:300;margin-bottom:14px;color:var(--mid)}
+.time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.t-slot{border:1px solid #E8E8E8;background:#fff;padding:10px 6px;text-align:center;font-size:13px;font-weight:400;cursor:pointer;border-radius:0;transition:all 0.2s;color:#333;letter-spacing:0.5px}
+.t-slot:hover{border-color:#111;color:#111;background:#fafafa}
+.t-slot.sel{background:#111;color:#fff;border-color:#111}
+.t-slot.taken{background:#F5F5F5;color:var(--light);cursor:not-allowed;text-decoration:line-through}
+.no-date-msg{color:#ccc;font-size:13px;font-weight:400;text-align:center;padding:36px 16px;line-height:2;letter-spacing:1px}
+
+/* form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.form-field{display:flex;flex-direction:column;gap:6px}
+.form-field.full{grid-column:1/-1}
+.form-field label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#aaa;font-weight:400}
+.form-field input,.form-field select,.form-field textarea{background:#fff;border:1.5px solid #ddd;border-radius:4px;padding:12px 15px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:400;color:#111;transition:border-color 0.2s;outline:none;width:100%}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:#111}
+.form-field textarea{resize:vertical;min-height:72px}
+
+/* summary */
+.summary-card{background:#fafafa;border:1px solid #E8E8E8;border-radius:0;padding:28px;margin-bottom:32px;position:relative;overflow:hidden}
+.summary-card::after{content:'L';font-family:'Cormorant Garamond',serif;font-size:150px;position:absolute;right:-6px;bottom:-32px;opacity:0.05;line-height:1;color:var(--gold)}
+.sum-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--aborder);font-size:15px}
+.sum-row:last-child{border-bottom:none}
+.sum-lbl{color:#888;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.sum-val{color:#111;font-weight:500;text-align:right;max-width:60%}
+.sum-price .sum-val{font-family:'Cormorant Garamond',serif;font-size:24px;color:#111}
+
+/* buttons */
+.btn-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:6px}
+.btn{padding:12px 32px;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:0;transition:all 0.25s;border:1px solid transparent}
+.btn-primary{background:#111;color:#fff;border-color:#111}
+.btn-primary:hover{background:#333;border-color:#333}
+.btn-secondary{background:transparent;color:#555;border-color:#ccc}
+.btn-secondary:hover{border-color:#111;color:#111}
+.btn:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
+
+/* success */
+.success-wrap{text-align:center;padding:52px 20px}
+.success-icon{width:60px;height:60px;border-radius:0;border:1px solid #111;margin:0 auto 28px;display:flex;align-items:center;justify-content:center;font-size:22px}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(201,169,110,0.3)}50%{box-shadow:0 0 0 10px rgba(201,169,110,0)}}
+.booking-id{font-family:'Cormorant Garamond',serif;font-size:40px;color:#111;letter-spacing:4px;margin:14px 0 6px}
+.success-note{font-size:14px;color:#888;max-width:360px;margin:0 auto 32px;line-height:1.8}
+
+/* my bookings */
+.bk-item{background:#fff;border:none;border-bottom:1px solid #E8E8E8;padding:16px 20px;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:all 0.2s}
+.bk-item:hover{background:#fafafa}
+.bk-info{flex:1}
+.bk-name{font-weight:600;margin-bottom:2px;font-size:15px;color:#111}
+.bk-details{font-size:13px;color:#888;font-weight:400;line-height:1.6}
+.bk-svc{font-family:'Cormorant Garamond',serif;font-size:17px;color:#111;white-space:nowrap;text-align:right;font-weight:400}
+.btn-cancel-sm{background:none;border:1px solid #ddd;color:#888;padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:1px;cursor:pointer;border-radius:2px;transition:all 0.2s;text-transform:uppercase;white-space:nowrap;font-weight:500}
+.btn-cancel-sm:hover{border-color:#111;color:#111}
+.empty-state{text-align:center;padding:32px;color:#aaa;font-size:14px;font-weight:400}
+.line-badge{display:inline-flex;align-items:center;gap:6px;background:#00B900;color:#fff;font-size:13px;letter-spacing:0.5px;padding:4px 12px;border-radius:20px;margin-bottom:18px}
+
+/* ══════════════════════════════════════════
+   ADMIN
+══════════════════════════════════════════ */
+.admin-wrap{background:var(--abg);flex:1;display:flex;min-height:calc(100vh - 56px);color:var(--atext)}
+
+/* sidebar */
+.a-sidebar{width:210px;background:var(--apanel);border-right:1px solid var(--aborder);padding:16px 0;flex-shrink:0}
+.a-sitem{display:flex;align-items:center;gap:10px;padding:12px 18px;font-size:13px;letter-spacing:0.5px;text-transform:uppercase;color:#5A5048;font-weight:500;cursor:pointer;transition:all 0.2s;border-left:2px solid transparent}
+.a-sitem:hover{color:var(--charcoal);background:var(--agold-dim)}
+.a-sitem.active{color:var(--gold);background:var(--agold-dim);border-left-color:var(--gold);font-weight:500}
+.a-sicon{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+.a-ssect{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#7A6E64;font-weight:600;padding:18px 18px 7px;margin-top:6px}
+
+/* admin content */
+.a-content{flex:1;overflow-y:auto;padding:28px 32px;background:var(--abg)}
+.a-panel{display:none}
+.a-panel.active{display:block;animation:fadeUp 0.3s ease}
+.a-phdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.a-ptitle{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;color:#3A3028}
+.a-ptitle em{font-style:italic;color:var(--gold)}
+
+/* stats */
+.a-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.a-stat{background:var(--bg-card);border:1.5px solid var(--aborder);border-radius:4px;padding:18px;transition:all 0.2s;box-shadow:0 2px 8px rgba(100,80,60,0.05)}
+.a-stat:hover{border-color:var(--gold);box-shadow:0 4px 16px rgba(184,136,90,0.12)}
+.a-stat-lbl{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5A5048;font-weight:600;margin-bottom:8px}
+.a-stat-val{font-family:'Cormorant Garamond',serif;font-size:38px;color:var(--gold);line-height:1}
+.a-stat-sub{font-size:13px;color:#7A6E64;font-weight:500;margin-top:4px}
+
+/* tables */
+.a-tbl-wrap{background:var(--bg-card);border:1.5px solid var(--aborder);border-radius:4px;overflow:hidden;margin-bottom:18px;box-shadow:0 2px 8px rgba(100,80,60,0.04)}
+.a-tbl-hdr{padding:14px 18px;border-bottom:1px solid var(--aborder);display:flex;align-items:center;justify-content:space-between;background:var(--apanel2)}
+.a-tbl-title{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#4A3E34;font-weight:700}
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#4A3E34;padding:11px 18px;text-align:left;border-bottom:1px solid var(--aborder);font-weight:700;background:var(--apanel2)}
+td{font-size:15px;padding:14px 18px;border-bottom:1px solid var(--aborder);vertical-align:middle;color:#3A3028;font-weight:400}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.badge{display:inline-block;font-size:12px;letter-spacing:0.5px;padding:4px 11px;border-radius:20px;text-transform:uppercase}
+.badge-ok{background:rgba(109,191,138,0.15);color:var(--green);border:1px solid rgba(109,191,138,0.3)}
+.badge-cancel{background:rgba(224,112,112,0.12);color:var(--red);border:1px solid rgba(224,112,112,0.25)}
+.sdot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:5px}
+.sdot-g{background:var(--green)}.sdot-r{background:var(--red)}
+
+/* filter */
+.a-filters{display:flex;gap:9px;margin-bottom:18px;flex-wrap:wrap}
+.a-fbtn{font-size:12px;letter-spacing:0.5px;text-transform:uppercase;border:1px solid var(--aborder);background:none;color:#5A5048;font-weight:500;padding:8px 16px;border-radius:2px;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif}
+.a-fbtn.active{border-color:var(--agold-border);color:var(--gold);background:var(--agold-dim)}
+.a-fbtn:hover:not(.active){color:var(--atext)}
+.a-search{background:var(--bg-card);border:1.5px solid var(--aborder);color:var(--atext);padding:8px 14px;font-size:15px;border-radius:2px;outline:none;font-family:'DM Sans',sans-serif;flex:1;min-width:160px;transition:border-color 0.2s}
+.a-search:focus{border-color:var(--agold-border)}
+.a-search::placeholder{color:var(--alight)}
+
+/* admin forms */
+.a-fsect{background:var(--bg-card);border:1.5px solid var(--aborder);border-radius:4px;padding:22px;margin-bottom:18px;box-shadow:0 2px 8px rgba(100,80,60,0.04)}
+.a-fsect-title{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#4A3E34;font-weight:700;margin-bottom:16px;padding-bottom:9px;border-bottom:1px solid var(--aborder)}
+.a-frow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.a-frow.s1{grid-template-columns:1fr}
+.a-frow.s3{grid-template-columns:1fr 1fr 1fr}
+.a-field{display:flex;flex-direction:column;gap:6px}
+.a-field label{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#4A3E34;font-weight:600}
+.a-field input,.a-field select,.a-field textarea{background:var(--bg-card);border:1.5px solid var(--aborder);color:#3A3028;padding:11px 14px;font-size:15px;font-weight:500;border-radius:2px;outline:none;font-family:'DM Sans',sans-serif;transition:border-color 0.2s;width:100%}
+.a-field input:focus,.a-field select:focus,.a-field textarea:focus{border-color:var(--gold)}
+.a-field input::placeholder,.a-field textarea::placeholder{color:var(--light)}
+.a-field select option{background:var(--bg-card);color:var(--charcoal)}
+.a-field textarea{resize:vertical;min-height:65px}
+
+/* admin buttons */
+.a-btn{padding:10px 22px;font-family:'DM Sans',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all 0.25s;border:1.5px solid transparent}
+.a-btn-gold{background:var(--gold);color:#fff;border-color:var(--gold)}
+.a-btn-gold:hover{background:#A07040;border-color:#A07040}
+.a-btn-outline{background:transparent;color:var(--amid);border-color:var(--aborder)}
+.a-btn-outline:hover{border-color:var(--agold-border);color:var(--gold)}
+.a-btn-danger{background:transparent;color:var(--red);border-color:rgba(224,112,112,0.3)}
+.a-btn-danger:hover{background:rgba(224,112,112,0.1)}
+.a-btn-sm{padding:4px 12px;font-size:9px}
+.a-btn-row{display:flex;gap:9px;margin-top:4px;flex-wrap:wrap}
+
+/* stylist admin cards */
+.sa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:18px}
+.sa-card{background:var(--bg-card);border:1.5px solid var(--aborder);border-radius:4px;padding:18px;transition:all 0.2s;box-shadow:0 2px 8px rgba(100,80,60,0.04)}
+.sa-card:hover{border-color:var(--gold);box-shadow:0 4px 16px rgba(184,136,90,0.1)}
+.sa-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.sa-avatar{width:44px;height:44px;border-radius:50%;background:var(--agold-dim);border:1.5px solid var(--agold-border);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);flex-shrink:0}
+.sa-name{font-family:'Cormorant Garamond',serif;font-size:17px;color:#3A3028;font-weight:400;margin-bottom:2px}
+.sa-title{font-size:13px;color:#5A5048;font-weight:500;letter-spacing:0.5px}
+.sa-specs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.sa-tag{font-size:12px;background:var(--agold-dim);color:var(--gold);padding:3px 10px;border-radius:20px;border:1px solid var(--agold-border)}
+.sa-hols{font-size:13px;color:#5A5048;font-weight:400;margin-bottom:12px;min-height:18px}
+.sa-actions{display:flex;gap:7px}
+
+/* mini calendar (holiday picker) */
+.mini-cal{background:var(--apanel2);border:1.5px solid var(--aborder);border-radius:4px;padding:14px;margin-bottom:10px}
+.mc-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mc-month{font-size:13px;color:#3A3028;font-weight:500}
+.mc-nav{background:none;border:1px solid var(--aborder);color:var(--amid);width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:11px;transition:all 0.2s;display:flex;align-items:center;justify-content:center}
+.mc-nav:hover{border-color:var(--agold-border);color:var(--gold)}
+.mc-wkdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:3px}
+.mc-wkday{font-size:9px;color:var(--alight);padding:2px 0;letter-spacing:1px}
+.mc-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.mc-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;cursor:pointer;border-radius:50%;transition:all 0.15s;border:1px solid transparent;color:#5A5048}
+.mc-day:hover:not(.mc-dis):not(.mc-emp){border-color:var(--agold-border);color:var(--gold)}
+.mc-day.mc-hol{background:rgba(224,112,112,0.15);border-color:rgba(224,112,112,0.3);color:var(--red)}
+.mc-day.mc-dis{opacity:0.3;cursor:default}
+.mc-day.mc-tod{border-color:var(--agold-border);color:var(--gold)}
+
+/* hours */
+.hrs-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-bottom:18px}
+.day-tog{background:var(--bg-card);border:1.5px solid var(--aborder);border-radius:4px;padding:12px 6px;text-align:center;cursor:pointer;transition:all 0.2s}
+.day-tog.open{border-color:var(--gold);background:var(--agold-dim)}
+.day-tog-name{font-size:11px;color:#5A5048;font-weight:600;margin-bottom:5px;letter-spacing:1px}
+.day-tog.open .day-tog-name{color:var(--gold)}
+.day-tog-status{font-size:10px;color:#7A6E64;font-weight:500}
+.day-tog.open .day-tog-status{color:var(--green)}
+
+/* line */
+.line-setup{background:var(--bg-card);border:1.5px solid var(--aborder);border-radius:4px;padding:22px;margin-bottom:18px;box-shadow:0 2px 8px rgba(100,80,60,0.04)}
+.line-hdr{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.line-ico{width:38px;height:38px;background:#00B900;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.line-title{font-size:14px;font-weight:600;color:#3A3028}
+.line-sub{font-size:12px;color:#5A5048;font-weight:400;margin-top:1px}
+.line-status{display:inline-flex;align-items:center;gap:6px;font-size:10px;padding:4px 12px;border-radius:20px;margin-bottom:13px}
+.line-ok{background:rgba(109,191,138,0.1);color:var(--green);border:1px solid rgba(109,191,138,0.3)}
+.line-no{background:rgba(224,112,112,0.1);color:var(--red);border:1px solid rgba(224,112,112,0.25)}
+.notify-types{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px}
+.nt{background:var(--cream);border:1.5px solid var(--aborder);border-radius:4px;padding:13px;text-align:center}
+.nt-ico{font-size:18px;margin-bottom:5px}
+.nt-lbl{font-size:11px;color:#5A5048;font-weight:500}
+.nt-st{font-size:10px;color:var(--green);font-weight:600;margin-top:3px}
+
+/* modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(80,60,40,0.45);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg-card);border:1.5px solid var(--aborder);border-radius:4px;padding:26px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:fadeUp 0.3s ease;box-shadow:0 8px 40px rgba(100,80,60,0.12)}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:#3A3028;margin-bottom:18px}
+.modal-title em{font-style:italic;color:var(--gold)}
+.modal-footer{display:flex;justify-content:flex-end;gap:9px;margin-top:18px;padding-top:14px;border-top:1px solid var(--aborder)}
+
+/* toast */
+.styl-svc-row .a-field label{font-size:9px}
+.styl-svc-row .a-field input{font-size:12px;padding:6px 10px}
+/* ── ROLE SELECTOR ── */
+.role-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.role-overlay.open{display:flex}
+.role-modal{background:var(--bg-card);border:1.5px solid var(--aborder);border-radius:4px;padding:32px;width:100%;max-width:420px;animation:fadeUp 0.3s ease;box-shadow:0 8px 40px rgba(100,80,60,0.12)}
+.role-option{display:flex;align-items:center;gap:14px;padding:16px 18px;border:1.5px solid var(--aborder);border-radius:4px;cursor:pointer;transition:all 0.2s;margin-bottom:10px}
+.role-option:hover{border-color:var(--agold-border);background:var(--agold-dim)}
+.role-option.selected{border-color:var(--gold);background:var(--agold-dim)}
+.role-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:20px;flex-shrink:0}
+
+/* ── STYLIST DASHBOARD ── */
+.sd-wrap{background:var(--abg);flex:1;display:flex;min-height:calc(100vh - 56px)}
+.sd-sidebar{width:210px;background:var(--apanel);border-right:1px solid var(--aborder);padding:16px 0;flex-shrink:0;box-shadow:2px 0 8px rgba(100,80,60,0.04)}
+.sd-content{flex:1;overflow-y:auto;padding:28px 32px}
+.sd-panel{display:none}
+.sd-panel.active{display:block;animation:fadeUp 0.3s ease}
+.sd-profile{background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;gap:16px}
+.sd-avatar{width:52px;height:52px;border-radius:50%;background:var(--agold-dim);border:2px solid var(--agold-border);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);flex-shrink:0;overflow:hidden}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg-card);border:1.5px solid var(--gold);color:var(--gold);padding:11px 18px;border-radius:4px;font-size:11px;letter-spacing:1px;z-index:999;transform:translateY(70px);opacity:0;transition:all 0.35s;box-shadow:0 4px 20px rgba(184,136,90,0.2)}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* ── STYLIST PROFILE OVERLAY ── */
+.profile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:400;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.profile-overlay.open{display:flex}
+.profile-modal{background:#fff;border:1px solid #E0E0E0;border-radius:4px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.12)}
+.profile-header{background:#fafafa;border-bottom:1px solid #E0E0E0;padding:28px 28px 24px;position:relative}
+.profile-close{position:absolute;top:16px;right:16px;background:none;border:1px solid #ddd;color:#888;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.profile-close:hover{border-color:#111;color:#111}
+.profile-photo-lg{width:80px;height:80px;border-radius:50%;border:2px solid #E0E0E0;object-fit:cover;margin-bottom:12px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:28px;color:#888;overflow:hidden}
+.profile-body{padding:24px 28px}
+.profile-bio{font-size:13px;color:#666;line-height:1.8;margin-bottom:20px}
+.portfolio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.portfolio-img{aspect-ratio:1;border-radius:2px;object-fit:cover;width:100%;cursor:pointer;transition:opacity 0.2s;background:#f0f0f0}
+.portfolio-img:hover{opacity:0.85}
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;align-items:center;justify-content:center;padding:20px}
+.lightbox.open{display:flex}
+.lightbox img{max-width:100%;max-height:90vh;object-fit:contain;border-radius:2px}
+.lightbox-close{position:absolute;top:16px;right:16px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer}
+@media print{
+  .app-nav,.progress-wrap,.f-tabs,.btn-row,.bk-item{display:none!important}
+  #fVoucher{box-shadow:none!important;border:1.5px solid #ccc!important}
+  body{background:#fff}
+}
+@media(max-width:680px){
+  .cal-layout{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .a-stats{grid-template-columns:repeat(2,1fr)}
+  .hrs-grid{grid-template-columns:repeat(4,1fr)}
+  .notify-types{grid-template-columns:1fr}
+  .btn-row{flex-direction:column}
+  .btn{width:100%;text-align:center}
+  .a-sidebar{width:180px}
+  .step-label{display:none}
+  /* Nav mobile fixes */
+  .app-nav{padding:0 12px;height:52px}
+  .app-logo{font-size:18px;letter-spacing:3px}
+  #dbStatus{display:none}
+  .nav-btns{gap:2px}
+  .nav-btn{padding:6px 10px;font-size:11px;letter-spacing:0;white-space:nowrap}
+  #stylEntryBtn,#adminEntryBtn{font-size:10px;padding:5px 8px}
+}
+</style>
+</head>
+<body>
+
+<div id="appShell">
+
+<!-- ══ TOP NAV ══════════════════════════════════════════ -->
+<div class="app-nav">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="app-logo" id="appLogo" onclick="switchMain('front')">Pax<span> Hair</span></div>
+    <div id="dbStatus" style="font-size:10px;color:var(--mid)">● 連線中…</div>
+  </div>
+  <div class="nav-btns">
+    <button class="nav-btn active" id="navFront" onclick="switchMain('front');fNewBooking()">線上預約</button>
+    <button class="nav-btn" id="navAdmin" onclick="askAdminPwd()" style="opacity:0;pointer-events:none;width:0;padding:0;border:none">後台管理</button>
+    <button class="nav-btn" id="stylEntryBtn" onclick="askStylLogin()" style="font-size:11px;letter-spacing:0.5px;opacity:0.7;color:#1A1208;border-color:var(--aborder)">設計師</button>
+    <button class="nav-btn" id="adminEntryBtn" onclick="askAdminPwd()" style="font-size:11px;letter-spacing:0.5px;opacity:0.6;color:#1A1208;border-color:var(--aborder)">管理</button>
+  </div>
+</div>
+
+<!-- ══ FRONT VIEW ════════════════════════════════════════ -->
+<div id="offlineBanner" style="display:none;background:#C0614A;color:#fff;text-align:center;padding:10px 16px;font-size:14px;font-weight:500;letter-spacing:0.5px;position:sticky;top:0;z-index:200">
+    ⚠️ 目前無網路連線，預約功能暫時停用，請確認網路後重新整理頁面
+  </div>
+<div id="viewFront" class="front-wrap">
+
+  <!-- progress bar -->
+  <div class="progress-wrap" id="progressWrap">
+    <div class="steps">
+      <div class="step active" id="s1"><div class="step-num">1</div><div class="step-label">選擇設計師</div></div>
+      <div class="step-line"></div>
+      <div class="step" id="s2"><div class="step-num">2</div><div class="step-label">服務項目</div></div>
+      <div class="step-line"></div>
+      <div class="step" id="s3"><div class="step-num">3</div><div class="step-label">日期時段</div></div>
+      <div class="step-line"></div>
+      <div class="step" id="s4"><div class="step-num">4</div><div class="step-label">客戶資料</div></div>
+      <div class="step-line"></div>
+      <div class="step" id="s5"><div class="step-num">5</div><div class="step-label">確認預約</div></div>
+    </div>
+  </div>
+
+  <div class="front-content">
+    <div class="f-tabs">
+      <button class="f-tab active" onclick="switchFrontTab('book')">線上預約</button>
+      <button class="f-tab" onclick="switchFrontTab('mybk')">我的預約</button>
+    </div>
+
+    <div id="fViewBook">
+      <!-- step 1 -->
+      <div class="f-page active" id="fp1">
+        <div class="sec-title">選擇<em>設計師</em></div>
+        <div class="sec-sub" id="frontWelcome">可指定設計師，或讓我們為您安排最合適人選</div>
+        <div class="styl-grid" id="stylGrid"></div>
+        <div class="btn-row" style="justify-content:flex-end">
+          <button class="btn btn-primary" id="fbtn1" disabled onclick="fGoStep(2)">選擇服務 →</button>
+        </div>
+      </div>
+      <!-- step 2 -->
+      <div class="f-page" id="fp2">
+        <div class="sec-title">選擇<em>服務項目</em></div>
+        <div class="sec-sub" id="svcSubText">請選擇您想要的服務</div>
+        <div class="svc-grid" id="svcGrid"></div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="fGoStep(1)">← 返回</button>
+          <button class="btn btn-primary" id="fbtn2" disabled onclick="fGoStep(3)">選擇時間 →</button>
+        </div>
+      </div>
+      <!-- step 3 -->
+      <div class="f-page" id="fp3">
+        <div class="sec-title">選擇<em>日期</em>與時段</div>
+        <div class="sec-sub">灰點為設計師休假日</div>
+        <div class="cal-layout">
+          <div class="cal-wrap">
+            <div class="cal-hdr">
+              <button class="cal-nav-btn" onclick="fChMonth(-1)">‹</button>
+              <div class="cal-mon" id="fCalMon"></div>
+              <button class="cal-nav-btn" onclick="fChMonth(1)">›</button>
+            </div>
+            <div class="cal-wkdays">
+              <div class="cal-wkday">日</div><div class="cal-wkday">一</div><div class="cal-wkday">二</div>
+              <div class="cal-wkday">三</div><div class="cal-wkday">四</div><div class="cal-wkday">五</div><div class="cal-wkday">六</div>
+            </div>
+            <div class="cal-days" id="fCalDays"></div>
+          </div>
+          <div class="time-wrap">
+            <h3 id="fTimeTitle">請先選擇日期</h3>
+            <div id="fTimeContent"><div class="no-date-msg">← 請從左側日曆<br>選擇預約日期</div></div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="fGoStep(2)">← 返回</button>
+          <button class="btn btn-primary" id="fbtn3" disabled onclick="fGoStep(4)">填寫資料 →</button>
+        </div>
+      </div>
+      <!-- step 4 -->
+      <div class="f-page" id="fp4">
+        <div class="sec-title">填寫<em>客戶資料</em></div>
+        <div class="sec-sub">您的資料僅用於預約確認與 Line 通知</div>
+        <div class="form-grid">
+          <div class="form-field"><label>姓名 *</label><input type="text" id="fName" placeholder="您的姓名" oninput="fCheckForm()"></div>
+          <div class="form-field"><label>電話 *</label><input type="tel" id="fPhone" placeholder="0912-345-678" oninput="fCheckForm()"></div>
+          <div class="form-field"><label>電子郵件</label><input type="email" id="fEmail" placeholder="email@example.com"></div>
+          <div class="form-field"><label>Line ID（接收通知用）</label><input type="text" id="fLineId" placeholder="您的 Line ID"></div>
+          <div class="form-field full"><label>特殊需求或備註</label><textarea id="fNotes" placeholder="例：對某化學成分過敏…"></textarea></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="fGoStep(3)">← 返回</button>
+          <button class="btn btn-primary" id="fbtn4" disabled onclick="fGoStep(5)">確認預約 →</button>
+        </div>
+      </div>
+      <!-- step 5 -->
+      <div class="f-page" id="fp5">
+        <div class="sec-title">確認<em>預約資訊</em></div>
+        <div class="sec-sub">確認後系統將發送 Line 通知</div>
+        <div class="line-badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+          預約確認後自動發送 Line 通知
+        </div>
+        <div class="summary-card" id="fSummary"></div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="fGoStep(4)">← 修改資料</button>
+          <button class="btn btn-primary" onclick="fConfirm()">✓ 確認預約</button>
+        </div>
+      </div>
+      <!-- step 6: success -->
+      <div class="f-page" id="fp6">
+        <div class="success-wrap">
+          <div class="success-icon">✦</div>
+          <div class="sec-title" style="margin-bottom:0">預約<em>成功</em></div>
+          <div class="booking-id" id="fBkId"></div>
+          <p class="success-note">感謝您！如需取消請前往「我的預約」，輸入您的電話號碼查詢。</p>
+          <!-- voucher -->
+          <div id="fVoucher" style="background:#fff;border:1.5px solid #EDE8E1;border-radius:4px;padding:24px 28px;max-width:380px;margin:0 auto 24px;text-align:left;box-shadow:0 4px 24px rgba(0,0,0,0.06)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px dashed #EDE8E1">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold)" id="vShopName"></div>
+              <div style="font-size:10px;letter-spacing:2px;color:var(--light);text-transform:uppercase">預約憑證</div>
+            </div>
+            <div id="vDetails"></div>
+            <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #EDE8E1;text-align:center">
+              <div style="font-size:11px;color:var(--light);letter-spacing:1px;margin-bottom:4px">預約編號</div>
+              <div id="vId" style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--charcoal);letter-spacing:3px"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-secondary" onclick="fNewBooking()">再次預約</button>
+            <button class="btn btn-primary" onclick="window.print()">列印 / 儲存憑證</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /fViewBook -->
+
+    <div id="fViewMybk" style="display:none">
+      <div class="sec-title">我的<em>預約紀錄</em></div>
+      <div class="sec-sub">輸入預約時填寫的電話號碼查詢</div>
+      <div style="display:flex;gap:10px;margin-bottom:24px;max-width:480px">
+        <input type="tel" id="myBkPhone" placeholder="輸入電話號碼，例：0912345678"
+          style="flex:1;background:var(--bg-card);border:1.5px solid #EDE8E1;border-radius:2px;padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--charcoal);outline:none;transition:border-color 0.2s"
+          onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='#EDE8E1'"
+          onkeydown="if(event.key==='Enter')fSearchMyBk()">
+        <button class="btn btn-primary" onclick="fSearchMyBk()" style="white-space:nowrap">查詢</button>
+      </div>
+      <div id="myBkList"></div>
+    </div>
+  </div>
+</div><!-- /viewFront -->
+
+<!-- ══ FRONT FOOTER ══════════════════════════════════════════ -->
+<div id="frontFooter" style="background:#fff;border-top:1px solid #E8E8E8;padding:32px 28px;margin-top:auto">
+  <div style="max-width:840px;margin:0 auto;display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between">
+    <div>
+      <div id="footerShopName" style="font-family:'Noto Serif TC','Cormorant Garamond',serif;font-size:15px;color:#111;letter-spacing:2px;font-weight:300;margin-bottom:10px"></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <a href="tel:0228827887" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#111'" onmouseout="this.style.color='#555'">
+          <span style="font-size:13px">📞</span>
+          <span>02-2882-7887</span>
+        </a>
+        <a href="https://maps.google.com/?q=台北市士林區文林路97號2樓" target="_blank" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#111'" onmouseout="this.style.color='#555'">
+          <span style="font-size:13px">📍</span>
+          <span>台北市士林區文林路97號2樓</span>
+        </a>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#ccc;letter-spacing:1px">© 2025 Pax Hair Salon</div>
+  </div>
+</div>
+
+<!-- ══ ADMIN VIEW ════════════════════════════════════════ -->
+<div id="viewAdmin" class="admin-wrap" style="display:none">
+
+  <!-- sidebar -->
+  <div class="a-sidebar">
+    <div class="a-sitem active" data-tab="dashboard" onclick="aShowTab('dashboard')"><span class="a-sicon">◈</span>總覽</div>
+    <div class="a-sitem" data-tab="bookings" onclick="aShowTab('bookings')"><span class="a-sicon">◷</span>預約管理</div>
+    <div class="a-ssect">設定</div>
+    <div class="a-sitem" data-tab="calendar" onclick="aShowTab('calendar')"><span class="a-sicon">▦</span>月曆排班</div>
+    <div class="a-sitem" data-tab="customers" onclick="aShowTab('customers')"><span class="a-sicon">◎</span>客戶名單</div>
+    <div class="a-sitem" data-tab="stats" onclick="aShowTab('stats')"><span class="a-sicon">◈</span>統計報表</div>
+    <div class="a-ssect">設定</div>
+    <div class="a-sitem" data-tab="shop" onclick="aShowTab('shop')"><span class="a-sicon">⌂</span>店家資料</div>
+    <div class="a-sitem" data-tab="stylists" onclick="aShowTab('stylists')"><span class="a-sicon">✦</span>設計師管理</div>
+    <div class="a-sitem" data-tab="hours" onclick="aShowTab('hours')"><span class="a-sicon">○</span>營業時間</div>
+    <div class="a-sitem" data-tab="services" onclick="aShowTab('services')"><span class="a-sicon">◇</span>服務項目</div>
+    <div class="a-sitem" data-tab="line" onclick="aShowTab('line')"><span class="a-sicon">◉</span>Line 通知</div>
+  </div>
+
+  <!-- content -->
+  <div class="a-content">
+
+    <!-- dashboard -->
+    <div class="a-panel active" id="atab-dashboard">
+      <div class="a-phdr"><div class="a-ptitle"><em>總覽</em>儀表板</div><div id="aDashDate" style="font-size:12px;color:var(--amid)"></div></div>
+      <div class="a-stats" id="aStats"></div>
+      <div class="a-tbl-wrap">
+        <div class="a-tbl-hdr"><div class="a-tbl-title">今日預約</div></div>
+        <table><thead><tr><th>時段</th><th>客戶</th><th>服務</th><th>設計師</th><th>狀態</th></tr></thead>
+        <tbody id="aTodayTbl"></tbody></table>
+      </div>
+    </div>
+
+    <!-- bookings -->
+    <div class="a-panel" id="atab-bookings">
+      <div class="a-phdr"><div class="a-ptitle">預約<em>管理</em></div><button class="a-btn a-btn-gold" onclick="aOpenAddBk()">+ 新增預約</button></div>
+      <!-- Mini calendar for date filter -->
+      <div style="display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap;align-items:flex-start">
+        <div style="flex-shrink:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <button class="a-btn a-btn-outline" onclick="aBkCalChMonth(-1)" style="padding:4px 10px">‹</button>
+            <span id="aBkCalTitle" style="font-size:13px;color:var(--atext);font-weight:500"></span>
+            <button class="a-btn a-btn-outline" onclick="aBkCalChMonth(1)" style="padding:4px 10px">›</button>
+          </div>
+          <div id="aBkCalWrap"></div>
+          <button class="a-btn a-btn-outline" onclick="aBkClearDate()" style="width:100%;margin-top:8px;font-size:10px">顯示全部</button>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="a-filters" style="margin-bottom:12px">
+            <input class="a-search" id="aBkSearch" placeholder="搜尋姓名、電話…" oninput="aRenderBk()">
+            <button class="a-fbtn active" onclick="aSetFilter('all',this)">全部</button>
+            <button class="a-fbtn" onclick="aSetFilter('confirmed',this)">已確認</button>
+            <button class="a-fbtn" onclick="aSetFilter('cancelled',this)">已取消</button>
+          </div>
+          <div id="aBkDateLabel" style="font-size:12px;color:var(--amid);margin-bottom:8px;min-height:18px"></div>
+          <div class="a-tbl-wrap">
+            <table><thead><tr><th>編號</th><th>客戶</th><th>服務</th><th>設計師</th><th>日期/時段</th><th>電話</th><th>狀態</th><th></th></tr></thead>
+            <tbody id="aBkTbl"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- shop -->
+    <div class="a-panel" id="atab-shop">
+      <div class="a-phdr"><div class="a-ptitle">店家<em>基本資料</em></div></div>
+      <div class="a-fsect">
+        <div class="a-fsect-title">品牌資訊</div>
+        <div class="a-frow"><div class="a-field"><label>店名 *</label><input type="text" id="sShopName" placeholder="例：Lumière Hair Studio"></div>
+        <div class="a-field"><label>副標語</label><input type="text" id="sShopTagline" placeholder="例：Hair &amp; Beauty"></div></div>
+        <div class="a-frow s1"><div class="a-field"><label>預約頁歡迎語</label><input type="text" id="sShopWelcome" placeholder="例：每項服務皆由資深造型師親自操作"></div></div>
+      </div>
+      <div class="a-fsect">
+        <div class="a-fsect-title">聯絡資訊</div>
+        <div class="a-frow"><div class="a-field"><label>電話</label><input type="text" id="sShopPhone" placeholder="02-1234-5678"></div>
+        <div class="a-field"><label>電子郵件</label><input type="email" id="sShopEmail" placeholder="hello@salon.com"></div></div>
+        <div class="a-frow s1"><div class="a-field"><label>地址</label><input type="text" id="sShopAddr" placeholder="台北市大安區…"></div></div>
+      </div>
+      <div class="a-fsect">
+        <div class="a-fsect-title">社群連結</div>
+        <div class="a-frow"><div class="a-field"><label>Instagram</label><input type="text" id="sShopIg" placeholder="@your_salon"></div>
+        <div class="a-field"><label>Facebook</label><input type="text" id="sShopFb" placeholder="粉絲專頁連結"></div></div>
+      </div>
+      <div class="a-fsect">
+        <div class="a-fsect-title">節假日公告</div>
+        <div style="font-size:12px;color:var(--amid);margin-bottom:14px">設定後會在前台預約頁面頂部顯示，例如春節假期、特殊活動等。留空則不顯示。</div>
+        <div class="a-frow s1"><div class="a-field"><label>公告標題</label><input type="text" id="sNoticeTitle" placeholder="例：春節假期公告"></div></div>
+        <div class="a-frow s1"><div class="a-field"><label>公告內容</label><textarea id="sNoticeContent" style="min-height:80px" placeholder="例：本店春節期間（1/28－2/4）暫停營業，2/5起恢復正常服務。"></textarea></div></div>
+        <div class="a-frow"><div class="a-field"><label>公告開始日期</label><input type="date" id="sNoticeStart"></div>
+        <div class="a-field"><label>公告結束日期</label><input type="date" id="sNoticeEnd"></div></div>
+        <div style="font-size:11px;color:var(--alight);margin-top:-4px">留空日期則永遠顯示</div>
+      </div>
+      <div class="a-fsect">
+        <div class="a-fsect-title">後台管理密碼</div>
+        <div class="a-frow">
+          <div class="a-field"><label>新密碼</label><input type="password" id="sNewPwd" placeholder="輸入新密碼"></div>
+          <div class="a-field"><label>確認新密碼</label><input type="password" id="sConfPwd" placeholder="再次輸入新密碼"></div>
+        </div>
+        <div style="font-size:11px;color:var(--amid);margin-top:-4px">留空則不更改密碼。預設密碼：1234</div>
+      </div>
+      <div class="a-btn-row"><button class="a-btn a-btn-gold" onclick="aSaveShop()">儲存店家資料</button></div>
+      <div style="margin-top:16px;padding:13px 16px;background:var(--apanel2);border:1px solid var(--aborder);border-radius:4px;font-size:12px;color:var(--amid);line-height:1.8">✦ 儲存後切換到「線上預約」即可看到更新後的店名。</div>
+    </div>
+
+    <!-- stylists -->
+    <div class="a-panel" id="atab-stylists">
+      <div class="a-phdr"><div class="a-ptitle">設計師<em>管理</em></div><button class="a-btn a-btn-gold" onclick="aOpenStylist()">+ 新增設計師</button></div>
+      <div class="sa-grid" id="aSaGrid"></div>
+    </div>
+
+    <!-- hours -->
+    <div class="a-panel" id="atab-hours">
+      <div class="a-phdr"><div class="a-ptitle">營業<em>時間設定</em></div></div>
+      <div class="a-fsect">
+        <div class="a-fsect-title">每週營業日（點擊切換）</div>
+        <div class="hrs-grid" id="aHrsGrid"></div>
+      </div>
+      <div class="a-fsect">
+        <div class="a-fsect-title">每日時段設定</div>
+        <div class="a-frow s3">
+          <div class="a-field"><label>開始時間</label><input type="time" id="aOpenTime" onchange="aSaveSettings()"></div>
+          <div class="a-field"><label>結束時間</label><input type="time" id="aCloseTime" onchange="aSaveSettings()"></div>
+          <div class="a-field"><label>時段間隔</label>
+            <select id="aSlotMin" onchange="aSaveSettings()">
+              <option value="30">30 分鐘</option><option value="60">60 分鐘</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- services -->
+    <div class="a-panel" id="atab-services">
+      <div class="a-phdr"><div class="a-ptitle">服務<em>項目</em></div><button class="a-btn a-btn-gold" onclick="aOpenSvc()">+ 新增服務</button></div>
+      <div class="a-tbl-wrap">
+        <table><thead><tr><th>名稱</th><th>說明</th><th>時長</th><th>費用</th><th></th></tr></thead>
+        <tbody id="aSvcTbl"></tbody></table>
+      </div>
+    </div>
+
+    <!-- line -->
+    <div class="a-panel" id="atab-line">
+      <div class="a-phdr"><div class="a-ptitle">Line<em>通知設定</em></div></div>
+      <div class="line-setup">
+        <div class="line-hdr">
+          <div class="line-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg></div>
+          <div><div class="line-title">Line Notify 整合</div><div class="line-sub">預約確認時自動發送通知</div></div>
+        </div>
+        <div class="line-status line-no" id="aLineStatus"><span class="sdot sdot-r"></span>尚未設定</div>
+        <div class="a-frow s1"><div class="a-field"><label>Line Notify Token</label><input type="text" id="aLineToken" placeholder="貼上 Line Notify Access Token" oninput="aUpdateLineStatus()"></div></div>
+        <div class="a-frow s1"><div class="a-field"><label>說明</label>
+          <div style="font-size:12px;color:var(--amid);line-height:1.8;padding:9px 13px;background:var(--apanel2);border-radius:2px;border:1px solid var(--aborder)">
+            1. 前往 <strong style="color:var(--gold)">notify.line.me</strong> 登入<br>
+            2. 點選「發行 Token」→ 選擇通知群組或個人<br>
+            3. 複製 Token 貼入上方欄位儲存
+          </div>
+        </div></div>
+        <div class="a-btn-row"><button class="a-btn a-btn-gold" onclick="aSaveLineToken()">儲存 Token</button><button class="a-btn a-btn-outline" onclick="aTestLine()">發送測試</button></div>
+        <div class="notify-types" style="margin-top:16px">
+          <div class="nt"><div class="nt-ico">👤</div><div class="nt-lbl">客戶預約確認</div><div class="nt-st">✓ 啟用中</div></div>
+          <div class="nt"><div class="nt-ico">✂️</div><div class="nt-lbl">設計師新預約</div><div class="nt-st">✓ 啟用中</div></div>
+          <div class="nt"><div class="nt-ico">🏠</div><div class="nt-lbl">店家管理員</div><div class="nt-st">✓ 啟用中</div></div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- calendar -->
+    <div class="a-panel" id="atab-calendar">
+      <div class="a-phdr">
+        <div class="a-ptitle">預約<em>月曆</em></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="a-btn a-btn-outline" onclick="aCalChMonth(-1)">‹ 上月</button>
+          <span id="aCalTitle" style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--atext);min-width:120px;text-align:center"></span>
+          <button class="a-btn a-btn-outline" onclick="aCalChMonth(1)">下月 ›</button>
+          <select id="aCalStylFilter" onchange="aRenderCalView()" style="background:var(--apanel2);border:1px solid var(--aborder);color:var(--atext);padding:6px 12px;font-size:11px;border-radius:2px;outline:none;font-family:'DM Sans',sans-serif;margin-left:8px">
+            <option value="">全部設計師</option>
+          </select>
+        </div>
+      </div>
+      <!-- legend -->
+      <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--amid)"><span style="width:10px;height:10px;background:var(--gold);border-radius:50%;display:inline-block"></span>有預約</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--amid)"><span style="width:10px;height:10px;background:rgba(224,112,112,0.5);border-radius:50%;display:inline-block"></span>封鎖時段</div>
+      </div>
+      <div style="background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--aborder)">
+          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">日</div>
+          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">一</div>
+          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">二</div>
+          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">三</div>
+          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">四</div>
+          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">五</div>
+          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">六</div>
+        </div>
+        <div id="aCalGrid" style="display:grid;grid-template-columns:repeat(7,1fr)"></div>
+      </div>
+      <!-- day detail panel -->
+      <div id="aCalDetail" style="display:none;margin-top:20px;background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div id="aCalDetailTitle" style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--atext)"></div>
+          <button class="a-btn a-btn-outline a-btn-sm" onclick="aOpenBlockSlot()">封鎖時段</button>
+        </div>
+        <div id="aCalDetailList"></div>
+      </div>
+    </div>
+
+    <!-- stylist schedule -->
+    <div class="a-panel" id="atab-stylschedule">
+      <div class="a-phdr">
+        <div class="a-ptitle">設計師<em>排班預約</em></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="a-btn a-btn-outline" onclick="aSSChMonth(-1)">‹ 上月</button>
+          <span id="aSSTitle" style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--atext);min-width:120px;text-align:center"></span>
+          <button class="a-btn a-btn-outline" onclick="aSSChMonth(1)">下月 ›</button>
+        </div>
+      </div>
+      <!-- stylist tabs -->
+      <div id="aSSStylTabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--aborder)"></div>
+      <!-- selected stylist info -->
+      <div id="aSSInfo" style="display:none;margin-bottom:16px;background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;padding:14px 18px;display:flex;align-items:center;gap:14px">
+        <div id="aSSAvatar" style="width:44px;height:44px;border-radius:50%;background:var(--agold-dim);border:1.5px solid var(--agold-border);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);flex-shrink:0"></div>
+        <div><div id="aSSName" style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--atext)"></div>
+        <div id="aSSSubtitle" style="font-size:11px;color:var(--amid);margin-top:2px"></div></div>
+        <div id="aSSMonthCount" style="margin-left:auto;text-align:right"><div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold)" id="aSSCnt">0</div><div style="font-size:10px;color:var(--amid);letter-spacing:1px">本月預約</div></div>
+      </div>
+      <!-- booking list for selected stylist -->
+      <div id="aSSList"></div>
+    </div>
+
+    <!-- customers -->
+    <div class="a-panel" id="atab-customers">
+      <div class="a-phdr"><div class="a-ptitle">客戶<em>名單</em></div></div>
+      <div class="a-filters">
+        <input class="a-search" id="aCustSearch" placeholder="搜尋姓名、電話…" oninput="aRenderCustomers()">
+      </div>
+      <div class="a-tbl-wrap">
+        <table><thead><tr><th>姓名</th><th>電話</th><th>Email</th><th>預約次數</th><th>最近服務</th><th>最近日期</th><th></th></tr></thead>
+        <tbody id="aCustTbl"></tbody></table>
+      </div>
+    </div>
+
+    <!-- stats -->
+    <div class="a-panel" id="atab-stats">
+      <div class="a-phdr"><div class="a-ptitle">統計<em>報表</em></div></div>
+      <div class="a-stats" id="aStatsBig"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div class="a-fsect" style="margin-bottom:0">
+          <div class="a-fsect-title">熱門服務 Top 5</div>
+          <div id="statSvcChart"></div>
+        </div>
+        <div class="a-fsect" style="margin-bottom:0">
+          <div class="a-fsect-title">設計師預約數</div>
+          <div id="statStylChart"></div>
+        </div>
+      </div>
+      <div class="a-fsect">
+        <div class="a-fsect-title">近 30 天每日預約量</div>
+        <div id="statDailyChart" style="height:120px;position:relative"></div>
+      </div>
+    </div>
+
+  </div><!-- /a-content -->
+</div><!-- /viewAdmin -->
+
+<!-- ══ STYLIST VIEW ══════════════════════════════════════════ -->
+<div id="viewStylist" class="sd-wrap" style="display:none">
+  <div class="sd-sidebar">
+    <div style="padding:16px 18px 20px;border-bottom:1px solid var(--aborder);margin-bottom:8px">
+      <div id="sdSideAvatar" style="width:40px;height:40px;border-radius:50%;background:var(--agold-dim);border:1.5px solid var(--agold-border);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);margin-bottom:8px;overflow:hidden"></div>
+      <div id="sdSideName" style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--atext)"></div>
+      <div id="sdSideTitle" style="font-size:11px;color:var(--amid);margin-top:2px"></div>
+    </div>
+    <div class="a-sitem active" data-sd="bookings" onclick="sdShowTab('bookings')"><span class="a-sicon">◷</span>我的預約</div>
+    <div class="a-sitem" data-sd="holidays" onclick="sdShowTab('holidays')"><span class="a-sicon">○</span>休假日設定</div>
+    <div class="a-sitem" data-sd="services" onclick="sdShowTab('services')"><span class="a-sicon">◇</span>服務與價格</div>
+    <div class="a-sitem" data-sd="profile" onclick="sdShowTab('profile')"><span class="a-sicon">✦</span>個人資料</div>
+  </div>
+  <div class="sd-content">
+
+    <!-- my bookings -->
+    <div class="sd-panel active" id="sdtab-bookings">
+      <div class="a-phdr"><div class="a-ptitle">我的<em>預約</em></div></div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+        <div style="flex-shrink:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <button class="a-btn a-btn-outline" onclick="sdCalChMonth(-1)" style="padding:4px 10px">‹</button>
+            <span id="sdCalTitle" style="font-size:13px;color:var(--atext);font-weight:500;min-width:90px;text-align:center"></span>
+            <button class="a-btn a-btn-outline" onclick="sdCalChMonth(1)" style="padding:4px 10px">›</button>
+          </div>
+          <div id="sdBkCalWrap"></div>
+          <button class="a-btn a-btn-outline" onclick="sdClearDate()" style="width:100%;margin-top:8px;font-size:10px">顯示整月</button>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="a-stats" id="sdStats" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px"></div>
+          <div id="sdDateLabel" style="font-size:12px;color:var(--amid);margin-bottom:8px;min-height:18px"></div>
+          <div id="sdBookingList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- holidays -->
+    <div class="sd-panel" id="sdtab-holidays">
+      <div class="a-phdr"><div class="a-ptitle">休假日<em>設定</em></div></div>
+      <div style="font-size:13px;color:var(--amid);margin-bottom:20px">點擊日期設定或取消休假，休假日客人無法預約。</div>
+      <div id="sdHolCalWrap" style="max-width:360px"></div>
+      <div class="a-btn-row" style="margin-top:16px"><button class="a-btn a-btn-gold" onclick="sdSaveHolidays()">儲存休假日</button></div>
+    </div>
+
+    <!-- services -->
+    <div class="sd-panel" id="sdtab-services">
+      <div class="a-phdr"><div class="a-ptitle">服務<em>與價格</em></div></div>
+      <div style="font-size:13px;color:var(--amid);margin-bottom:20px">勾選並設定你提供的服務與個人價格，未勾選項目客人不會看到。</div>
+      <div id="sdSvcList"></div>
+      <div class="a-btn-row" style="margin-top:16px">
+        <button class="a-btn a-btn-outline" onclick="sdOpenAddSvc()">+ 新增專屬服務</button>
+        <button class="a-btn a-btn-gold" onclick="sdSaveServices()">儲存服務設定</button>
+      </div>
+      <!-- Add custom service form -->
+      <div id="sdAddSvcForm" style="display:none;background:var(--apanel2);border:1px solid var(--aborder);border-radius:4px;padding:18px;margin-top:16px">
+        <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--amid);margin-bottom:14px;font-weight:600">新增專屬服務</div>
+        <div class="a-frow">
+          <div class="a-field"><label>服務名稱</label><input type="text" id="sdNewSvcName" placeholder="例：特殊護髮"></div>
+          <div class="a-field"><label>價格</label><input type="text" id="sdNewSvcPrice" placeholder="例：NT$1200"></div>
+        </div>
+        <div class="a-frow">
+          <div class="a-field"><label>時長</label><input type="text" id="sdNewSvcDur" placeholder="例：60分"></div>
+          <div class="a-field"><label>說明（選填）</label><input type="text" id="sdNewSvcDesc" placeholder="例：專業護髮療程"></div>
+        </div>
+        <div class="a-btn-row" style="margin-top:8px">
+          <button class="a-btn a-btn-outline" onclick="sdCloseAddSvc()">取消</button>
+          <button class="a-btn a-btn-gold" onclick="sdConfirmAddSvc()">新增</button>
+        </div>
+      </div>
+      <!-- Custom services list -->
+      <div id="sdCustomSvcList" style="margin-top:16px"></div>
+    </div>
+
+    <!-- profile -->
+    <div class="sd-panel" id="sdtab-profile">
+      <div class="a-phdr"><div class="a-ptitle">個人<em>資料</em></div></div>
+      <div class="a-fsect">
+        <div class="a-fsect-title">基本資訊</div>
+        <div class="a-frow"><div class="a-field"><label>個人照片</label>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+            <div id="sdPhotoPreview" style="width:56px;height:56px;border-radius:50%;background:var(--apanel2);border:2px solid var(--aborder);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--amid);overflow:hidden;flex-shrink:0">預覽</div>
+            <label style="padding:7px 14px;background:var(--gold);color:#fff;border-radius:2px;cursor:pointer;font-size:11px;letter-spacing:1px;text-transform:uppercase">
+              選擇圖片 <input type="file" id="sdPhotoFile" accept="image/*" style="display:none" onchange="handleSdPhotoUpload(this)">
+            </label>
+          </div>
+          <input type="text" id="sdPhoto" placeholder="或貼上圖片網址" oninput="updateSdPhotoPreview(this.value)">
+        </div>
+        <div class="a-field"><label>職稱</label><input type="text" id="sdTitle2" placeholder="例：首席設計師"></div></div>
+        <div class="a-frow s1"><div class="a-field"><label>個人簡介</label><textarea id="sdBio" style="min-height:80px" placeholder="介紹自己的風格與經歷…"></textarea></div></div>
+        <div class="a-frow s1"><div class="a-field"><label>作品圖片（最多6張）</label>
+          <label style="display:inline-block;padding:7px 14px;background:var(--apanel2);border:1.5px solid var(--aborder);border-radius:2px;cursor:pointer;font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;color:var(--amid)">
+            + 上傳圖片 <input type="file" id="sdPortfolioFile" accept="image/*" multiple style="display:none" onchange="handleSdPortfolioUpload(this)">
+          </label>
+          <div id="sdPortfolioPreviews" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+          <textarea id="sdPortfolio" style="min-height:60px" placeholder="或貼上圖片網址（每行一個）"></textarea>
+        </div></div>
+      </div>
+      <div class="a-fsect">
+        <div class="a-fsect-title">修改密碼</div>
+        <div class="a-frow">
+          <div class="a-field"><label>新密碼</label><input type="password" id="sdNewPwd" placeholder="輸入新密碼（至少4位）"></div>
+          <div class="a-field"><label>確認新密碼</label><input type="password" id="sdConfPwd"></div>
+        </div>
+      </div>
+      <div class="a-btn-row"><button class="a-btn a-btn-gold" onclick="sdSaveProfile()">儲存個人資料</button></div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /appShell -->
+
+<!-- modals -->
+<div class="modal-overlay" id="mStylist">
+  <div class="modal">
+    <div class="modal-title" id="mStylistTitle">新增<em>設計師</em></div>
+    <div class="a-frow"><div class="a-field"><label>姓名 *</label><input type="text" id="mSName" placeholder="設計師姓名"></div>
+    <div class="a-field"><label>職稱</label><input type="text" id="mSTitle" placeholder="例：首席設計師"></div></div>
+    <div class="a-frow"><div class="a-field"><label>頭像文字（1-2字）</label><input type="text" id="mSAvatar" placeholder="例：C" maxlength="2"></div>
+    <div class="a-field"><label>專長（逗號分隔）</label><input type="text" id="mSSpec" placeholder="例：染髮,挑染"></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>設計師照片</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <div id="mSPhotoPreview" style="width:60px;height:60px;border-radius:50%;background:var(--apanel2);border:2px solid var(--aborder);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;font-size:11px;color:var(--amid)">預覽</div>
+        <div style="flex:1">
+          <label style="display:inline-block;padding:8px 16px;background:var(--gold);color:#fff;border-radius:2px;cursor:pointer;font-size:11px;letter-spacing:1px;text-transform:uppercase">
+            選擇圖片 <input type="file" id="mSPhotoFile" accept="image/*" style="display:none" onchange="handleStylistPhotoUpload(this)">
+          </label>
+          <div style="font-size:11px;color:var(--alight);margin-top:6px">或直接貼網址：</div>
+          <input type="text" id="mSPhoto" placeholder="https://..." oninput="updateStylistPhotoPreview(this.value)" style="margin-top:4px">
+        </div>
+      </div>
+    </div></div>
+    <div class="a-frow s1"><div class="a-field"><label>設計師簡介</label><textarea id="mSBio" placeholder="例：擁有 10 年染燙經驗，擅長日系風格…" style="min-height:80px"></textarea></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>作品圖片（最多6張）</label>
+      <label style="display:inline-block;padding:7px 14px;background:var(--apanel2);border:1.5px solid var(--aborder);border-radius:2px;cursor:pointer;font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;color:var(--amid)">
+        + 上傳圖片 <input type="file" id="mSPortfolioFile" accept="image/*" multiple style="display:none" onchange="handlePortfolioUpload(this)">
+      </label>
+      <div id="mSPortfolioPreviews" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+      <div style="font-size:11px;color:var(--alight);margin-bottom:4px">或貼網址（每行一個）：</div>
+      <textarea id="mSPortfolio" placeholder="https://i.imgur.com/xxx.jpg" style="min-height:70px"></textarea>
+    </div></div>
+    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--alight);margin:16px 0 8px">設定休假日（點擊日期切換）</div>
+    <div id="mSCalWrap"></div>
+    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--alight);margin:16px 0 8px">個人服務項目與價格</div>
+    <div style="font-size:12px;color:var(--amid);margin-bottom:10px">未設定則沿用全店預設服務。勾選後可為此設計師設定獨立名稱與價格。</div>
+    <div id="mSSvcList"></div>
+    <input type="hidden" id="mSId">
+    <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mStylist')">取消</button><button class="a-btn a-btn-gold" onclick="aSaveStylist()">儲存</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="mSvc">
+  <div class="modal">
+    <div class="modal-title" id="mSvcTitle">新增<em>服務項目</em></div>
+    <div class="a-frow"><div class="a-field"><label>服務名稱 *</label><input type="text" id="mVName" placeholder="例：剪髮造型"></div>
+    <div class="a-field"><label>費用 *</label><input type="text" id="mVPrice" placeholder="例：NT$800"></div></div>
+    <div class="a-frow"><div class="a-field"><label>時長</label><input type="text" id="mVDur" placeholder="例：60 分鐘"></div><div class="a-field"></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>服務說明</label><textarea id="mVDesc" placeholder="簡短描述此服務"></textarea></div></div>
+    <input type="hidden" id="mVId">
+    <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mSvc')">取消</button><button class="a-btn a-btn-gold" onclick="aSaveSvc()">儲存</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="mAddBk">
+  <div class="modal">
+    <div class="modal-title">新增<em>預約</em></div>
+    <div class="a-frow"><div class="a-field"><label>客戶姓名 *</label><input type="text" id="mBName"></div>
+    <div class="a-field"><label>電話 *</label><input type="tel" id="mBPhone"></div></div>
+    <div class="a-frow"><div class="a-field"><label>服務項目</label><select id="mBSvc"></select></div>
+    <div class="a-field"><label>設計師</label><select id="mBStyl"></select></div></div>
+    <div class="a-frow"><div class="a-field"><label>日期</label><input type="date" id="mBDate"></div>
+    <div class="a-field"><label>時段</label><input type="time" id="mBTime"></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>備註</label><textarea id="mBNotes"></textarea></div></div>
+    <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mAddBk')">取消</button><button class="a-btn a-btn-gold" onclick="aSaveAddBk()">新增</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ BLOCK SLOT MODAL ══ -->
+<div class="modal-overlay" id="mBlockSlot">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">封鎖<em>時段</em></div>
+    <p style="font-size:12px;color:var(--amid);margin-bottom:16px">封鎖後該時段不開放客人預約</p>
+    <div class="a-frow s1"><div class="a-field"><label>日期</label><input type="date" id="mBlkDate"></div></div>
+    <div class="a-frow"><div class="a-field"><label>開始時間</label><input type="time" id="mBlkStart"></div>
+    <div class="a-field"><label>結束時間</label><input type="time" id="mBlkEnd"></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>原因（選填）</label><input type="text" id="mBlkReason" placeholder="例：設備維修、員工會議…"></div></div>
+    <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mBlockSlot')">取消</button><button class="a-btn a-btn-gold" onclick="aSaveBlockSlot()">封鎖</button></div>
+  </div>
+</div>
+
+<!-- ══ CUSTOMER HISTORY MODAL ══ -->
+<div class="modal-overlay" id="mCustHist">
+  <div class="modal">
+    <div class="modal-title" id="mCustHistTitle">客戶<em>預約紀錄</em></div>
+    <div id="mCustHistList"></div>
+    <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mCustHist')">關閉</button></div>
+  </div>
+</div>
+
+<!-- ══ STYLIST LOGIN MODAL ══ -->
+<div class="modal-overlay" id="mStylLogin">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">設計師<em>登入</em></div>
+    <p style="font-size:13px;color:var(--amid);margin-bottom:18px">選擇你的名字並輸入密碼</p>
+    <div id="stylLoginList" style="margin-bottom:14px"></div>
+    <div id="stylLoginPwdWrap" style="display:none">
+      <div class="a-field" style="margin-bottom:8px">
+        <label>密碼</label>
+        <input type="password" id="stylLoginPwd" placeholder="輸入你的密碼" onkeydown="if(event.key==='Enter')doStylLogin()">
+      </div>
+      <div id="stylLoginErr" style="color:var(--red);font-size:12px;min-height:16px;margin-bottom:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="a-btn a-btn-outline" onclick="closeModal('mStylLogin')">取消</button>
+      <button class="a-btn a-btn-gold" onclick="doStylLogin()">登入</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ROLE SELECTOR MODAL ══ -->
+<div class="role-overlay" id="roleModal">
+  <div class="role-modal">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--atext);margin-bottom:6px">選擇<em style="font-style:italic;color:var(--gold)">身份</em></div>
+    <div style="font-size:12px;color:var(--amid);margin-bottom:20px">請選擇你的身份繼續</div>
+    <div class="role-option" id="roleOwner" onclick="closeModal('roleModal');switchMain('admin')">
+      <div class="role-icon" style="background:var(--agold-dim);color:var(--gold)">⌂</div>
+      <div><div style="font-size:14px;color:var(--atext);font-weight:500">店長</div><div style="font-size:12px;color:var(--amid)">完整後台管理權限</div></div>
+    </div>
+    <div id="stylRoleList"></div>
+    <div id="roleStylPwdWrap" style="display:none;margin-top:12px">
+      <div class="a-field"><label>設計師密碼</label><input type="password" id="roleStylPwdInput" placeholder="輸入你的密碼" onkeydown="if(event.key==='Enter')confirmRoleLogin()"></div>
+      <div id="roleStylPwdError" style="color:var(--red);font-size:12px;margin-top:6px;min-height:16px"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end">
+      <button class="a-btn a-btn-outline" onclick="closeModal('roleModal')">取消</button>
+      <button class="a-btn a-btn-gold" onclick="confirmRoleLogin()">登入</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN PASSWORD MODAL ══ -->
+<div class="modal-overlay" id="mAdminPwd" style="z-index:600">
+  <div class="modal" style="max-width:360px;text-align:center">
+    <div class="modal-title" style="justify-content:center;text-align:center">後台<em>登入</em></div>
+    <p style="font-size:13px;color:var(--amid);margin-bottom:20px">請輸入管理員密碼</p>
+    <div class="a-field" style="margin-bottom:16px;text-align:left">
+      <label>密碼</label>
+      <input type="password" id="adminPwdInput" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')verifyAdminPwd()" style="text-align:center;letter-spacing:4px;font-size:16px">
+    </div>
+    <div id="adminPwdError" style="color:var(--red);font-size:12px;margin-bottom:12px;min-height:16px"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="a-btn a-btn-outline" onclick="closeModal('mAdminPwd')">取消</button>
+      <button class="a-btn a-btn-gold" onclick="verifyAdminPwd()">進入後台</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══ STORE — Firebase + localStorage cache ══════════════════
+function gs(k,d){try{const v=localStorage.getItem(k);if(v===null)return d;try{return JSON.parse(v);}catch{return v;}}catch{return d;}}
+function ss(k,v){localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v))}
+
+let _cache={svcs:null,styls:null,bks:null,set:null,shop:null,blocks:null};
+
+const DEF_SVCS=[
+  {id:1,name:'剪髮造型',desc:'含洗髮、剪髮及基本吹整',duration:'60 分鐘',price:'NT$800'},
+  {id:2,name:'燙髮',desc:'各式燙髮技術，塑造理想捲度',duration:'150 分鐘',price:'NT$2,800'},
+  {id:3,name:'染髮',desc:'時尚色彩設計，含護色護理',duration:'120 分鐘',price:'NT$2,200'},
+  {id:4,name:'護髮療程',desc:'深度修護受損髮質',duration:'60 分鐘',price:'NT$1,200'},
+  {id:5,name:'挑染/漸層',desc:'個性化挑染，多種技法',duration:'180 分鐘',price:'NT$3,800'},
+  {id:6,name:'頭皮護理',desc:'專業頭皮清潔與滋養',duration:'45 分鐘',price:'NT$950'},
+];
+const DEF_STYLS=[
+  {id:1,name:'Claire',title:'首席設計師',avatar:'C',specialties:['染髮','挑染'],holidays:[],services:[]},
+  {id:2,name:'Kevin',title:'資深造型師',avatar:'K',specialties:['燙髮','剪髮'],holidays:[],services:[]},
+  {id:3,name:'Mia',title:'造型師',avatar:'M',specialties:['護髮','頭皮護理'],holidays:[],services:[]},
+  {id:4,name:'James',title:'資深造型師',avatar:'J',specialties:['染髮','燙髮'],holidays:[],services:[]},
+];
+
+// ── FIREBASE SYNC ──────────────────────────────────────────
+async function syncFromFirebase(){
+  if(!window.FB)return;
+  try{
+    const [setData,shopData,pwdData,svcs,styls,blocks]=await Promise.all([
+      window.FB.dbGet('config','settings'),
+      window.FB.dbGet('config','shop'),
+      window.FB.dbGet('config','password'),
+      window.FB.dbList('services'),
+      window.FB.dbList('stylists'),
+      window.FB.dbList('blocks'),
+    ]);
+    if(setData){_cache.set=setData;ss('lm_set',setData);}
+    if(shopData){_cache.shop=shopData;ss('lm_shop',shopData);}
+    if(pwdData?.value){ss('lm_adminpwd', pwdData.value);}
+    if(svcs.length){_cache.svcs=svcs;ss('lm_svcs',svcs);}
+    if(styls.length){_cache.styls=styls;ss('lm_styls',styls);}
+    _cache.blocks=blocks;ss('lm_blocks',blocks);
+
+    // Realtime bookings listener
+    window.FB.db.collection('bookings').orderBy('createdAt','desc').onSnapshot(snap=>{
+      const bks=snap.docs.map(d=>({...d.data(),id:d.id}));
+      _cache.bks=bks;ss('lm_bks',bks);
+      const activeTab=document.querySelector('.a-panel.active');
+      if(activeTab&&document.getElementById('viewAdmin').style.display!=='none'){
+        const tid=activeTab.id.replace('atab-','');
+        const map={dashboard:aRenderDash,bookings:aRenderBk,calendar:aRenderCalView,
+          stylschedule:aRenderCalView,customers:aRenderCustomers,stats:aRenderStats};
+        if(map[tid])map[tid]();
+      }
+    });
+    // Load stylist passwords
+    const styls2=getStyls();
+    for(const s of styls2){
+      const pwdDoc=await window.FB.dbGet('config','stylpwd_'+s.id);
+      if(pwdDoc?.value) ss('lm_stylpwd_'+s.id, pwdDoc.value);
+    }
+    document.getElementById('dbStatus').innerHTML='<span style="color:#5A9E72">● 已連線</span>';
+    toast('已連線至雲端 ✦');
+  }catch(e){
+    console.warn('Firebase error:',e);
+    document.getElementById('dbStatus').innerHTML='<span style="color:#C0614A">● 離線模式</span>';
+  }
+}
+
+// ── FIREBASE WRITE HELPERS ─────────────────────────────────
+async function fbSaveList(col,list){
+  if(!window.FB)return;
+  const existing=await window.FB.dbList(col);
+  await Promise.all(existing.map(item=>window.FB.dbDelete(col,item._id)));
+  await Promise.all(list.map(item=>window.FB.dbAdd(col,{...item})));
+}
+async function fbAddBooking(bk){
+  if(window.FB)await window.FB.dbSet('bookings',bk.id,bk);
+  else{const bks=getBks();bks.unshift(bk);_cache.bks=bks;ss('lm_bks',bks);}
+}
+async function fbUpdateBooking(id,data){
+  if(window.FB)await window.FB.dbUpdate('bookings',id,data);
+  const bks=getBks();const b=bks.find(x=>x.id===id);
+  if(b)Object.assign(b,data);
+  _cache.bks=bks;ss('lm_bks',bks);
+}
+async function fbAddBlock(block){
+  if(window.FB)await window.FB.dbAdd('blocks',block);
+  const blocks=getBlocks();blocks.push(block);
+  _cache.blocks=blocks;ss('lm_blocks',blocks);
+}
+async function fbDeleteBlock(id){
+  if(window.FB){const blocks=await window.FB.dbList('blocks');const b=blocks.find(x=>x.id===id);if(b)await window.FB.dbDelete('blocks',b._id);}
+  const blocks=getBlocks().filter(b=>b.id!==id);
+  _cache.blocks=blocks;ss('lm_blocks',blocks);
+}
+
+// ── GETTERS ────────────────────────────────────────────────
+const getSvcs=()=>{if(_cache.svcs)return _cache.svcs;let v=gs('lm_svcs',null);if(!v){v=DEF_SVCS;ss('lm_svcs',v);}return v;};
+const getStyls=()=>{if(_cache.styls)return _cache.styls;let v=gs('lm_styls',null);if(!v){v=DEF_STYLS;ss('lm_styls',v);}return v;};
+const getBks=()=>_cache.bks||gs('lm_bks',[]);
+const getBlocks=()=>_cache.blocks||gs('lm_blocks',[]);
+
+function getSvcForStyl(styl){
+  if(!styl||styl.id===0)return getSvcs();
+  const s=getStyls().find(x=>Number(x.id)===Number(styl.id));
+  if(!s)return getSvcs();
+  const globals=(s.services&&s.services.length>0)?s.services.filter(sv=>sv.enabled!==false):getSvcs();
+  const customs=(s.customServices||[]).filter(sv=>sv.enabled!==false);
+  return [...globals,...customs];
+}
+const getSet=()=>_cache.set||gs('lm_set',{openTime:'10:00',closeTime:'19:00',slotMinutes:30,closedDays:[0],lineToken:''});
+const getShop=()=>_cache.shop||gs('lm_shop',{name:'Pax Hair Salon',tagline:'Hair & Beauty',welcome:'每項服務皆由資深造型師親自操作',phone:'',email:'',address:'',ig:'',fb:'',noticeTitle:'',noticeContent:'',noticeStart:'',noticeEnd:''});
+
+// ══ MAIN SWITCH ════════════════════════════════════════════
+function switchMain(v, stylId){
+  document.getElementById('viewFront').style.display=v==='front'?'block':'none';
+  document.getElementById('viewAdmin').style.display=v==='admin'?'flex':'none';
+  document.getElementById('viewStylist').style.display=v==='stylist'?'flex':'none';
+  document.getElementById('navFront').classList.toggle('active',v==='front');
+  document.getElementById('navAdmin').classList.toggle('active',v==='admin'||v==='stylist');
+  document.getElementById('progressWrap').style.display=v==='front'?'block':'none';
+
+  const btn=document.getElementById('adminEntryBtn');
+  const stylBtn=document.getElementById('stylEntryBtn');
+  if(v==='admin'){
+    btn.textContent='← 前台';btn.onclick=()=>switchMain('front');btn.style.opacity='1';btn.style.color='#1A1208';btn.style.pointerEvents='auto';
+    stylBtn.textContent='設計師';stylBtn.onclick=askStylLogin;stylBtn.style.opacity='0.7';stylBtn.style.color='#1A1208';
+  }else if(v==='stylist'){
+    btn.textContent='管理';btn.onclick=askAdminPwd;btn.style.opacity='0.7';btn.style.color='#1A1208';btn.style.pointerEvents='auto';
+    stylBtn.textContent='← 前台';stylBtn.onclick=()=>switchMain('front');stylBtn.style.opacity='1';stylBtn.style.color='#1A1208';
+  }else{
+    btn.textContent='管理';btn.onclick=askAdminPwd;btn.style.opacity='0.7';btn.style.color='#1A1208';btn.style.pointerEvents='auto';
+    stylBtn.textContent='設計師';stylBtn.onclick=askStylLogin;stylBtn.style.opacity='0.7';stylBtn.style.color='#1A1208';
+  }
+
+  if(v==='admin') aRenderDash();
+  if(v==='front') applyShop();
+  if(v==='stylist'&&stylId) sdInit(stylId);
+}
+
+function getAdminPwd(){return gs('lm_adminpwd','1234');}
+
+// ── STYLIST LOGIN ──────────────────────────────────────────
+let _loginStylId=null;
+
+function askStylLogin(){
+  // If already in stylist view, go back to front
+  if(document.getElementById('viewStylist').style.display!=='none'){
+    switchMain('front');return;
+  }
+  _loginStylId=null;
+  const styls=getStyls();
+  document.getElementById('stylLoginList').innerHTML=styls.map(s=>`
+    <div class="role-option" id="slogin-${s.id}" onclick="selectStylForLogin(${s.id})">
+      <div class="role-icon" style="background:var(--agold-dim);font-family:'Cormorant Garamond',serif;color:var(--gold);font-size:18px">${s.photo?`<img src="${esc(s.photo)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:`${esc(s.avatar)}`}</div>
+      <div><div style="font-size:14px;color:var(--atext);font-weight:500">${esc(s.name)}</div><div style="font-size:12px;color:var(--amid)">${esc(s.title)}</div></div>
+    </div>`).join('');
+  document.getElementById('stylLoginPwdWrap').style.display='none';
+  document.getElementById('stylLoginErr').textContent='';
+  openModal('mStylLogin');
+}
+
+function selectStylForLogin(id){
+  _loginStylId=id;
+  document.querySelectorAll('#stylLoginList .role-option').forEach(el=>el.classList.remove('selected'));
+  const el=document.getElementById('slogin-'+id);
+  if(el)el.classList.add('selected');
+  document.getElementById('stylLoginPwdWrap').style.display='block';
+  document.getElementById('stylLoginPwd').value='';
+  document.getElementById('stylLoginErr').textContent='';
+  setTimeout(()=>document.getElementById('stylLoginPwd').focus(),100);
+}
+
+async function doStylLogin(){
+  if(!_loginStylId){toast('請選擇設計師');return;}
+  const input=document.getElementById('stylLoginPwd').value;
+  const errEl=document.getElementById('stylLoginErr');
+
+  // First check localStorage
+  const localPwd=gs('lm_stylpwd_'+_loginStylId,'0000');
+  if(input===localPwd){
+    closeModal('mStylLogin');
+    switchMain('stylist',_loginStylId);
+    return;
+  }
+
+  // If localStorage doesn't match, try Firebase directly
+  if(window.FB){
+    try{
+      const doc=await window.FB.dbGet('config','stylpwd_'+_loginStylId);
+      const fbPwd=doc?.value||'0000';
+      // Update localStorage with latest password
+      ss('lm_stylpwd_'+_loginStylId, fbPwd);
+      if(input===fbPwd){
+        closeModal('mStylLogin');
+        switchMain('stylist',_loginStylId);
+        return;
+      }
+    }catch(e){
+      console.warn('Firebase pwd check failed:',e);
+    }
+  }
+
+  errEl.textContent='密碼錯誤，請再試一次';
+  document.getElementById('stylLoginPwd').value='';
+  document.getElementById('stylLoginPwd').focus();
+}
+
+function askAdminPwd(){
+  // If already in admin, just go front
+  if(document.getElementById('viewAdmin').style.display!=='none'){switchMain('front');return;}
+  document.getElementById('adminPwdInput').value='';
+  document.getElementById('adminPwdError').textContent='';
+  openModal('mAdminPwd');
+  setTimeout(()=>document.getElementById('adminPwdInput').focus(),100);
+}
+
+function verifyAdminPwd(){
+  const input=document.getElementById('adminPwdInput').value;
+  if(input===getAdminPwd()){
+    closeModal('mAdminPwd');
+    switchMain('admin');
+  }else{
+    document.getElementById('adminPwdError').textContent='密碼錯誤，請再試一次';
+    document.getElementById('adminPwdInput').value='';
+    document.getElementById('adminPwdInput').focus();
+  }
+}
+
+let _selectedRoleStylId=null;
+function openRoleSelector(){
+  const styls=getStyls();
+  _selectedRoleStylId=null;
+  // Build stylist role list
+  document.getElementById('stylRoleList').innerHTML=''; // unused
+  document.getElementById('roleStylPwdWrap').style.display='none';
+  document.getElementById('roleOwner').classList.remove('selected');
+  openModal('roleModal');
+}
+function selectRole(type, stylId){
+  _selectedRoleStylId=null;
+  // Clear all selections
+  document.querySelectorAll('.role-option').forEach(el=>el.classList.remove('selected'));
+  if(type==='owner'){
+    document.getElementById('roleOwner').classList.add('selected');
+    document.getElementById('roleStylPwdWrap').style.display='none';
+  }else{
+    const el=document.getElementById('roleStyl-'+stylId);
+    if(el)el.classList.add('selected');
+    _selectedRoleStylId=stylId;
+    document.getElementById('roleStylPwdWrap').style.display='block';
+    document.getElementById('roleStylPwdInput').value='';
+    document.getElementById('roleStylPwdError').textContent='';
+    setTimeout(()=>document.getElementById('roleStylPwdInput').focus(),100);
+  }
+}
+function getStylPwd(stylId){
+  return gs('lm_stylpwd_'+stylId,'0000');
+}
+function confirmRoleLogin(){
+  const ownerSelected=document.getElementById('roleOwner').classList.contains('selected');
+  if(ownerSelected){
+    closeModal('roleModal');
+    switchMain('admin');
+    return;
+  }
+  if(!_selectedRoleStylId){toast('請選擇身份');return;}
+  const input=document.getElementById('roleStylPwdInput').value;
+  if(input===getStylPwd(_selectedRoleStylId)){
+    closeModal('roleModal');
+    switchMain('stylist',_selectedRoleStylId);
+  }else{
+    document.getElementById('roleStylPwdError').textContent='密碼錯誤，請再試一次';
+    document.getElementById('roleStylPwdInput').value='';
+    document.getElementById('roleStylPwdInput').focus();
+  }
+}
+
+// ══ FRONT ══════════════════════════════════════════════════
+const today=new Date();
+let fst={step:1,svc:null,styl:null,date:null,time:null,name:'',phone:'',email:'',lineId:'',notes:'',calY:today.getFullYear(),calM:today.getMonth()};
+
+function applyShop(){
+  const s=getShop();
+  document.title=(s.name||'線上預約')+' — 線上預約';
+  const logoEl=document.getElementById('appLogo');
+  if(logoEl&&s.name) logoEl.textContent=s.name;
+  const footerName=document.getElementById('footerShopName');
+  if(footerName) footerName.textContent=s.name||'';
+  const nameEl=document.getElementById('frontShopName');
+  if(nameEl) nameEl.textContent=s.name||'';
+  const phoneEl=document.getElementById('frontShopPhone');
+  const phoneTxt=document.getElementById('frontShopPhoneText');
+  if(phoneEl&&s.phone){
+    phoneEl.style.display='flex';
+    phoneEl.href='tel:'+s.phone.replace(/[\-\s]/g,'');
+    if(phoneTxt) phoneTxt.textContent=s.phone;
+  }else if(phoneEl){phoneEl.style.display='none';}
+  const noticeEl=document.getElementById('holidayNotice');
+  if(noticeEl){
+    const today=fmt(new Date());
+    const hasContent=s.noticeTitle||s.noticeContent;
+    const inRange=(!s.noticeStart||today>=s.noticeStart)&&(!s.noticeEnd||today<=s.noticeEnd);
+    if(hasContent&&inRange){
+      noticeEl.style.display='block';
+      noticeEl.innerHTML=(s.noticeTitle?`<strong style="display:block;margin-bottom:4px;font-size:13px;letter-spacing:1px">${esc(s.noticeTitle)}</strong>`:'')+
+        (s.noticeContent?`<span>${esc(s.noticeContent).replace(/\n/g,'<br>')}</span>`:'');
+    }else{noticeEl.style.display='none';}
+  }
+  const sub=document.getElementById('frontWelcome');
+  if(sub&&s.welcome) sub.textContent=s.welcome;
+}
+
+function switchFrontTab(v){
+  document.querySelectorAll('.f-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&v==='book')||(i===1&&v==='mybk')));
+  document.getElementById('fViewBook').style.display=v==='book'?'block':'none';
+  document.getElementById('fViewMybk').style.display=v==='mybk'?'block':'none';
+  document.getElementById('progressWrap').style.display=v==='book'?'block':'none';
+  if(v==='mybk'){
+    document.getElementById('myBkList').innerHTML='';
+    document.getElementById('myBkPhone').value='';
+  }
+}
+
+function fGoStep(n){
+  document.querySelectorAll('.f-page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('fp'+n).classList.add('active');
+  fst.step=n;fUpdProg();
+  if(n===1)fRenderStyls();
+  if(n===2)fRenderSvcs();
+  if(n===5)fRenderSummary();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function fUpdProg(){
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('s'+i);if(!el)return;
+    el.classList.remove('active','done');
+    if(i===fst.step)el.classList.add('active');
+    else if(i<fst.step)el.classList.add('done');
+  }
+}
+
+function fRenderSvcs(){
+  const svcs=getSvcForStyl(fst.styl);
+  document.getElementById('svcGrid').innerHTML=svcs.map(s=>`
+    <div class="svc-card ${fst.svc?.id===s.id?'selected':''}" onclick="fSelSvc('${s.id}')">
+      <div class="svc-name">${esc(s.name)}</div>
+      <div class="svc-desc">${esc(s.desc)}</div>
+      <div class="svc-meta"><div class="svc-dur">⏱ ${esc(s.duration)}</div><div class="svc-price">${esc(s.price)}</div></div>
+    </div>`).join('');
+}
+function fSelSvc(id){
+  const svcs=getSvcForStyl(fst.styl);
+  // Match by string first (custom services), then by number (global services)
+  fst.svc=svcs.find(s=>String(s.id)===String(id))||svcs.find(s=>Number(s.id)===Number(id));
+  fRenderSvcs();document.getElementById('fbtn2').disabled=false;
+}
+
+function fRenderStyls(){
+  let html=`<div class="styl-card anyone-card ${fst.styl?.id===0?'selected':''}" onclick="fSelStyl(0)">
+    <div class="styl-avatar" style="font-size:16px">✦</div>
+    <div class="styl-name">不指定</div><div class="styl-title">由店家安排最合適人選</div>
+  </div>`;
+  html+=getStyls().map(s=>`
+    <div class="styl-card ${fst.styl?.id===s.id?'selected':''}" onclick="fSelStyl(${s.id})">
+      <div class="styl-card-photo">
+        ${s.photo?`<img src="${esc(s.photo)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:`<span style="font-size:22px">${esc(s.avatar)}</span>`}
+      </div>
+      <div class="styl-name">${esc(s.name)}</div><div class="styl-title">${esc(s.title)}</div>
+      <div class="styl-tags">${s.specialties.map(t=>`<span class="styl-tag">${esc(t)}</span>`).join('')}</div>
+      ${(s.bio||(s.portfolio&&s.portfolio.length))?`<div style="font-size:10px;color:#888;letter-spacing:1px;margin-top:8px;cursor:pointer;text-decoration:underline" onclick="event.stopPropagation();openStylProfile(${s.id})">查看簡介與作品</div>`:''}
+    </div>`).join('');
+  document.getElementById('stylGrid').innerHTML=html;
+}
+function fSelStyl(id){
+  fst.styl=id===0?{id:0,name:'不指定',holidays:[],services:[]}:getStyls().find(s=>Number(s.id)===Number(id));
+  fst.svc=null;fst.date=null;fst.time=null;
+  fRenderStyls();document.getElementById('fbtn1').disabled=false;
+  document.getElementById('fbtn3').disabled=true;fRenderCal();
+}
+
+function fRenderCal(){
+  const set=getSet();
+  const d=new Date(fst.calY,fst.calM,1);
+  const maxY=today.getFullYear()+(today.getMonth()+2>11?1:0);
+  const maxM=(today.getMonth()+2)%12;
+  const atMax=(fst.calY>maxY)||(fst.calY===maxY&&fst.calM>=maxM);
+  document.getElementById('fCalMon').textContent=`${fst.calY} 年 ${fst.calM+1} 月`;
+  // Disable next month button if at limit
+  const nextBtn=document.querySelector('.cal-nav-btn:last-child');
+  if(nextBtn) nextBtn.disabled=atMax;
+  const firstDay=d.getDay(),dInM=new Date(fst.calY,fst.calM+1,0).getDate(),todStr=fmt(today);
+  const hols=fst.styl?.holidays||[],closed=set.closedDays||[0];
+  // Max booking date = 2 months from today
+  const maxDate=new Date(today.getFullYear(),today.getMonth()+2,today.getDate());
+  const maxDateStr=fmt(maxDate);
+
+  let html='';
+  for(let i=0;i<firstDay;i++)html+='<div class="cal-day emp"></div>';
+  for(let day=1;day<=dInM;day++){
+    const ds=fmt(new Date(fst.calY,fst.calM,day));
+    const dow=new Date(fst.calY,fst.calM,day).getDay();
+    const isPast=ds<todStr,isOff=closed.includes(dow),isHol=hols.includes(ds);
+    const isTooFar=ds>maxDateStr;
+    const dis=isPast||isOff||isHol||isTooFar;
+    const cls=[(ds===todStr?'tod':''),dis?'dis':'',(ds===fst.date?'sel':''),(!isPast&&isHol?'hol':'')].filter(Boolean).join(' ');
+    html+=`<div class="cal-day ${cls}" id="fcd-${ds}" onclick="fSelDate('${ds}',${dis})">${day}</div>`;
+  }
+  document.getElementById('fCalDays').innerHTML=html;
+  // After rendering, add availability indicators
+  fAddCalDots();
+}
+async function fAddCalDots(){
+  if(!window.FB) return;
+  try{
+    const monthStr=`${fst.calY}-${String(fst.calM+1).padStart(2,'0')}`;
+    const snap=await window.FB.db.collection('bookings')
+      .where('status','==','confirmed').get();
+    const bks=snap.docs.map(d=>d.data()).filter(b=>b.date?.startsWith(monthStr));
+    const set=getSet();
+    const oh=toMins(set.openTime),ch=toMins(set.closeTime);
+    const slotMin=set.slotMinutes||30;
+    const totalSlots=Math.floor((ch-oh)/slotMin);
+    // Count bookings per date
+    const dateCnt={};
+    bks.forEach(b=>{dateCnt[b.date]=(dateCnt[b.date]||0)+1;});
+    Object.entries(dateCnt).forEach(([date,cnt])=>{
+      const el=document.getElementById('fcd-'+date);
+      if(!el)return;
+      const pct=cnt/Math.max(totalSlots,1);
+      const dot=document.createElement('div');
+      dot.style.cssText=`width:5px;height:5px;border-radius:50%;margin:1px auto 0;background:${pct>=0.8?'#E07070':pct>=0.5?'#FFA726':'#4CAF50'}`;
+      el.appendChild(dot);
+    });
+  }catch(e){console.warn('fAddCalDots:',e);}
+}
+function fChMonth(d){fst.calM+=d;if(fst.calM<0){fst.calM=11;fst.calY--;}if(fst.calM>11){fst.calM=0;fst.calY++;}fRenderCal();}
+function fSelDate(ds,dis){
+  if(dis)return;fst.date=ds;fst.time=null;document.getElementById('fbtn3').disabled=true;
+  fRenderCal();
+  // Show loading state
+  document.getElementById('fTimeTitle').textContent=dspDate(ds);
+  document.getElementById('fTimeContent').innerHTML='<div class="no-date-msg">載入中…</div>';
+  document.getElementById('fTimeContent').style.display='block';
+  fRenderSlots();
+}
+// Parse duration string like "60 分鐘", "90分鐘", "1.5小時" → minutes
+function parseDurMins(str){
+  if(!str)return 60;
+  const s=String(str);
+  const hrMatch=s.match(/([\d.]+)\s*小時/);
+  if(hrMatch)return Math.round(parseFloat(hrMatch[1])*60);
+  const minMatch=s.match(/([\d.]+)\s*分/);
+  if(minMatch)return Math.round(parseFloat(minMatch[1]));
+  const numOnly=s.match(/^(\d+)$/);
+  if(numOnly)return parseInt(numOnly[1]);
+  return 60;
+}
+// Convert "HH:MM" to minutes-since-midnight
+function toMins(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
+// Convert minutes-since-midnight to "HH:MM"
+function fromMins(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+
+async function fRenderSlots(){
+  const set=getSet();
+  const oh=toMins(set.openTime),ch=toMins(set.closeTime);
+  const slotMin=set.slotMinutes||30;
+
+  // Build all slot start times
+  const slots=[];let cur=oh;
+  while(cur+slotMin<=ch){slots.push(fromMins(cur));cur+=slotMin;}
+
+  // Current service duration in minutes
+  const svcMins=fst.svc?parseDurMins(fst.svc.duration):slotMin;
+
+  // Always fetch latest bookings from Firebase for accurate slot blocking
+  let bks=getBks();
+  if(window.FB){
+    try{
+      const snap=await window.FB.db.collection('bookings')
+        .where('date','==',fst.date)
+        .where('status','==','confirmed')
+        .get();
+      bks=snap.docs.map(d=>({...d.data(),id:d.id}));
+    }catch(e){
+      console.warn('Firebase slot check failed, using cache');
+    }
+  }
+
+  // Build blocked ranges from bookings for this stylist
+  const relevantBks=bks.filter(b=>
+    b.date===fst.date &&
+    b.status!=='cancelled' &&
+    (fst.styl?.id===0 || Number(b.stylistId)===Number(fst.styl?.id))
+  );
+
+  const blockedRanges=relevantBks.map(b=>{
+    const start=toMins(b.time);
+    // Use duration stored in booking first, fallback to service lookup
+    let dur=slotMin;
+    if(b.duration){
+      dur=parseDurMins(b.duration);
+    }else{
+      const bkSvc=getSvcs().find(s=>Number(s.id)===Number(b.serviceId));
+      dur=bkSvc?parseDurMins(bkSvc.duration):slotMin;
+    }
+    return{start,end:start+dur};
+  });
+
+  // Add manually blocked slots
+  const blockSlots=getBlocks().filter(b=>b.date===fst.date);
+  blockSlots.forEach(bl=>{blockedRanges.push({start:toMins(bl.start),end:toMins(bl.end)});});
+
+  function isBlocked(slotTime){
+    const sStart=toMins(slotTime);
+    const sEnd=sStart+svcMins;
+    if(sEnd>ch)return true;
+    for(const r of blockedRanges){
+      if(sStart<r.end && sEnd>r.start)return true;
+    }
+    return false;
+  }
+
+  const available=slots.filter(t=>!isBlocked(t)).length;
+  const total=slots.length;
+  document.getElementById('fTimeTitle').textContent=dspDate(fst.date);
+  document.getElementById('fTimeContent').innerHTML=
+    `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <span style="font-size:12px;color:var(--mid)">可預約時段</span>
+      <span style="font-size:12px;padding:3px 10px;border-radius:20px;${available>0?'background:#F0FAF4;color:#4CAF50;border:1px solid #C8E6C9':'background:#FFF3F3;color:var(--rose);border:1px solid #FFCDD2'}">
+        ${available>0?`剩餘 ${available} 個時段`:'本日已約滿'}
+      </span>
+    </div>
+    <div class="time-grid">`+
+    slots.map(t=>{
+      const tk=isBlocked(t),sel=fst.time===t;
+      return`<div class="t-slot ${tk?'taken':''} ${sel?'sel':''}" onclick="fSelTime('${t}',${tk})">${t}</div>`;
+    }).join('')+'</div>';
+}
+function fSelTime(t,tk){if(tk)return;fst.time=t;fRenderSlots();document.getElementById('fbtn3').disabled=false;}
+
+function fCheckForm(){document.getElementById('fbtn4').disabled=!(document.getElementById('fName').value.trim()&&document.getElementById('fPhone').value.trim());}
+
+function fRenderSummary(){
+  fst.name=document.getElementById('fName').value.trim();
+  fst.phone=document.getElementById('fPhone').value.trim();
+  fst.email=document.getElementById('fEmail').value.trim();
+  fst.lineId=document.getElementById('fLineId').value.trim();
+  fst.notes=document.getElementById('fNotes').value.trim();
+  document.getElementById('fSummary').innerHTML=`
+    <div class="sum-row"><span class="sum-lbl">服務項目</span><span class="sum-val">${esc(fst.svc.name)}</span></div>
+    <div class="sum-row"><span class="sum-lbl">指定設計師</span><span class="sum-val">${esc(fst.styl?.name||'不指定')}</span></div>
+    <div class="sum-row"><span class="sum-lbl">預約日期</span><span class="sum-val">${dspDate(fst.date)}</span></div>
+    <div class="sum-row"><span class="sum-lbl">預約時段</span><span class="sum-val">${fst.time}</span></div>
+    <div class="sum-row"><span class="sum-lbl">客戶姓名</span><span class="sum-val">${esc(fst.name)}</span></div>
+    <div class="sum-row"><span class="sum-lbl">聯絡電話</span><span class="sum-val">${esc(fst.phone)}</span></div>
+    ${fst.notes?`<div class="sum-row"><span class="sum-lbl">備註</span><span class="sum-val" style="font-size:12px">${esc(fst.notes)}</span></div>`:''}
+    <div class="sum-row sum-price"><span class="sum-lbl">費用</span><span class="sum-val">${esc(fst.svc.price)}</span></div>`;
+}
+
+async function fConfirm(){
+  // 1. Check network connectivity
+  if(!navigator.onLine){
+    alert('⚠️ 目前無網路連線\n\n無法完成預約，請確認網路連線後再試。\n（預約資料不會遺失，請重新填寫）');
+    return;
+  }
+  // 2. Check Firebase connection
+  if(!window.FB){
+    alert('⚠️ 系統尚未連線至資料庫\n\n請稍候幾秒後再試，或重新整理頁面。');
+    return;
+  }
+  // 3. Test Firebase with a quick read
+  try{
+    await window.FB.db.collection('config').doc('settings').get();
+  }catch(e){
+    alert('⚠️ 資料庫連線異常\n\n請重新整理頁面後再試。若問題持續，請直接電話預約。');
+    return;
+  }
+  // 4. Final check: verify slot is still available
+  try{
+    const snap=await window.FB.db.collection('bookings')
+      .where('date','==',fst.date)
+      .where('time','==',fst.time)
+      .where('status','==','confirmed')
+      .get();
+    const conflicts=snap.docs.filter(d=>{
+      const b=d.data();
+      return fst.styl?.id===0 || Number(b.stylistId)===Number(fst.styl?.id);
+    });
+    if(conflicts.length>0){
+      alert('抱歉！此時段剛被預約，請重新選擇時段。');
+      fGoStep(3);
+      await fRenderSlots();
+      return;
+    }
+  }catch(e){
+    console.warn('Conflict check failed:',e);
+  }
+  const id='LM'+Date.now().toString().slice(-6);
+  const bk={id,service:fst.svc.name,serviceId:fst.svc.id,price:fst.svc.price,duration:fst.svc.duration,
+    stylistId:fst.styl?.id||0,stylistName:fst.styl?.name||'不指定',
+    date:fst.date,time:fst.time,name:fst.name,phone:fst.phone,
+    email:fst.email,lineId:fst.lineId,notes:fst.notes,
+    status:'confirmed',createdAt:new Date().toISOString()};
+  // Save to Firebase — if this fails, stop and warn user
+  try{
+    await fbAddBooking(bk);
+  }catch(e){
+    console.error('Booking save failed:',e);
+    alert('⚠️ 預約儲存失敗\n\n請重新整理頁面後再試。若問題持續，請直接電話預約。');
+    return;
+  }
+  const set=getSet();
+  if(set.lineToken){
+    const shop=getShop();
+    const msg=`✦ ${shop.name} 新預約通知\n────────────\n客戶：${fst.name}\n電話：${fst.phone}\n服務：${fst.svc.name}\n設計師：${bk.stylistName}\n日期：${dspDate(fst.date)} ${fst.time}\n預約編號：#${id}`;
+    try{ await sendLine(set.lineToken,msg); }catch(e){ console.warn('Line failed:',e); }
+  }
+  document.getElementById('fBkId').textContent='#'+id;
+  renderVoucher(bk);
+  fGoStep(6);
+}
+
+async function sendLine(token,msg){
+  try{await fetch('https://notify-api.line.me/api/notify',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({message:msg})});}catch(e){console.warn(e)}
+}
+
+function fNewBooking(){
+  fst={step:1,svc:null,styl:null,date:null,time:null,name:'',phone:'',email:'',lineId:'',notes:'',calY:today.getFullYear(),calM:today.getMonth()};
+  ['fName','fPhone','fEmail','fLineId','fNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fbtn1','fbtn2','fbtn3','fbtn4'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=true;});
+  fRenderStyls();fRenderCal();fGoStep(1);
+}
+
+async function fSearchMyBk(){
+  const phone=document.getElementById('myBkPhone').value.trim();
+  const el=document.getElementById('myBkList');
+  if(!phone){
+    el.innerHTML='<div class="empty-state">請輸入電話號碼</div>';
+    return;
+  }
+  el.innerHTML='<div class="empty-state">查詢中…</div>';
+  const normPhone=phone.replace(/\D/g,'');
+
+  // Directly fetch from Firebase if available
+  if(window.FB){
+    try{
+      const snap=await window.FB.db.collection('bookings')
+        .orderBy('createdAt','desc').get();
+      const allBks=snap.docs.map(d=>({...d.data(),id:d.id}));
+      // Update cache
+      _cache.bks=allBks;
+      fRenderMyBk(phone);
+      return;
+    }catch(e){
+      console.warn('Firebase query failed, using cache:', e);
+    }
+  }
+  // Fallback to cache
+  fRenderMyBk(phone);
+}
+
+function fRenderMyBk(phone){
+  const el=document.getElementById('myBkList');
+  if(!phone){el.innerHTML='';return;}
+
+  // Normalize phone: remove ALL non-digit characters
+  const normPhone=phone.replace(/\D/g,'');
+  const list=getBks().filter(b=>{
+    const bPhone=(b.phone||'').replace(/\D/g,'');
+    // Match if either contains the other (handles partial matches too)
+    return (bPhone===normPhone || bPhone.includes(normPhone) || normPhone.includes(bPhone))
+      && normPhone.length>=8
+      && b.status!=='cancelled';
+  }).sort((a,b)=>b.date.localeCompare(a.date));
+
+  if(!list.length){
+    el.innerHTML='<div class="empty-state">查無此電話號碼的預約紀錄</div>';
+    return;
+  }
+  el.innerHTML=list.map(b=>`
+    <div class="bk-item">
+      <div class="bk-info">
+        <div class="bk-name">${esc(b.name)} <span style="font-size:11px;color:var(--light);margin-left:6px">${b.id}</span></div>
+        <div class="bk-details">${dspDate(b.date)} · ${b.time} · ${esc(b.stylistName)}</div>
+      </div>
+      <div class="bk-svc">${esc(b.service)}</div>
+      <button class="btn-cancel-sm" onclick="fRepeatBk('${b.id}')" style="border-color:var(--gold-light);color:var(--gold)">再次預約</button>
+      <button class="btn-cancel-sm" onclick="fCancelBk('${b.id}','${normPhone}')">取消</button>
+    </div>`).join('');
+}
+async function fCancelBk(id, phone){
+  if(!confirm('確定要取消此預約嗎？'))return;
+  await fbUpdateBooking(id,{status:'cancelled'});
+  if(phone) fRenderMyBk(phone);
+  else {
+    const p=document.getElementById('myBkPhone')?.value.trim();
+    if(p) fRenderMyBk(p);
+  }
+}
+
+// ══ ADMIN ══════════════════════════════════════════════════
+function aShowTab(id){
+  document.querySelectorAll('.a-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('atab-'+id).classList.add('active');
+  document.querySelectorAll('.a-sitem[data-tab]').forEach(s=>s.classList.toggle('active',s.dataset.tab===id));
+  const map={dashboard:aRenderDash,bookings:aRenderBk,calendar:aRenderCalView,stylschedule:aRenderCalView,customers:aRenderCustomers,stats:aRenderStats,shop:aRenderShop,stylists:aRenderStyls,hours:aRenderHours,services:aRenderSvcs,line:aRenderLine};
+  if(map[id])map[id]();
+}
+
+function aRenderDash(){
+  const bks=getBks(),todStr=fmt(new Date());
+  document.getElementById('aDashDate').textContent=dspDate(todStr);
+  const todBks=bks.filter(b=>b.date===todStr&&b.status==='confirmed');
+  const totalOk=bks.filter(b=>b.status==='confirmed').length;
+  const thisM=bks.filter(b=>b.status==='confirmed'&&b.date?.startsWith(todStr.slice(0,7))).length;
+  document.getElementById('aStats').innerHTML=`
+    <div class="a-stat"><div class="a-stat-lbl">今日預約</div><div class="a-stat-val">${todBks.length}</div><div class="a-stat-sub">筆</div></div>
+    <div class="a-stat"><div class="a-stat-lbl">本月預約</div><div class="a-stat-val">${thisM}</div><div class="a-stat-sub">筆</div></div>
+    <div class="a-stat"><div class="a-stat-lbl">有效預約</div><div class="a-stat-val">${totalOk}</div><div class="a-stat-sub">筆</div></div>
+    <div class="a-stat"><div class="a-stat-lbl">設計師</div><div class="a-stat-val">${getStyls().length}</div><div class="a-stat-sub">位</div></div>`;
+  document.getElementById('aTodayTbl').innerHTML=todBks.length
+    ?todBks.sort((a,b)=>a.time.localeCompare(b.time)).map(b=>`<tr><td>${b.time}</td><td>${esc(b.name)}</td><td>${esc(b.service)}</td><td>${esc(b.stylistName)}</td><td><span class="badge badge-ok"><span class="sdot sdot-g"></span>已確認</span></td></tr>`).join('')
+    :'<tr><td colspan="5" style="text-align:center;color:var(--alight);padding:24px">今日尚無預約</td></tr>';
+}
+
+let aBkFilter='all';
+function aSetFilter(f,btn){aBkFilter=f;document.querySelectorAll('.a-fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');aRenderBk();}
+function aRenderBk(){
+  const q=(document.getElementById('aBkSearch')?.value||'').toLowerCase();
+  let bks=getBks();
+  if(aBkFilter!=='all')bks=bks.filter(b=>b.status===aBkFilter);
+  if(q)bks=bks.filter(b=>b.name?.toLowerCase().includes(q)||b.phone?.includes(q));
+  document.getElementById('aBkTbl').innerHTML=bks.length
+    ?bks.map(b=>`<tr>
+      <td style="font-size:10px;color:var(--amid)">${b.id}</td>
+      <td>${esc(b.name)}</td><td>${esc(b.service)}</td><td>${esc(b.stylistName)}</td>
+      <td style="font-size:12px">${b.date} ${b.time}</td>
+      <td style="font-size:12px;color:var(--amid)">${esc(b.phone)}</td>
+      <td><span class="badge ${b.status==='confirmed'?'badge-ok':'badge-cancel'}">${b.status==='confirmed'?'已確認':'已取消'}</span></td>
+      <td>${b.status==='confirmed'?`<button class="a-btn a-btn-danger a-btn-sm" onclick="aCancelBk('${b.id}')">取消</button>`:''}</td>
+    </tr>`).join('')
+    :'<tr><td colspan="8" style="text-align:center;color:var(--alight);padding:24px">無預約紀錄</td></tr>';
+}
+async function aCancelBk(id){
+  if(!confirm('確定要取消此預約？'))return;
+  await fbUpdateBooking(id,{status:'cancelled'});
+  aRenderBk();toast('預約已取消');
+}
+
+function aOpenAddBk(){
+  document.getElementById('mBSvc').innerHTML=getSvcs().map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.price)}</option>`).join('');
+  document.getElementById('mBStyl').innerHTML=`<option value="0">不指定</option>`+getStyls().map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  ['mBName','mBPhone','mBNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mBDate').value='';document.getElementById('mBTime').value='';
+  openModal('mAddBk');
+}
+async function aSaveAddBk(){
+  const name=document.getElementById('mBName').value.trim(),phone=document.getElementById('mBPhone').value.trim();
+  if(!name||!phone){toast('請填寫姓名與電話');return;}
+  const svcId=parseInt(document.getElementById('mBSvc').value);
+  const stylId=parseInt(document.getElementById('mBStyl').value);
+  const svc=getSvcs().find(s=>s.id===svcId)||getSvcs()[0];
+  const styl=getStyls().find(s=>s.id===stylId);
+  const id='LM'+Date.now().toString().slice(-6);
+  const bk={id,service:svc.name,serviceId:svc.id,price:svc.price,duration:svc.duration,
+    stylistId:stylId,stylistName:styl?.name||'不指定',
+    date:document.getElementById('mBDate').value,time:document.getElementById('mBTime').value,
+    name,phone,notes:document.getElementById('mBNotes').value,status:'confirmed',createdAt:new Date().toISOString()};
+  await fbAddBooking(bk);
+  closeModal('mAddBk');aRenderBk();toast('預約已新增 ✦');
+}
+
+function aRenderShop(){
+  const s=getShop();
+  document.getElementById('sShopName').value=s.name;
+  document.getElementById('sShopTagline').value=s.tagline;
+  document.getElementById('sShopWelcome').value=s.welcome;
+  document.getElementById('sShopPhone').value=s.phone;
+  document.getElementById('sShopEmail').value=s.email;
+  document.getElementById('sShopAddr').value=s.address;
+  document.getElementById('sShopIg').value=s.ig;
+  document.getElementById('sShopFb').value=s.fb;
+  document.getElementById('sNoticeTitle').value=s.noticeTitle||'';
+  document.getElementById('sNoticeContent').value=s.noticeContent||'';
+  document.getElementById('sNoticeStart').value=s.noticeStart||'';
+  document.getElementById('sNoticeEnd').value=s.noticeEnd||'';
+}
+function aSaveShop(){
+  const s={
+    name:document.getElementById('sShopName').value.trim()||'Lumière',
+    tagline:document.getElementById('sShopTagline').value.trim(),
+    welcome:document.getElementById('sShopWelcome').value.trim(),
+    phone:document.getElementById('sShopPhone').value.trim(),
+    email:document.getElementById('sShopEmail').value.trim(),
+    address:document.getElementById('sShopAddr').value.trim(),
+    ig:document.getElementById('sShopIg').value.trim(),
+    fb:document.getElementById('sShopFb').value.trim(),
+    noticeTitle:document.getElementById('sNoticeTitle').value.trim(),
+    noticeContent:document.getElementById('sNoticeContent').value.trim(),
+    noticeStart:document.getElementById('sNoticeStart').value,
+    noticeEnd:document.getElementById('sNoticeEnd').value,
+  };
+  ss('lm_shop',s);_cache.shop=s;
+  if(window.FB)(async()=>{await window.FB.dbSet('config','shop',s);})();
+  // Handle password change
+  const np=document.getElementById('sNewPwd')?.value;
+  const cp=document.getElementById('sConfPwd')?.value;
+  if(np){
+    if(np!==cp){toast('兩次密碼不一致，請重新輸入');return;}
+    if(np.length<4){toast('密碼至少需要 4 位');return;}
+    ss('lm_adminpwd',np);
+    if(window.FB)(async()=>{await window.FB.dbSet('config','password',{value:np});})();
+    document.getElementById('sNewPwd').value='';
+    document.getElementById('sConfPwd').value='';
+    toast('店家資料與密碼已儲存 ✦');
+  }else{
+    toast('店家資料已儲存 ✦');
+  }
+}
+
+function aRenderStyls(){
+  document.getElementById('aSaGrid').innerHTML=getStyls().map(s=>`
+    <div class="sa-card">
+      <div class="sa-top"><div class="sa-avatar">${esc(s.avatar)}</div>
+      <div><div class="sa-name">${esc(s.name)}</div><div class="sa-title">${esc(s.title)}</div></div></div>
+      <div class="sa-specs">${s.specialties.map(t=>`<span class="sa-tag">${esc(t)}</span>`).join('')}</div>
+      <div class="sa-hols">${s.holidays.length?`休假：${s.holidays.slice(0,3).join('、')}${s.holidays.length>3?`…等${s.holidays.length}天`:''}`:' 無設定休假日'}</div>
+      <div class="sa-actions">
+        <button class="a-btn a-btn-outline a-btn-sm" onclick="aOpenStylist(${s.id})">編輯</button>
+        <button class="a-btn a-btn-danger a-btn-sm" onclick="aDelStylist(${s.id})">刪除</button>
+      </div>
+    </div>`).join('');
+}
+
+let mcSt={y:new Date().getFullYear(),m:new Date().getMonth(),hols:[],svcs:[]};
+function aOpenStylist(stylistId){
+  mcSt.hols=[];
+  if(stylistId!=null && stylistId!==''){
+    const sid=Number(stylistId);
+    const s=getStyls().find(x=>Number(x.id)===sid);
+    if(!s){toast('找不到設計師');return;}
+    document.getElementById('mSName').value=s.name;
+    document.getElementById('mSTitle').value=s.title;
+    document.getElementById('mSAvatar').value=s.avatar;
+    document.getElementById('mSSpec').value=s.specialties.join(',');
+    document.getElementById('mSPhoto').value=s.photo||'';
+    updateStylistPhotoPreview(s.photo||'');
+    // Show portfolio previews
+    const pp=document.getElementById('mSPortfolioPreviews');
+    if(pp) pp.innerHTML=(s.portfolio||[]).map(url=>`<div style="width:60px;height:60px;border-radius:4px;overflow:hidden;border:1px solid var(--aborder)"><img src="${url}" style="width:100%;height:100%;object-fit:cover"></div>`).join('');
+    document.getElementById('mSBio').value=s.bio||'';
+    document.getElementById('mSPortfolio').value=(s.portfolio||[]).join('\n');
+    document.getElementById('mSId').value=s.id;
+    mcSt.hols=[...s.holidays];
+    mcSt.svcs=[...(s.services||[])];
+    document.getElementById('mStylistTitle').innerHTML='編輯<em>設計師</em>';
+  }else{
+    ['mSName','mSTitle','mSAvatar','mSSpec','mSPhoto','mSBio','mSPortfolio'].forEach(fid=>document.getElementById(fid).value='');
+    updateStylistPhotoPreview('');
+    const pp2=document.getElementById('mSPortfolioPreviews');
+    if(pp2) pp2.innerHTML='';
+    document.getElementById('mSId').value='';
+    mcSt.svcs=[];
+    document.getElementById('mStylistTitle').innerHTML='新增<em>設計師</em>';
+  }
+  mcSt.y=new Date().getFullYear();mcSt.m=new Date().getMonth();
+  renderMiniCal();
+  renderStylistSvcList(mcSt.svcs);
+  openModal('mStylist');
+}
+function renderStylistSvcList(stylistSvcs){
+  // stylistSvcs: array of {id, name, price, duration, desc, enabled}
+  const globalSvcs=getSvcs();
+  const svcMap={};(stylistSvcs||[]).forEach(s=>svcMap[Number(s.id)]=s);
+  document.getElementById('mSSvcList').innerHTML=globalSvcs.map(gs=>{
+    const ov=svcMap[Number(gs.id)];
+    const en=ov?ov.enabled!==false:false;
+    return`<div class="styl-svc-row" id="ssrow-${gs.id}" style="background:var(--apanel2);border:1px solid var(--aborder);border-radius:4px;padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:${en?'10px':'0'}">
+        <input type="checkbox" id="ssc-${gs.id}" ${en?'checked':''} onchange="toggleStylistSvc(${gs.id})" style="width:14px;height:14px;accent-color:var(--gold);cursor:pointer">
+        <label for="ssc-${gs.id}" style="font-size:13px;color:var(--atext);cursor:pointer;flex:1">${esc(gs.name)}</label>
+        <span style="font-size:11px;color:var(--amid)">${esc(gs.price)}</span>
+      </div>
+      <div id="ssfields-${gs.id}" style="display:${en?'grid':'none'};grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+        <div class="a-field"><label>服務名稱</label><input type="text" id="ssname-${gs.id}" value="${esc(ov&&ov.enabled?ov.name:gs.name)}" placeholder="${esc(gs.name)}"></div>
+        <div class="a-field"><label>價格</label><input type="text" id="ssprice-${gs.id}" value="${esc(ov&&ov.enabled?ov.price:gs.price)}" placeholder="${esc(gs.price)}"></div>
+        <div class="a-field"><label>時長</label><input type="text" id="ssdur-${gs.id}" value="${esc(ov&&ov.enabled?ov.duration:gs.duration)}" placeholder="${esc(gs.duration)}"></div>
+        <div class="a-field"><label>說明</label><input type="text" id="ssdesc-${gs.id}" value="${esc(ov&&ov.enabled?ov.desc:gs.desc)}" placeholder="${esc(gs.desc)}"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleStylistSvc(id){
+  const cb=document.getElementById('ssc-'+id);
+  const fields=document.getElementById('ssfields-'+id);
+  fields.style.display=cb.checked?'grid':'none';
+}
+function collectStylistSvcs(){
+  const globalSvcs=getSvcs();
+  return globalSvcs.map(gs=>{
+    const cb=document.getElementById('ssc-'+gs.id);
+    const enabled=cb&&cb.checked;
+    return{
+      id:gs.id,
+      enabled,
+      name:enabled?(document.getElementById('ssname-'+gs.id)?.value.trim()||gs.name):gs.name,
+      price:enabled?(document.getElementById('ssprice-'+gs.id)?.value.trim()||gs.price):gs.price,
+      duration:enabled?(document.getElementById('ssdur-'+gs.id)?.value.trim()||gs.duration):gs.duration,
+      desc:enabled?(document.getElementById('ssdesc-'+gs.id)?.value.trim()||gs.desc):gs.desc,
+    };
+  });
+}
+
+function handleStylistPhotoUpload(input){
+  const preview=document.getElementById('mSPhotoPreview');
+  handleImageUpload(input, preview, (url)=>{
+    document.getElementById('mSPhoto').value=url;
+  });
+}
+function updateStylistPhotoPreview(url){
+  const el=document.getElementById('mSPhotoPreview');
+  if(url && url.startsWith('http')){
+    el.innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  }else{
+    el.innerHTML='預覽';
+  }
+}
+async function handlePortfolioUpload(input){
+  const files=Array.from(input.files).slice(0,6);
+  const previews=document.getElementById('mSPortfolioPreviews');
+  for(const file of files){
+    if(file.size>5*1024*1024){toast('圖片不能超過 5MB');continue;}
+    const div=document.createElement('div');
+    div.style.cssText='width:60px;height:60px;background:var(--apanel2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--amid);overflow:hidden';
+    div.textContent='上傳中…';
+    previews.appendChild(div);
+    try{
+      const path='portfolio/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9.]/g,'_');
+      const url=await uploadImage(file, path);
+      div.innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+      // Add to textarea
+      const ta=document.getElementById('mSPortfolio');
+      ta.value=(ta.value?ta.value+'\n':'')+url;
+      toast('圖片上傳成功 ✦');
+    }catch(e){
+      div.textContent='失敗';
+      toast('上傳失敗');
+    }
+  }
+  input.value='';
+}
+
+function renderMiniCal(){
+  const firstDay=new Date(mcSt.y,mcSt.m,1).getDay();
+  const dInM=new Date(mcSt.y,mcSt.m+1,0).getDate();
+  const todStr=fmt(new Date());
+  let html=`<div class="mini-cal"><div class="mc-hdr">
+    <button class="mc-nav" onclick="mcChMonth(-1)">‹</button>
+    <span class="mc-month">${mcSt.y}年${mcSt.m+1}月</span>
+    <button class="mc-nav" onclick="mcChMonth(1)">›</button>
+  </div>
+  <div class="mc-wkdays">${['日','一','二','三','四','五','六'].map(d=>`<span class="mc-wkday">${d}</span>`).join('')}</div>
+  <div class="mc-days">`;
+  for(let i=0;i<firstDay;i++)html+='<div class="mc-day mc-emp"></div>';
+  for(let day=1;day<=dInM;day++){
+    const ds=fmt(new Date(mcSt.y,mcSt.m,day));
+    const isH=mcSt.hols.includes(ds),isT=ds===todStr;
+    html+=`<div class="mc-day ${isH?'mc-hol':''} ${isT?'mc-tod':''}" onclick="mcTogHol('${ds}')">${day}</div>`;
+  }
+  html+='</div></div>';
+  document.getElementById('mSCalWrap').innerHTML=html;
+}
+function mcChMonth(d){mcSt.m+=d;if(mcSt.m<0){mcSt.m=11;mcSt.y--;}if(mcSt.m>11){mcSt.m=0;mcSt.y++;}renderMiniCal();}
+function mcTogHol(ds){const i=mcSt.hols.indexOf(ds);if(i>=0)mcSt.hols.splice(i,1);else mcSt.hols.push(ds);renderMiniCal();}
+
+function aSaveStylist(){
+  const name=document.getElementById('mSName').value.trim();
+  if(!name){toast('請輸入姓名');return;}
+  const styls=getStyls();const idVal=document.getElementById('mSId').value;
+  const portfolioRaw=document.getElementById('mSPortfolio').value;
+  const portfolio=portfolioRaw.split('\n').map(s=>s.trim()).filter(s=>s.startsWith('http')).slice(0,6);
+  const data={name,title:document.getElementById('mSTitle').value.trim()||'造型師',
+    avatar:document.getElementById('mSAvatar').value.trim().slice(0,2)||name[0],
+    specialties:document.getElementById('mSSpec').value.split(',').map(s=>s.trim()).filter(Boolean),
+    photo:document.getElementById('mSPhoto').value.trim(),
+    bio:document.getElementById('mSBio').value.trim(),
+    portfolio,
+    holidays:mcSt.hols,
+    services:collectStylistSvcs()};
+  if(idVal!==''){
+    const sid=Number(idVal);
+    const idx=styls.findIndex(s=>Number(s.id)===sid);
+    if(idx>=0){styls[idx]={...styls[idx],...data};}
+    else{data.id=sid;styls.push(data);}
+  }else{data.id=Date.now();styls.push(data);}
+  ss('lm_styls',styls);_cache.styls=styls;
+  if(window.FB)(async()=>{await fbSaveList('stylists',styls);})();
+  closeModal('mStylist');aRenderStyls();toast('設計師資料已儲存 ✦');
+}
+async function aDelStylist(id){
+  if(!confirm('確定要刪除此設計師？'))return;
+  const styls=getStyls().filter(x=>Number(x.id)!==Number(id));
+  ss('lm_styls',styls);_cache.styls=styls;
+  if(window.FB)await fbSaveList('stylists',styls);
+  aRenderStyls();toast('已刪除');
+}
+
+const DAY_NAMES=['日','一','二','三','四','五','六'];
+function aRenderHours(){
+  const s=getSet();
+  document.getElementById('aOpenTime').value=s.openTime;
+  document.getElementById('aCloseTime').value=s.closeTime;
+  document.getElementById('aSlotMin').value=s.slotMinutes;
+  document.getElementById('aHrsGrid').innerHTML=DAY_NAMES.map((d,i)=>{
+    const open=!s.closedDays.includes(i);
+    return`<div class="day-tog ${open?'open':''}" onclick="aTogDay(${i})"><div class="day-tog-name">週${d}</div><div class="day-tog-status">${open?'營業':'休息'}</div></div>`;
+  }).join('');
+}
+function aTogDay(dow){const s=getSet();const i=s.closedDays.indexOf(dow);if(i>=0)s.closedDays.splice(i,1);else s.closedDays.push(dow);ss('lm_set',s);aRenderHours();toast('已更新');}
+function aSaveSettings(){const s=getSet();s.openTime=document.getElementById('aOpenTime').value||s.openTime;s.closeTime=document.getElementById('aCloseTime').value||s.closeTime;s.slotMinutes=parseInt(document.getElementById('aSlotMin').value)||30;ss('lm_set',s);_cache.set=s;if(window.FB)(async()=>{await window.FB.dbSet('config','settings',s);})();toast('設定已儲存');}
+
+function aRenderSvcs(){
+  document.getElementById('aSvcTbl').innerHTML=getSvcs().map(s=>`<tr>
+    <td><strong>${esc(s.name)}</strong></td>
+    <td style="color:var(--amid);font-size:12px">${esc(s.desc)}</td>
+    <td style="font-size:12px;color:var(--amid)">${esc(s.duration)}</td>
+    <td style="color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:15px">${esc(s.price)}</td>
+    <td><button class="a-btn a-btn-outline a-btn-sm" onclick="aOpenSvc(${s.id})" style="margin-right:6px">編輯</button><button class="a-btn a-btn-danger a-btn-sm" onclick="aDelSvc(${s.id})">刪除</button></td>
+  </tr>`).join('');
+}
+function aOpenSvc(svcId){
+  if(svcId!=null && svcId!==''){
+    const sid=Number(svcId);
+    const s=getSvcs().find(x=>Number(x.id)===sid);
+    if(!s){toast('找不到服務');return;}
+    document.getElementById('mVName').value=s.name;
+    document.getElementById('mVPrice').value=s.price;
+    document.getElementById('mVDur').value=s.duration;
+    document.getElementById('mVDesc').value=s.desc;
+    document.getElementById('mVId').value=s.id;
+    document.getElementById('mSvcTitle').innerHTML='編輯<em>服務項目</em>';
+  }else{
+    ['mVName','mVPrice','mVDur','mVDesc'].forEach(fid=>document.getElementById(fid).value='');
+    document.getElementById('mVId').value='';
+    document.getElementById('mSvcTitle').innerHTML='新增<em>服務項目</em>';
+  }
+  openModal('mSvc');
+}
+function aSaveSvc(){
+  const name=document.getElementById('mVName').value.trim();
+  if(!name){toast('請輸入服務名稱');return;}
+  const svcs=getSvcs();
+  const idVal=document.getElementById('mVId').value;
+  const data={name,price:document.getElementById('mVPrice').value.trim(),duration:document.getElementById('mVDur').value.trim(),desc:document.getElementById('mVDesc').value.trim()};
+  if(idVal!==''){
+    const sid=Number(idVal);
+    const idx=svcs.findIndex(s=>Number(s.id)===sid);
+    if(idx>=0){svcs[idx]={...svcs[idx],...data};}
+    else{data.id=sid;svcs.push(data);}
+  }else{
+    data.id=Date.now();svcs.push(data);
+  }
+  ss('lm_svcs',svcs);_cache.svcs=svcs;
+  if(window.FB)(async()=>{await fbSaveList('services',svcs);})();
+  closeModal('mSvc');aRenderSvcs();toast('服務項目已儲存');
+}
+function aDelSvc(id){
+  if(!confirm('確定要刪除此服務？'))return;
+  ss('lm_svcs',getSvcs().filter(x=>Number(x.id)!==Number(id)));
+  aRenderSvcs();toast('已刪除');
+}
+
+function aRenderLine(){
+  const s=getSet();document.getElementById('aLineToken').value=s.lineToken||'';aUpdateLineStatus();
+}
+function aUpdateLineStatus(){
+  const val=document.getElementById('aLineToken').value.trim();
+  const el=document.getElementById('aLineStatus');
+  el.className='line-status '+(val?'line-ok':'line-no');
+  el.innerHTML=val?'<span class="sdot sdot-g"></span>已設定 Token':'<span class="sdot sdot-r"></span>尚未設定';
+}
+function aSaveLineToken(){const s=getSet();s.lineToken=document.getElementById('aLineToken').value.trim();ss('lm_set',s);aUpdateLineStatus();toast('Line Token 已儲存');}
+async function aTestLine(){
+  const s=getSet();if(!s.lineToken){toast('請先儲存 Token');return;}
+  const shop=getShop();
+  const msg=`✦ ${shop.name} 測試通知\n────────────\n這是一則測試訊息。\n時間：${new Date().toLocaleString('zh-TW')}`;
+  try{await sendLine(s.lineToken,msg);toast('測試通知已發送！');}catch{toast('發送失敗，請確認 Token');}
+}
+
+// ══ STYLIST DASHBOARD ═════════════════════════════════════
+let _sdStylId=null;
+let _sdCalState={y:new Date().getFullYear(),m:new Date().getMonth()};
+let _sdHolState={y:new Date().getFullYear(),m:new Date().getMonth(),hols:[]};
+
+function sdInit(stylId){
+  _sdStylId=stylId;
+  const s=getStyls().find(x=>Number(x.id)===Number(stylId));
+  if(!s)return;
+  // Sidebar info
+  const avatarEl=document.getElementById('sdSideAvatar');
+  avatarEl.innerHTML=s.photo?`<img src="${esc(s.photo)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:`<span>${esc(s.avatar)}</span>`;
+  document.getElementById('sdSideName').textContent=s.name;
+  document.getElementById('sdSideTitle').textContent=s.title;
+  // Show bookings tab
+  sdShowTab('bookings');
+}
+
+function sdShowTab(id){
+  document.querySelectorAll('.sd-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('sdtab-'+id).classList.add('active');
+  document.querySelectorAll('.a-sitem[data-sd]').forEach(s=>s.classList.toggle('active',s.dataset.sd===id));
+  if(id==='bookings')sdRenderBookings();
+  if(id==='holidays')sdRenderHolCal();
+  if(id==='services')sdRenderServices();
+  if(id==='profile')sdRenderProfile();
+}
+
+function sdCalChMonth(d){
+  _sdCalState.m+=d;
+  if(_sdCalState.m<0){_sdCalState.m=11;_sdCalState.y--;}
+  if(_sdCalState.m>11){_sdCalState.m=0;_sdCalState.y++;}
+  sdRenderBookings();
+}
+
+function sdRenderBookings(){
+  renderSdBkCal();
+  const {y,m}=_sdCalState;
+  const monthStr=y+'-'+String(m+1).padStart(2,'0');
+  let bks=getBks().filter(b=>
+    Number(b.stylistId)===Number(_sdStylId)&&
+    b.status==='confirmed'&&
+    b.date?.startsWith(monthStr)
+  ).sort((a,b)=>a.date===b.date?a.time.localeCompare(b.time):a.date.localeCompare(b.date));
+
+  // Stats (always full month)
+  const today=fmt(new Date());
+  const todayCnt=bks.filter(b=>b.date===today).length;
+  document.getElementById('sdStats').innerHTML=`
+    <div class="a-stat"><div class="a-stat-lbl">本月預約</div><div class="a-stat-val">${bks.length}</div><div class="a-stat-sub">筆</div></div>
+    <div class="a-stat"><div class="a-stat-lbl">今日預約</div><div class="a-stat-val">${todayCnt}</div><div class="a-stat-sub">筆</div></div>
+    <div class="a-stat"><div class="a-stat-lbl">客戶數</div><div class="a-stat-val">${new Set(bks.map(b=>b.phone)).size}</div><div class="a-stat-sub">位</div></div>`;
+
+  // Filter by selected date
+  if(_sdBkSel) bks=bks.filter(b=>b.date===_sdBkSel);
+
+  if(!bks.length){
+    document.getElementById('sdBookingList').innerHTML='<div style="color:var(--alight);font-size:13px;padding:24px 0;text-align:center">本月尚無預約</div>';
+    return;
+  }
+  // Group by date
+  const byDate={};
+  bks.forEach(b=>{if(!byDate[b.date])byDate[b.date]=[];byDate[b.date].push(b);});
+  document.getElementById('sdBookingList').innerHTML=Object.entries(byDate).map(([date,dayBks])=>`
+    <div style="margin-bottom:20px">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--amid);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--aborder)">${dspDate(date)}</div>
+      ${dayBks.map(b=>`
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;margin-bottom:6px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);width:50px;flex-shrink:0">${b.time}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;color:var(--atext)">${esc(b.name)} <span style="font-size:11px;color:var(--amid)">${esc(b.phone)}</span></div>
+            <div style="font-size:11px;color:var(--amid)">${esc(b.service)}${b.notes?` · ${esc(b.notes)}`:''}</div>
+          </div>
+          <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold)">${esc(b.price)}</span>
+          <button class="a-btn a-btn-danger a-btn-sm" onclick="sdCancelBk('${b.id}')">取消</button>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+async function sdCancelBk(id){
+  if(!confirm('確定要取消此預約？'))return;
+  await fbUpdateBooking(id,{status:'cancelled'});
+  sdRenderBookings();toast('預約已取消');
+}
+
+// Holiday calendar for stylist
+function sdRenderHolCal(){
+  const s=getStyls().find(x=>Number(x.id)===Number(_sdStylId));
+  _sdHolState.hols=[...(s?.holidays||[])];
+  _sdHolState.y=new Date().getFullYear();
+  _sdHolState.m=new Date().getMonth();
+  renderSdHolCalMonth();
+}
+function renderSdHolCalMonth(){
+  const {y,m,hols}=_sdHolState;
+  const firstDay=new Date(y,m,1).getDay();
+  const dInM=new Date(y,m+1,0).getDate();
+  const todStr=fmt(new Date());
+  let html=`<div style="background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;padding:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <button class="a-btn a-btn-outline" onclick="sdHolChMonth(-1)">‹</button>
+      <span style="font-size:15px;color:var(--atext)">${y}年${m+1}月</span>
+      <button class="a-btn a-btn-outline" onclick="sdHolChMonth(1)">›</button>
+    </div>
+    <div class="mc-wkdays">${['日','一','二','三','四','五','六'].map(d=>`<span class="mc-wkday">${d}</span>`).join('')}</div>
+    <div class="mc-days">`;
+  for(let i=0;i<firstDay;i++)html+='<div class="mc-day mc-emp"></div>';
+  for(let day=1;day<=dInM;day++){
+    const ds=fmt(new Date(y,m,day));
+    const isH=hols.includes(ds),isT=ds===todStr,isPast=ds<todStr;
+    html+=`<div class="mc-day ${isH?'mc-hol':''} ${isT?'mc-tod':''} ${isPast?'mc-dis':''}" onclick="sdTogHol('${ds}',${isPast})">${day}</div>`;
+  }
+  html+='</div></div>';
+  document.getElementById('sdHolCalWrap').innerHTML=html;
+}
+function sdHolChMonth(d){_sdHolState.m+=d;if(_sdHolState.m<0){_sdHolState.m=11;_sdHolState.y--;}if(_sdHolState.m>11){_sdHolState.m=0;_sdHolState.y++;}renderSdHolCalMonth();}
+function sdTogHol(ds,isPast){if(isPast)return;const i=_sdHolState.hols.indexOf(ds);if(i>=0)_sdHolState.hols.splice(i,1);else _sdHolState.hols.push(ds);renderSdHolCalMonth();}
+async function sdSaveHolidays(){
+  const styls=getStyls();
+  const idx=styls.findIndex(x=>Number(x.id)===Number(_sdStylId));
+  if(idx<0)return;
+  styls[idx].holidays=[..._sdHolState.hols];
+  ss('lm_styls',styls);_cache.styls=styls;
+  if(window.FB)(async()=>{await fbSaveList('stylists',styls);})();
+  toast('休假日已儲存 ✦');
+}
+
+// Stylist services
+function sdRenderServices(){
+  const s=getStyls().find(x=>Number(x.id)===Number(_sdStylId));
+  const globalSvcs=getSvcs();
+  const svcMap={};(s?.services||[]).forEach(sv=>svcMap[Number(sv.id)]=sv);
+  sdRenderCustomSvcs();
+  document.getElementById('sdSvcList').innerHTML=globalSvcs.map(gs=>{
+    const ov=svcMap[Number(gs.id)];
+    const en=ov?ov.enabled!==false:false;
+    return`<div style="background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:${en?'10px':'0'}">
+        <input type="checkbox" id="sdsc-${gs.id}" ${en?'checked':''} onchange="sdTogSvc(${gs.id})" style="width:14px;height:14px;accent-color:var(--gold);cursor:pointer">
+        <label for="sdsc-${gs.id}" style="font-size:13px;color:var(--atext);cursor:pointer;flex:1">${esc(gs.name)}</label>
+        <span style="font-size:11px;color:var(--amid)">${esc(gs.price)}</span>
+      </div>
+      <div id="sdsfields-${gs.id}" style="display:${en?'grid':'none'};grid-template-columns:1fr 1fr;gap:8px">
+        <div class="a-field"><label>名稱</label><input type="text" id="sdsname-${gs.id}" value="${esc(ov&&ov.enabled?ov.name:gs.name)}" placeholder="${esc(gs.name)}"></div>
+        <div class="a-field"><label>價格</label><input type="text" id="sdsprice-${gs.id}" value="${esc(ov&&ov.enabled?ov.price:gs.price)}" placeholder="${esc(gs.price)}"></div>
+        <div class="a-field"><label>時長</label><input type="text" id="sdsdur-${gs.id}" value="${esc(ov&&ov.enabled?ov.duration:gs.duration)}" placeholder="${esc(gs.duration)}"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function sdTogSvc(id){const cb=document.getElementById('sdsc-'+id);document.getElementById('sdsfields-'+id).style.display=cb.checked?'grid':'none';}
+function sdOpenAddSvc(){
+  document.getElementById('sdAddSvcForm').style.display='block';
+  ['sdNewSvcName','sdNewSvcPrice','sdNewSvcDur','sdNewSvcDesc'].forEach(id=>document.getElementById(id).value='');
+  setTimeout(()=>document.getElementById('sdNewSvcName').focus(),100);
+}
+function sdCloseAddSvc(){
+  document.getElementById('sdAddSvcForm').style.display='none';
+}
+function sdConfirmAddSvc(){
+  const name=document.getElementById('sdNewSvcName').value.trim();
+  const price=document.getElementById('sdNewSvcPrice').value.trim();
+  const dur=document.getElementById('sdNewSvcDur').value.trim();
+  const desc=document.getElementById('sdNewSvcDesc').value.trim();
+  if(!name||!price||!dur){toast('請填寫名稱、價格和時長');return;}
+  const styls=getStyls();
+  const idx=styls.findIndex(x=>Number(x.id)===Number(_sdStylId));
+  if(idx<0)return;
+  if(!styls[idx].customServices) styls[idx].customServices=[];
+  styls[idx].customServices.push({id:'cs_'+Date.now(),name,price,duration:dur,desc,enabled:true,custom:true});
+  ss('lm_styls',styls);_cache.styls=styls;
+  if(window.FB)(async()=>{await fbSaveList('stylists',styls);})();
+  sdCloseAddSvc();
+  sdRenderCustomSvcs();
+  toast('專屬服務已新增 ✦');
+}
+function sdRenderCustomSvcs(){
+  const s=getStyls().find(x=>Number(x.id)===Number(_sdStylId));
+  const customs=(s?.customServices||[]);
+  const el=document.getElementById('sdCustomSvcList');
+  if(!el)return;
+  if(!customs.length){el.innerHTML='';return;}
+  el.innerHTML=`<div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--amid);margin-bottom:10px;font-weight:600;padding-top:12px;border-top:1px solid var(--aborder)">我的專屬服務</div>`+
+  customs.map(sv=>`
+    <div style="background:var(--bg-card);border:1px solid var(--aborder);border-radius:4px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+      <div style="flex:1">
+        <div style="font-size:14px;color:var(--atext);font-weight:500">${esc(sv.name)}</div>
+        <div style="font-size:12px;color:var(--amid);margin-top:2px">${esc(sv.price)} · ${esc(sv.duration)}${sv.desc?` · ${esc(sv.desc)}`:''}</div>
+      </div>
+      <button class="a-btn a-btn-danger a-btn-sm" onclick="sdDelCustomSvc('${sv.id}')">刪除</button>
+    </div>`).join('');
+}
+async function sdDelCustomSvc(svcId){
+  if(!confirm('確定刪除此專屬服務？'))return;
+  const styls=getStyls();
+  const idx=styls.findIndex(x=>Number(x.id)===Number(_sdStylId));
+  if(idx<0)return;
+  styls[idx].customServices=(styls[idx].customServices||[]).filter(s=>s.id!==svcId);
+  ss('lm_styls',styls);_cache.styls=styls;
+  if(window.FB)(async()=>{await fbSaveList('stylists',styls);})();
+  sdRenderCustomSvcs();
+  toast('已刪除');
+}
+
+async function sdSaveServices(){
+  const globalSvcs=getSvcs();
+  const services=globalSvcs.map(gs=>{
+    const cb=document.getElementById('sdsc-'+gs.id);
+    const enabled=cb&&cb.checked;
+    return{id:gs.id,enabled,
+      name:enabled?(document.getElementById('sdsname-'+gs.id)?.value.trim()||gs.name):gs.name,
+      price:enabled?(document.getElementById('sdsprice-'+gs.id)?.value.trim()||gs.price):gs.price,
+      duration:enabled?(document.getElementById('sdsdur-'+gs.id)?.value.trim()||gs.duration):gs.duration,
+      desc:gs.desc};
+  });
+  const styls=getStyls();
+  const idx=styls.findIndex(x=>Number(x.id)===Number(_sdStylId));
+  if(idx<0)return;
+  styls[idx].services=services;
+  ss('lm_styls',styls);_cache.styls=styls;
+  if(window.FB)(async()=>{await fbSaveList('stylists',styls);})();
+  toast('服務設定已儲存 ✦');
+}
+
+// Stylist profile
+function handleSdPhotoUpload(input){
+  const preview=document.getElementById('sdPhotoPreview');
+  handleImageUpload(input, preview, (url)=>{
+    document.getElementById('sdPhoto').value=url;
+  });
+}
+function updateSdPhotoPreview(url){
+  const el=document.getElementById('sdPhotoPreview');
+  if(url&&url.startsWith('http')){
+    el.innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  }else{
+    el.innerHTML='預覽';
+  }
+}
+async function handleSdPortfolioUpload(input){
+  const files=Array.from(input.files).slice(0,6);
+  const previews=document.getElementById('sdPortfolioPreviews');
+  for(const file of files){
+    if(file.size>5*1024*1024){toast('圖片不能超過 5MB');continue;}
+    const div=document.createElement('div');
+    div.style.cssText='width:56px;height:56px;background:var(--apanel2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--amid);overflow:hidden';
+    div.textContent='上傳中…';
+    previews.appendChild(div);
+    try{
+      const path='portfolio/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9.]/g,'_');
+      const url=await uploadImage(file, path);
+      div.innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+      const ta=document.getElementById('sdPortfolio');
+      ta.value=(ta.value?ta.value+'\n':'')+url;
+      toast('上傳成功 ✦');
+    }catch(e){div.textContent='失敗';toast('上傳失敗');}
+  }
+  input.value='';
+}
+
+function sdRenderProfile(){
+  const s=getStyls().find(x=>Number(x.id)===Number(_sdStylId));
+  if(!s)return;
+  document.getElementById('sdPhoto').value=s.photo||'';
+  updateSdPhotoPreview(s.photo||'');
+  const spp=document.getElementById('sdPortfolioPreviews');
+  if(spp) spp.innerHTML=(s.portfolio||[]).map(url=>`<div style="width:56px;height:56px;border-radius:4px;overflow:hidden;border:1px solid var(--aborder)"><img src="${url}" style="width:100%;height:100%;object-fit:cover"></div>`).join('');
+  document.getElementById('sdTitle2').value=s.title||'';
+  document.getElementById('sdBio').value=s.bio||'';
+  document.getElementById('sdPortfolio').value=(s.portfolio||[]).join('\n');
+  document.getElementById('sdNewPwd').value='';
+  document.getElementById('sdConfPwd').value='';
+}
+async function sdSaveProfile(){
+  const styls=getStyls();
+  const idx=styls.findIndex(x=>Number(x.id)===Number(_sdStylId));
+  if(idx<0)return;
+  styls[idx].photo=document.getElementById('sdPhoto').value.trim();
+  styls[idx].title=document.getElementById('sdTitle2').value.trim()||styls[idx].title;
+  styls[idx].bio=document.getElementById('sdBio').value.trim();
+  const portRaw=document.getElementById('sdPortfolio').value;
+  styls[idx].portfolio=portRaw.split('\n').map(s=>s.trim()).filter(s=>s.startsWith('http')).slice(0,6);
+  // Password
+  const np=document.getElementById('sdNewPwd').value;
+  const cp=document.getElementById('sdConfPwd').value;
+  if(np){
+    if(np!==cp){toast('兩次密碼不一致');return;}
+    if(np.length<4){toast('密碼至少4位');return;}
+    ss('lm_stylpwd_'+_sdStylId,np);
+    if(window.FB)await window.FB.dbSet('config','stylpwd_'+_sdStylId,{value:np});
+  }
+  ss('lm_styls',styls);_cache.styls=styls;
+  if(window.FB)(async()=>{await fbSaveList('stylists',styls);})();
+  toast('個人資料已儲存 ✦');
+}
+
+// ══ CALENDAR VIEW ═════════════════════════════════════════
+let aCalState={y:new Date().getFullYear(),m:new Date().getMonth(),selDate:null,stylId:''};
+function aCalChMonth(d){aCalState.m+=d;if(aCalState.m<0){aCalState.m=11;aCalState.y--;}if(aCalState.m>11){aCalState.m=0;aCalState.y++;}aRenderCalView();}
+function aRenderCalView(){
+  const {y,m}=aCalState;
+  document.getElementById('aCalTitle').textContent=y+'年'+(m+1)+'月';
+  // Populate stylist dropdown
+  const stylSel=document.getElementById('aCalStylFilter');
+  const prevVal=stylSel.value;
+  const styls=getStyls();
+  stylSel.innerHTML='<option value="">全部設計師</option>'+styls.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  stylSel.value=prevVal;
+  aCalState.stylId=stylSel.value;
+  const filterStylId=aCalState.stylId;
+
+  const allBks=getBks();const blocks=getBlocks();
+  const firstDay=new Date(y,m,1).getDay();
+  const dInM=new Date(y,m+1,0).getDate();
+  const todStr=fmt(new Date());
+  let html='';
+  for(let i=0;i<firstDay;i++)html+=`<div style="border:1px solid var(--aborder);min-height:80px;padding:6px;opacity:0.3"></div>`;
+  for(let day=1;day<=dInM;day++){
+    const ds=fmt(new Date(y,m,day));
+    const bks=allBks;
+    const dayBks=bks.filter(b=>b.date===ds&&b.status==='confirmed'&&(!filterStylId||String(b.stylistId)===String(filterStylId)));
+    const dayBlocks=blocks.filter(b=>b.date===ds);
+    const isToday=ds===todStr;
+    const isSel=ds===aCalState.selDate;
+    html+=`<div onclick="aCalSelectDay('${ds}')" style="border:1px solid ${isSel?'var(--gold)':isToday?'var(--agold-border)':'var(--aborder)'};min-height:80px;padding:6px;cursor:pointer;background:${isSel?'var(--agold-dim)':isToday?'rgba(201,169,110,0.05)':'transparent'};transition:all 0.15s" onmouseover="this.style.background='var(--agold-dim)'" onmouseout="this.style.background='${isSel?'var(--agold-dim)':isToday?'rgba(201,169,110,0.05)':'transparent'}'">
+      <div style="font-size:12px;color:${isToday?'var(--gold)':'var(--atext)'};font-weight:${isToday?'500':'300'};margin-bottom:4px">${day}</div>
+      ${dayBks.slice(0,3).map(b=>`<div style="font-size:9px;background:var(--agold-dim);border:1px solid var(--agold-border);border-radius:2px;padding:1px 4px;margin-bottom:2px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.time} ${esc(b.name)}</div>`).join('')}
+      ${dayBks.length>3?`<div style="font-size:9px;color:var(--amid)">+${dayBks.length-3} 筆</div>`:''}
+      ${dayBlocks.length>0?`<div style="font-size:9px;background:rgba(224,112,112,0.15);border:1px solid rgba(224,112,112,0.3);border-radius:2px;padding:1px 4px;color:var(--red)">封鎖 ${dayBlocks.length}</div>`:''}
+    </div>`;
+  }
+  document.getElementById('aCalGrid').innerHTML=html;
+  if(aCalState.selDate)aCalShowDayDetail(aCalState.selDate);
+}
+function aCalSelectDay(ds){
+  aCalState.selDate=ds;aRenderCalView();
+  const detail=document.getElementById('aCalDetail');
+  detail.style.display='block';
+  aCalShowDayDetail(ds);
+  // Smooth scroll to detail
+  setTimeout(()=>detail.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+}
+function aCalShowDayDetail(ds){
+  const filterStylId=aCalState.stylId;
+  const bks=getBks().filter(b=>b.date===ds&&b.status==='confirmed'&&(!filterStylId||String(b.stylistId)===String(filterStylId))).sort((a,b)=>a.time.localeCompare(b.time));
+  const blocks=getBlocks().filter(b=>b.date===ds);
+  document.getElementById('aCalDetailTitle').textContent=dspDate(ds);
+  document.getElementById('mBlkDate').value=ds;
+  let html='';
+  if(!bks.length&&!blocks.length){html='<div style="color:var(--alight);font-size:13px;padding:12px 0">此日無預約</div>';}
+  bks.forEach(b=>{
+    html+=`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--aborder)">
+      <div style="font-size:13px;color:var(--gold);font-family:'Cormorant Garamond',serif;width:48px;flex-shrink:0">${b.time}</div>
+      <div style="flex:1"><div style="font-size:13px;color:var(--atext)">${esc(b.name)} <span style="color:var(--amid);font-size:11px">${esc(b.phone)}</span></div>
+      <div style="font-size:11px;color:var(--amid)">${esc(b.service)} · ${esc(b.stylistName)}</div></div>
+      <button class="a-btn a-btn-danger a-btn-sm" onclick="aCancelBk('${b.id}');aCalShowDayDetail('${ds}')">取消</button>
+    </div>`;
+  });
+  blocks.forEach(bl=>{
+    html+=`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--aborder)">
+      <div style="font-size:12px;color:var(--red);width:48px;flex-shrink:0">${bl.start}–${bl.end}</div>
+      <div style="flex:1;font-size:12px;color:var(--red)">封鎖時段 ${bl.reason?'· '+esc(bl.reason):''}</div>
+      <button class="a-btn a-btn-danger a-btn-sm" onclick="aDelBlock('${bl.id}');aCalShowDayDetail('${ds}')">刪除</button>
+    </div>`;
+  });
+  document.getElementById('aCalDetailList').innerHTML=html;
+}
+
+// ══ STYLIST SCHEDULE ══════════════════════════════════════
+let aSSState={y:new Date().getFullYear(),m:new Date().getMonth(),stylId:null};
+function aSSChMonth(d){aSSState.m+=d;if(aSSState.m<0){aSSState.m=11;aSSState.y--;}if(aSSState.m>11){aSSState.m=0;aSSState.y++;}aRenderStylSchedule();}
+
+function aRenderStylSchedule(){
+  const {y,m,stylId}=aSSState;
+  if(document.getElementById('aSSTitle'))document.getElementById('aSSTitle').textContent=y+'年'+(m+1)+'月';
+  const styls=getStyls();
+  // Render stylist tab buttons
+  const tabsEl=document.getElementById('aSSStylTabs');
+  tabsEl.innerHTML=styls.map(s=>`
+    <button onclick="aSSSelStyl(${s.id})" style="display:flex;align-items:center;gap:8px;padding:8px 16px;border:1.5px solid ${stylId===s.id?'var(--gold)':'var(--aborder)'};background:${stylId===s.id?'var(--agold-dim)':'transparent'};border-radius:4px;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--agold-dim);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--gold)">${esc(s.avatar)}</div>
+      <span style="font-size:12px;color:${stylId===s.id?'var(--gold)':'var(--amid)'}">${esc(s.name)}</span>
+    </button>`).join('');
+
+  if(!stylId){
+    document.getElementById('aSSInfo').style.display='none';
+    document.getElementById('aSSList').innerHTML='<div style="color:var(--alight);font-size:13px;padding:24px 0;text-align:center">請選擇設計師查看排班</div>';
+    return;
+  }
+
+  const styl=styls.find(s=>s.id===stylId);
+  if(!styl)return;
+
+  // Update stylist info bar
+  const infoEl=document.getElementById('aSSInfo');
+  infoEl.style.display='flex';
+  document.getElementById('aSSAvatar').textContent=styl.avatar;
+  document.getElementById('aSSName').textContent=styl.name;
+  document.getElementById('aSSSubtitle').textContent=styl.title+(styl.specialties?.length?' · '+styl.specialties.join('、'):'');
+
+  // Get bookings for this stylist this month
+  const monthStr=y+'-'+String(m+1).padStart(2,'0');
+  const bks=getBks().filter(b=>b.stylistId===stylId&&b.status==='confirmed'&&b.date?.startsWith(monthStr))
+    .sort((a,b)=>a.date===b.date?a.time.localeCompare(b.time):a.date.localeCompare(b.date));
+  document.getElementById('aSSCnt').textContent=bks.length;
+
+  if(!bks.length){
+    document.getElementById('aSSList').innerHTML='<div style="color:var(--alight);font-size:13px;padding:24px 0;text-align:center">本月尚無預約</div>';
+    return;
+  }
+
+  // Group by date
+  const byDate={};
+  bks.forEach(b=>{if(!byDate[b.date])byDate[b.date]=[];byDate[b.date].push(b);});
+
+  document.getElementById('aSSList').innerHTML=Object.entries(byDate).map(([date,dayBks])=>`
+    <div style="margin-bottom:20px">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--amid);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--aborder)">${dspDate(date)}</div>
+      ${dayBks.map(b=>`
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;margin-bottom:6px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);width:50px;flex-shrink:0">${b.time}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;color:var(--atext)">${esc(b.name)} <span style="font-size:11px;color:var(--amid)">${esc(b.phone)}</span></div>
+            <div style="font-size:11px;color:var(--amid);margin-top:2px">${esc(b.service)}${b.notes?` · <span style="color:var(--alight)">${esc(b.notes)}</span>`:''}</div>
+          </div>
+          <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold)">${esc(b.price)}</span>
+          <button class="a-btn a-btn-danger a-btn-sm" onclick="aCancelBk('${b.id}');aRenderStylSchedule()">取消</button>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function aSSSelStyl(id){
+  aSSState.stylId=aSSState.stylId===id?null:id;
+  aRenderStylSchedule();
+}
+
+// ══ BLOCK SLOTS ════════════════════════════════════════════
+function aOpenBlockSlot(){
+  if(aCalState.selDate)document.getElementById('mBlkDate').value=aCalState.selDate;
+  document.getElementById('mBlkStart').value='';document.getElementById('mBlkEnd').value='';document.getElementById('mBlkReason').value='';
+  openModal('mBlockSlot');
+}
+async function aSaveBlockSlot(){
+  const date=document.getElementById('mBlkDate').value;
+  const start=document.getElementById('mBlkStart').value;
+  const end=document.getElementById('mBlkEnd').value;
+  if(!date||!start||!end){toast('請填寫日期與時間');return;}
+  if(start>=end){toast('結束時間需晚於開始時間');return;}
+  const block={id:'BL'+Date.now(),date,start,end,reason:document.getElementById('mBlkReason').value.trim()};
+  await fbAddBlock(block);
+  closeModal('mBlockSlot');
+  aRenderCalView();toast('時段已封鎖');
+}
+async function aDelBlock(id){
+  await fbDeleteBlock(id);
+  aRenderCalView();toast('已解除封鎖');
+}
+
+// ══ CUSTOMERS ══════════════════════════════════════════════
+function aRenderCustomers(){
+  const q=(document.getElementById('aCustSearch')?.value||'').toLowerCase();
+  const bks=getBks().filter(b=>b.status==='confirmed');
+  // Group by phone
+  const map={};
+  bks.forEach(b=>{
+    const key=b.phone;
+    if(!map[key])map[key]={name:b.name,phone:b.phone,email:b.email||'',count:0,lastSvc:'',lastDate:''};
+    map[key].count++;
+    if(!map[key].lastDate||b.date>map[key].lastDate){map[key].lastDate=b.date;map[key].lastSvc=b.service;}
+  });
+  let rows=Object.values(map).sort((a,b)=>b.count-a.count);
+  if(q)rows=rows.filter(r=>r.name.toLowerCase().includes(q)||r.phone.includes(q));
+  document.getElementById('aCustTbl').innerHTML=rows.length
+    ?rows.map(r=>`<tr>
+      <td>${esc(r.name)}</td><td>${esc(r.phone)}</td><td style="font-size:12px;color:var(--amid)">${esc(r.email)}</td>
+      <td style="text-align:center"><span style="background:var(--agold-dim);color:var(--gold);padding:2px 10px;border-radius:20px;font-size:12px">${r.count}</span></td>
+      <td style="font-size:12px">${esc(r.lastSvc)}</td>
+      <td style="font-size:12px;color:var(--amid)">${r.lastDate}</td>
+      <td><button class="a-btn a-btn-outline a-btn-sm" onclick="aShowCustHistory('${esc(r.phone)}')">紀錄</button></td>
+    </tr>`).join('')
+    :'<tr><td colspan="7" style="text-align:center;color:var(--alight);padding:24px">無客戶資料</td></tr>';
+}
+function aShowCustHistory(phone){
+  const bks=getBks().filter(b=>b.phone===phone).sort((a,b)=>b.date.localeCompare(a.date));
+  if(!bks.length)return;
+  document.getElementById('mCustHistTitle').innerHTML=esc(bks[0].name)+'的<em>預約紀錄</em>';
+  document.getElementById('mCustHistList').innerHTML=bks.map(b=>`
+    <div style="padding:10px 0;border-bottom:1px solid var(--aborder);display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:13px;color:var(--atext)">${b.date} ${b.time}</div>
+      <div style="font-size:12px;color:var(--amid)">${esc(b.service)} · ${esc(b.stylistName)}</div>
+      ${b.notes?`<div style="font-size:11px;color:var(--alight)">${esc(b.notes)}</div>`:''}
+      </div>
+      <span class="badge ${b.status==='confirmed'?'badge-ok':'badge-cancel'}">${b.status==='confirmed'?'已確認':'已取消'}</span>
+    </div>`).join('');
+  openModal('mCustHist');
+}
+
+// ══ STATS ══════════════════════════════════════════════════
+function aRenderStats(){
+  const bks=getBks().filter(b=>b.status==='confirmed');
+  const todStr=fmt(new Date());
+  const thisM=todStr.slice(0,7);
+  const lastM=new Date(new Date().getFullYear(),new Date().getMonth()-1,1);
+  const lastMStr=fmt(lastM).slice(0,7);
+
+  document.getElementById('aStatsBig').innerHTML=`
+    <div class="a-stat"><div class="a-stat-lbl">總預約</div><div class="a-stat-val">${bks.length}</div><div class="a-stat-sub">筆</div></div>
+    <div class="a-stat"><div class="a-stat-lbl">本月</div><div class="a-stat-val">${bks.filter(b=>b.date?.startsWith(thisM)).length}</div><div class="a-stat-sub">筆</div></div>
+    <div class="a-stat"><div class="a-stat-lbl">上月</div><div class="a-stat-val">${bks.filter(b=>b.date?.startsWith(lastMStr)).length}</div><div class="a-stat-sub">筆</div></div>
+    <div class="a-stat"><div class="a-stat-lbl">客戶數</div><div class="a-stat-val">${new Set(bks.map(b=>b.phone)).size}</div><div class="a-stat-sub">位</div></div>`;
+
+  // Service chart
+  const svcMap={};bks.forEach(b=>{svcMap[b.service]=(svcMap[b.service]||0)+1;});
+  const svcTop=Object.entries(svcMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const svcMax=svcTop[0]?svcTop[0][1]:1;
+  document.getElementById('statSvcChart').innerHTML=svcTop.length
+    ?svcTop.map(([name,cnt])=>`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--amid);margin-bottom:4px"><span>${esc(name)}</span><span>${cnt}</span></div>
+        <div style="background:var(--aborder);border-radius:2px;height:6px"><div style="background:var(--gold);width:${Math.round(cnt/svcMax*100)}%;height:100%;border-radius:2px;transition:width 0.5s"></div></div>
+      </div>`).join('')
+    :'<div style="color:var(--alight);font-size:12px;padding:20px 0;text-align:center">尚無資料</div>';
+
+  // Stylist chart
+  const stMap={};bks.forEach(b=>{stMap[b.stylistName]=(stMap[b.stylistName]||0)+1;});
+  const stTop=Object.entries(stMap).sort((a,b)=>b[1]-a[1]);
+  const stMax=stTop[0]?stTop[0][1]:1;
+  document.getElementById('statStylChart').innerHTML=stTop.length
+    ?stTop.map(([name,cnt])=>`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--amid);margin-bottom:4px"><span>${esc(name)}</span><span>${cnt}</span></div>
+        <div style="background:var(--aborder);border-radius:2px;height:6px"><div style="background:var(--gold);width:${Math.round(cnt/stMax*100)}%;height:100%;border-radius:2px"></div></div>
+      </div>`).join('')
+    :'<div style="color:var(--alight);font-size:12px;padding:20px 0;text-align:center">尚無資料</div>';
+
+  // Daily chart (last 30 days)
+  const days=[];const now=new Date();
+  for(let i=29;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);days.push(fmt(d));}
+  const dailyCnts=days.map(d=>bks.filter(b=>b.date===d).length);
+  const dMax=Math.max(...dailyCnts,1);
+  const barW=Math.floor(100/30);
+  document.getElementById('statDailyChart').innerHTML=`
+    <div style="display:flex;align-items:flex-end;gap:2px;height:100%;padding-bottom:20px">
+      ${dailyCnts.map((cnt,i)=>`
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px" title="${days[i]}: ${cnt}筆">
+          <div style="width:100%;background:${cnt>0?'var(--gold)':'var(--aborder)'};height:${Math.max(cnt/dMax*80,cnt>0?4:0)}px;border-radius:1px 1px 0 0;transition:height 0.3s"></div>
+          ${i%7===0?`<div style="font-size:8px;color:var(--alight);transform:rotate(-45deg);white-space:nowrap;margin-top:2px">${days[i].slice(5)}</div>`:'<div style="height:14px"></div>'}
+        </div>`).join('')}
+    </div>`;
+}
+
+// ══ VOUCHER ════════════════════════════════════════════════
+function renderVoucher(bk){
+  const shop=getShop();
+  document.getElementById('vShopName').textContent=shop.name;
+  document.getElementById('vId').textContent='#'+bk.id;
+  document.getElementById('vDetails').innerHTML=`
+    <div style="display:grid;grid-template-columns:80px 1fr;gap:6px 12px;font-size:12px">
+      <span style="color:var(--light);letter-spacing:1px;font-size:10px;text-transform:uppercase">服務</span><span style="color:var(--charcoal)">${esc(bk.service)}</span>
+      <span style="color:var(--light);letter-spacing:1px;font-size:10px;text-transform:uppercase">設計師</span><span style="color:var(--charcoal)">${esc(bk.stylistName)}</span>
+      <span style="color:var(--light);letter-spacing:1px;font-size:10px;text-transform:uppercase">日期</span><span style="color:var(--charcoal)">${dspDate(bk.date)}</span>
+      <span style="color:var(--light);letter-spacing:1px;font-size:10px;text-transform:uppercase">時段</span><span style="color:var(--charcoal)">${bk.time}</span>
+      <span style="color:var(--light);letter-spacing:1px;font-size:10px;text-transform:uppercase">費用</span><span style="color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:16px">${esc(bk.price)}</span>
+    </div>`;
+}
+
+// ══ REPEAT BOOKING ═════════════════════════════════════════
+function fRepeatBk(id){
+  const bk=getBks().find(b=>b.id===id);if(!bk)return;
+  // Pre-fill customer info and go to step 1
+  switchFrontTab('book');
+  fNewBooking();
+  // After reset, pre-fill fields
+  setTimeout(()=>{
+    document.getElementById('fName').value=bk.name;
+    document.getElementById('fPhone').value=bk.phone;
+    if(bk.email)document.getElementById('fEmail').value=bk.email;
+    if(bk.lineId)document.getElementById('fLineId').value=bk.lineId;
+    toast('已帶入上次客戶資料，請重新選擇服務');
+  },100);
+}
+
+// ══ BLOCK SLOTS in fRenderSlots integration ════════════════
+// (patched into existing parseDurMins / fRenderSlots area)
+
+// ══ STYLIST PROFILE ═══════════════════════════════════════
+function openStylProfile(id){
+  const s=getStyls().find(x=>Number(x.id)===Number(id));
+  if(!s)return;
+  const photoBig=document.getElementById('profilePhotoBig');
+  if(s.photo){
+    photoBig.innerHTML=`<img src="${esc(s.photo)}" alt="${esc(s.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  }else{
+    photoBig.textContent=s.avatar;
+  }
+  document.getElementById('profileName').textContent=s.name;
+  document.getElementById('profileTitle').textContent=s.title;
+  document.getElementById('profileTags').innerHTML=(s.specialties||[]).map(t=>
+    `<span style="font-size:11px;background:rgba(201,169,110,0.15);color:var(--gold);padding:3px 10px;border-radius:20px;border:1px solid rgba(201,169,110,0.3)">${esc(t)}</span>`
+  ).join('');
+  const bioEl=document.getElementById('profileBio');
+  bioEl.textContent=s.bio||'';
+  bioEl.style.display=s.bio?'block':'none';
+  const portfolio=s.portfolio||[];
+  const portSection=document.getElementById('profilePortfolioSection');
+  if(portfolio.length){
+    portSection.style.display='block';
+    document.getElementById('profilePortfolio').innerHTML=portfolio.map(url=>
+      `<img class="portfolio-img" src="${esc(url)}" alt="作品" onclick="openLightbox('${esc(url)}')" onerror="this.style.display='none'">`
+    ).join('');
+  }else{
+    portSection.style.display='none';
+  }
+  document.getElementById('profileSelectBtn').onclick=()=>{
+    fSelStyl(id);closeProfile();
+    document.getElementById('fbtn1').disabled=false;
+  };
+  document.getElementById('profileOverlay').classList.add('open');
+}
+function closeProfile(){document.getElementById('profileOverlay').classList.remove('open');}
+function openLightbox(url){document.getElementById('lightboxImg').src=url;document.getElementById('lightbox').classList.add('open');}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
+
+// ══ IMAGE UPLOAD ══════════════════════════════════════════
+async function uploadImage(file, path){
+  if(!window.FB?.storage) throw new Error('Storage not ready');
+  const ref=window.FB.storage.ref(path);
+  await ref.put(file);
+  return await ref.getDownloadURL();
+}
+
+async function handleImageUpload(inputEl, previewEl, onSuccess){
+  const file=inputEl.files[0];
+  if(!file) return;
+  if(file.size > 5*1024*1024){ toast('圖片不能超過 5MB'); return; }
+  if(!file.type.startsWith('image/')){ toast('請選擇圖片檔案'); return; }
+  if(previewEl) previewEl.innerHTML='<div style="color:var(--amid);font-size:12px;padding:8px">上傳中…</div>';
+  try{
+    const path='stylist-images/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9.]/g,'_');
+    const url=await uploadImage(file, path);
+    if(previewEl) previewEl.innerHTML=`<img src="${url}" style="width:60px;height:60px;object-fit:cover;border-radius:50%;border:2px solid var(--gold)">`;
+    onSuccess(url);
+    toast('圖片上傳成功 ✦');
+  }catch(e){
+    console.error('Upload failed:',e);
+    toast('上傳失敗，請重試');
+    if(previewEl) previewEl.innerHTML='';
+  }
+}
+
+// ══ MODAL UTILS ════════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')});});
+
+// ══ TOAST ══════════════════════════════════════════════════
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ══ UTILS ══════════════════════════════════════════════════
+function fmt(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function dspDate(str){if(!str)return'';const[y,m,d]=str.split('-');const days=['日','一','二','三','四','五','六'];return`${y}年${parseInt(m)}月${parseInt(d)}日（週${days[new Date(str).getDay()]}）`;}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ══ INIT ═══════════════════════════════════════════════════
+// UI starts immediately — Firebase syncs in background
+applyShop();fRenderStyls();fRenderCal();
+
+// Online/offline detection
+function updateOnlineStatus(){
+  const banner=document.getElementById('offlineBanner');
+  if(!navigator.onLine){
+    if(banner) banner.style.display='block';
+    const ds=document.getElementById('dbStatus');
+    if(ds) ds.innerHTML='<span style="color:#C0614A">● 無網路連線</span>';
+  }else{
+    if(banner) banner.style.display='none';
+  }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// Sync Firebase in background when ready
+async function initApp(){
+  try{
+    if(window.FB) await syncFromFirebase();
+  }catch(e){
+    console.warn('syncFromFirebase error:',e);
+    const ds=document.getElementById('dbStatus');
+    if(ds) ds.innerHTML='<span style="color:#C0614A">● 離線模式</span>';
+  }
+}
+
+// Poll for Firebase instead of relying on event timing
+(function waitForFB(){
+  if(window.FB){
+    initApp();
+  }else if(window._fbFailed){
+    const ds=document.getElementById('dbStatus');
+    if(ds) ds.innerHTML='<span style="color:#C0614A">● 離線模式</span>';
+  }else{
+    setTimeout(waitForFB, 200);
+  }
+})();
+// Safety timeout 8s
+setTimeout(()=>{
+  if(!window.FB){
+    window._fbFailed=true;
+    const ds=document.getElementById('dbStatus');
+    if(ds) ds.innerHTML='<span style="color:#C0614A">● 離線模式</span>';
+  }
+},8000);
+</script>
+<!-- Stylist Profile Modal -->
+<div class="profile-overlay" id="profileOverlay" style="display:none" onclick="if(event.target===this)closeProfile()">
+  <div class="profile-modal">
+    <div class="profile-header">
+      <button class="profile-close" onclick="closeProfile()">×</button>
+      <div id="profilePhotoBig" class="profile-photo-lg"></div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--charcoal);margin-bottom:4px" id="profileName"></div>
+      <div style="font-size:12px;color:var(--mid);letter-spacing:1px" id="profileTitle"></div>
+      <div id="profileTags" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px"></div>
+    </div>
+    <div class="profile-body">
+      <div id="profileBio" class="profile-bio"></div>
+      <div id="profilePortfolioSection">
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--light);margin-bottom:12px">作品展示</div>
+        <div class="portfolio-grid" id="profilePortfolio"></div>
+      </div>
+      <button class="btn btn-primary" id="profileSelectBtn" style="width:100%;text-align:center;margin-top:8px">選擇此設計師</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<div id="loadingOverlay" style="display:none !important;position:fixed;inset:0;z-index:-1">
+  <div style="font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--gold);letter-spacing:6px">Lumière</div>
+  <div style="display:flex;gap:6px">
+    <div style="width:8px;height:8px;background:var(--gold);border-radius:50%;animation:ldot 1.2s ease infinite 0s"></div>
+    <div style="width:8px;height:8px;background:var(--gold);border-radius:50%;animation:ldot 1.2s ease infinite 0.2s"></div>
+    <div style="width:8px;height:8px;background:var(--gold);border-radius:50%;animation:ldot 1.2s ease infinite 0.4s"></div>
+  </div>
+  <div style="font-size:11px;letter-spacing:2px;color:var(--mid);text-transform:uppercase">連線至雲端資料庫…</div>
+</div>
+<style>@keyframes ldot{0%,100%{opacity:0.2;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}</style>
+<!-- Firebase SDK — loaded after UI is ready -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script>
+window.FB=null;window._fbReady=false;
+(function tryInit(){
+  try{
+    if(typeof firebase==='undefined'||typeof firebase.firestore==='undefined'){
+      setTimeout(tryInit,100);return;
+    }
+    const cfg={
+      apiKey:"AIzaSyDg9FvGacFcz_yolqTS8rIACpTzEJrRP-Y",
+      authDomain:"pax-hair-salon.firebaseapp.com",
+      projectId:"pax-hair-salon",
+      storageBucket:"pax-hair-salon.firebasestorage.app",
+      messagingSenderId:"653024895005",
+      appId:"1:653024895005:web:76b66726ff2d60ae90a6f4"
+    };
+    if(!firebase.apps.length) firebase.initializeApp(cfg);
+    const db=firebase.firestore();
+    async function dbGet(col,id){const s=await db.collection(col).doc(id).get();return s.exists?s.data():null;}
+    async function dbSet(col,id,data){await db.collection(col).doc(id).set(data);}
+    async function dbAdd(col,data){const r=await db.collection(col).add(data);return r.id;}
+    async function dbUpdate(col,id,data){await db.collection(col).doc(id).update(data);}
+    async function dbDelete(col,id){await db.collection(col).doc(id).delete();}
+    async function dbList(col){const s=await db.collection(col).get();return s.docs.map(d=>({...d.data(),_id:d.id}));}
+    const storage=firebase.storage();
+    window.FB={db,storage,dbGet,dbSet,dbAdd,dbUpdate,dbDelete,dbList,
+      collection:(n)=>db.collection(n),
+      onSnapshot:(q,cb)=>q.onSnapshot(cb)
+    };
+    window._fbReady=true;
+    document.dispatchEvent(new Event('fbReady'));
+    console.log('Firebase ready ✓');
+  }catch(e){
+    console.warn('Firebase init failed:',e);
+    document.dispatchEvent(new Event('fbReady'));
+  }
+})();
+</script>
+</body>
+</html>
