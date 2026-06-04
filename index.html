@@ -2193,10 +2193,10 @@ function sdShowTab(id){
   document.querySelectorAll('.sd-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('sdtab-'+id).classList.add('active');
   document.querySelectorAll('.a-sitem[data-sd]').forEach(s=>s.classList.toggle('active',s.dataset.sd===id));
-  if(id==='bookings')sdRenderBookings();
-  if(id==='holidays')sdRenderHolCal();
-  if(id==='services')sdRenderServices();
-  if(id==='profile')sdRenderProfile();
+  if(id==='bookings') sdRenderBookings();
+  if(id==='holidays') sdRenderHolCal();
+  if(id==='services') sdRenderServices();
+  if(id==='profile') sdRenderProfile();
 }
 
 function sdCalChMonth(d){
@@ -2207,22 +2207,27 @@ function sdCalChMonth(d){
 }
 
 async function sdRenderBookings(){
-  // Fetch latest from Firebase if available
+  // Show loading
+  const listEl=document.getElementById('sdBookingList');
+  if(listEl) listEl.innerHTML='<div style="color:var(--alight);font-size:13px;padding:16px 0">載入中…</div>';
+
+  // Fetch from Firebase directly
   if(window.FB){
     try{
-      const snap=await window.FB.db.collection('bookings')
-        .where('stylistId','==',_sdStylId)
-        .where('status','==','confirmed')
-        .get();
-      const fbBks=snap.docs.map(d=>({...d.data(),id:d.id}));
-      if(fbBks.length>0){
-        // Merge with cache
-        const cache=getBks();
-        const ids=new Set(fbBks.map(b=>b.id));
-        const merged=[...fbBks,...cache.filter(b=>!ids.has(b.id))];
-        _cache.bks=merged;
-        ss('lm_bks',merged);
-      }
+      // Try both number and string versions of stylistId
+      const [snap1, snap2] = await Promise.all([
+        window.FB.db.collection('bookings').where('stylistId','==',Number(_sdStylId)).where('status','==','confirmed').get(),
+        window.FB.db.collection('bookings').where('stylistId','==',String(_sdStylId)).where('status','==','confirmed').get()
+      ]);
+      const ids=new Set();
+      const fbBks=[];
+      [...snap1.docs,...snap2.docs].forEach(d=>{
+        if(!ids.has(d.id)){ids.add(d.id);fbBks.push({...d.data(),id:d.id});}
+      });
+      // Update cache
+      const cache=getBks().filter(b=>!ids.has(b.id));
+      _cache.bks=[...fbBks,...cache];
+      ss('lm_bks',_cache.bks);
     }catch(e){console.warn('sdRenderBookings Firebase fetch:',e);}
   }
   renderSdBkCal();
