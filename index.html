@@ -2206,12 +2206,30 @@ function sdCalChMonth(d){
   sdRenderBookings();
 }
 
-function sdRenderBookings(){
+async function sdRenderBookings(){
+  // Fetch latest from Firebase if available
+  if(window.FB){
+    try{
+      const snap=await window.FB.db.collection('bookings')
+        .where('stylistId','==',_sdStylId)
+        .where('status','==','confirmed')
+        .get();
+      const fbBks=snap.docs.map(d=>({...d.data(),id:d.id}));
+      if(fbBks.length>0){
+        // Merge with cache
+        const cache=getBks();
+        const ids=new Set(fbBks.map(b=>b.id));
+        const merged=[...fbBks,...cache.filter(b=>!ids.has(b.id))];
+        _cache.bks=merged;
+        ss('lm_bks',merged);
+      }
+    }catch(e){console.warn('sdRenderBookings Firebase fetch:',e);}
+  }
   renderSdBkCal();
   const {y,m}=_sdCalState;
   const monthStr=y+'-'+String(m+1).padStart(2,'0');
   let bks=getBks().filter(b=>
-    Number(b.stylistId)===Number(_sdStylId)&&
+    (Number(b.stylistId)===Number(_sdStylId)||String(b.stylistId)===String(_sdStylId))&&
     b.status==='confirmed'&&
     b.date?.startsWith(monthStr)
   ).sort((a,b)=>a.date===b.date?a.time.localeCompare(b.time):a.date.localeCompare(b.date));
