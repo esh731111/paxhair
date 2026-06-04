@@ -878,10 +878,10 @@ tr:hover td{background:rgba(255,255,255,0.02)}
         <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--amid);margin-bottom:14px;font-weight:600">新增專屬服務</div>
         <div class="a-frow">
           <div class="a-field"><label>服務名稱</label><input type="text" id="sdNewSvcName" placeholder="例：特殊護髮"></div>
-          <div class="a-field"><label>價格</label><input type="text" id="sdNewSvcPrice" placeholder="例：NT$1200"></div>
+          <div class="a-field"><label>價格</label><input type="text" id="sdNewSvcPrice" placeholder="例：1200"></div>
         </div>
         <div class="a-frow">
-          <div class="a-field"><label>時長</label><input type="text" id="sdNewSvcDur" placeholder="例：60分"></div>
+          <div class="a-field"><label>時長</label><input type="text" id="sdNewSvcDur" placeholder="例：60"></div>
           <div class="a-field"><label>說明（選填）</label><input type="text" id="sdNewSvcDesc" placeholder="例：專業護髮療程"></div>
         </div>
         <div class="a-btn-row" style="margin-top:8px">
@@ -975,8 +975,8 @@ tr:hover td{background:rgba(255,255,255,0.02)}
   <div class="modal">
     <div class="modal-title" id="mSvcTitle">新增<em>服務項目</em></div>
     <div class="a-frow"><div class="a-field"><label>服務名稱 *</label><input type="text" id="mVName" placeholder="例：剪髮造型"></div>
-    <div class="a-field"><label>費用 *</label><input type="text" id="mVPrice" placeholder="例：NT$800"></div></div>
-    <div class="a-frow"><div class="a-field"><label>時長</label><input type="text" id="mVDur" placeholder="例：60 分鐘"></div><div class="a-field"></div></div>
+    <div class="a-field"><label>費用 *</label><input type="text" id="mVPrice" placeholder="例：800"></div></div>
+    <div class="a-frow"><div class="a-field"><label>時長</label><input type="text" id="mVDur" placeholder="例：60"></div><div class="a-field"></div></div>
     <div class="a-frow s1"><div class="a-field"><label>服務說明</label><textarea id="mVDesc" placeholder="簡短描述此服務"></textarea></div></div>
     <input type="hidden" id="mVId">
     <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mSvc')">取消</button><button class="a-btn a-btn-gold" onclick="aSaveSvc()">儲存</button></div>
@@ -2011,8 +2011,8 @@ function renderStylistSvcList(stylistSvcs){
       </div>
       <div id="ssfields-${gs.id}" style="display:${en?'grid':'none'};grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
         <div class="a-field"><label>服務名稱</label><input type="text" id="ssname-${gs.id}" value="${esc(ov&&ov.enabled?ov.name:gs.name)}" placeholder="${esc(gs.name)}"></div>
-        <div class="a-field"><label>價格</label><input type="text" id="ssprice-${gs.id}" value="${esc(ov&&ov.enabled?ov.price:gs.price)}" placeholder="${esc(gs.price)}"></div>
-        <div class="a-field"><label>時長</label><input type="text" id="ssdur-${gs.id}" value="${esc(ov&&ov.enabled?ov.duration:gs.duration)}" placeholder="${esc(gs.duration)}"></div>
+        <div class="a-field"><label>價格</label><input type="text" id="ssprice-${gs.id}" value="${(ov&&ov.enabled?ov.price:gs.price).replace(/[^0-9]/g,'')}" placeholder="${gs.price.replace(/[^0-9]/g,'')}"></div>
+        <div class="a-field"><label>時長</label><input type="text" id="ssdur-${gs.id}" value="${(ov&&ov.enabled?ov.duration:gs.duration).replace(/[^0-9]/g,'')}" placeholder="${gs.duration.replace(/[^0-9]/g,'')}"></div>
         <div class="a-field"><label>說明</label><input type="text" id="ssdesc-${gs.id}" value="${esc(ov&&ov.enabled?ov.desc:gs.desc)}" placeholder="${esc(gs.desc)}"></div>
       </div>
     </div>`;
@@ -2162,8 +2162,8 @@ function aOpenSvc(svcId){
     const s=getSvcs().find(x=>Number(x.id)===sid);
     if(!s){toast('找不到服務');return;}
     document.getElementById('mVName').value=s.name;
-    document.getElementById('mVPrice').value=s.price;
-    document.getElementById('mVDur').value=s.duration;
+    document.getElementById('mVPrice').value=(s.price||'').replace(/[^0-9]/g,'');
+    document.getElementById('mVDur').value=(s.duration||'').replace(/[^0-9]/g,'');
     document.getElementById('mVDesc').value=s.desc;
     document.getElementById('mVId').value=s.id;
     document.getElementById('mSvcTitle').innerHTML='編輯<em>服務項目</em>';
@@ -2418,8 +2418,8 @@ function sdRenderServices(){
       </div>
       <div id="sdsfields-${gs.id}" style="display:${en?'grid':'none'};grid-template-columns:1fr 1fr;gap:8px">
         <div class="a-field"><label>名稱</label><input type="text" id="sdsname-${gs.id}" value="${esc(ov&&ov.enabled?ov.name:gs.name)}" placeholder="${esc(gs.name)}"></div>
-        <div class="a-field"><label>價格</label><input type="text" id="sdsprice-${gs.id}" value="${esc(ov&&ov.enabled?ov.price:gs.price)}" placeholder="${esc(gs.price)}"></div>
-        <div class="a-field"><label>時長</label><input type="text" id="sdsdur-${gs.id}" value="${esc(ov&&ov.enabled?ov.duration:gs.duration)}" placeholder="${esc(gs.duration)}"></div>
+        <div class="a-field"><label>價格</label><input type="text" id="sdsprice-${gs.id}" value="${(ov&&ov.enabled?ov.price:gs.price).replace(/[^0-9]/g,'')}" placeholder="${gs.price.replace(/[^0-9]/g,'')}"></div>
+        <div class="a-field"><label>時長</label><input type="text" id="sdsdur-${gs.id}" value="${(ov&&ov.enabled?ov.duration:gs.duration).replace(/[^0-9]/g,'')}" placeholder="${gs.duration.replace(/[^0-9]/g,'')}"></div>
       </div>
     </div>`;
   }).join('');
@@ -2443,7 +2443,7 @@ function sdConfirmAddSvc(){
   const idx=styls.findIndex(x=>Number(x.id)===Number(_sdStylId));
   if(idx<0)return;
   if(!styls[idx].customServices) styls[idx].customServices=[];
-  styls[idx].customServices.push({id:'cs_'+Date.now(),name,price,duration:dur,desc,enabled:true,custom:true});
+  styls[idx].customServices.push({id:'cs_'+Date.now(),name,price:fmtPrice(price),duration:fmtDur(dur),desc,enabled:true,custom:true});
   ss('lm_styls',styls);_cache.styls=styls;
   if(window.FB)(async()=>{await fbSaveList('stylists',styls);})();
   sdCloseAddSvc();
@@ -2470,10 +2470,10 @@ function sdRenderCustomSvcs(){
       <div id="sdEdit-${sv.id}" style="display:none;padding:12px 14px;border-top:1px solid var(--aborder);background:var(--apanel2)">
         <div class="a-frow">
           <div class="a-field"><label>服務名稱</label><input type="text" id="sdEName-${sv.id}" value="${esc(sv.name)}"></div>
-          <div class="a-field"><label>價格</label><input type="text" id="sdEPrice-${sv.id}" value="${esc(sv.price)}"></div>
+          <div class="a-field"><label>價格</label><input type="text" id="sdEPrice-${sv.id}" value="${esc(sv.price).replace(/[^0-9]/g,'')}"></div>
         </div>
         <div class="a-frow">
-          <div class="a-field"><label>時長</label><input type="text" id="sdEDur-${sv.id}" value="${esc(sv.duration)}"></div>
+          <div class="a-field"><label>時長</label><input type="text" id="sdEDur-${sv.id}" value="${esc(sv.duration).replace(/[^0-9]/g,'')}"></div>
           <div class="a-field"><label>說明</label><input type="text" id="sdEDesc-${sv.id}" value="${esc(sv.desc||'')}"></div>
         </div>
         <div class="a-btn-row" style="margin-top:6px">
@@ -2498,7 +2498,7 @@ async function sdSaveEditSvc(svcId){
   if(idx<0)return;
   const svcIdx=(styls[idx].customServices||[]).findIndex(s=>s.id===svcId);
   if(svcIdx<0)return;
-  styls[idx].customServices[svcIdx]={...styls[idx].customServices[svcIdx],name,price,duration:dur,desc};
+  styls[idx].customServices[svcIdx]={...styls[idx].customServices[svcIdx],name,price:fmtPrice(price),duration:fmtDur(dur),desc};
   ss('lm_styls',styls);_cache.styls=styls;
   if(window.FB)(async()=>{await fbSaveList('stylists',styls);})();
   sdRenderCustomSvcs();
@@ -2524,8 +2524,8 @@ async function sdSaveServices(){
     const enabled=cb&&cb.checked;
     return{id:gs.id,enabled,
       name:enabled?(document.getElementById('sdsname-'+gs.id)?.value.trim()||gs.name):gs.name,
-      price:enabled?(document.getElementById('sdsprice-'+gs.id)?.value.trim()||gs.price):gs.price,
-      duration:enabled?(document.getElementById('sdsdur-'+gs.id)?.value.trim()||gs.duration):gs.duration,
+      price:enabled?fmtPrice(document.getElementById('sdsprice-'+gs.id)?.value.trim()||gs.price):gs.price,
+      duration:enabled?fmtDur(document.getElementById('sdsdur-'+gs.id)?.value.trim()||gs.duration):gs.duration,
       desc:gs.desc};
   });
   const styls=getStyls();
