@@ -1428,7 +1428,7 @@ function fRenderSvcs(){
     <div class="svc-card ${fst.svc?.id===s.id?'selected':''}" onclick="fSelSvc('${s.id}')">
       <div class="svc-name">${esc(s.name)}</div>
       <div class="svc-desc">${esc(s.desc)}</div>
-      <div class="svc-meta"><div class="svc-dur">⏱ ${esc(s.duration)}</div><div class="svc-price">${esc(s.price)}</div></div>
+      <div class="svc-meta"><div class="svc-dur">⏱ ${dspDur(s.duration)}</div><div class="svc-price">${dspPrice(s.price)}</div></div>
     </div>`).join('');
 }
 function fSelSvc(id){
@@ -2347,7 +2347,7 @@ async function sdRenderBookings(){
             <div style="font-size:13px;color:var(--atext)">${esc(b.name)} <span style="font-size:11px;color:var(--amid)">${esc(b.phone)}</span></div>
             <div style="font-size:11px;color:var(--amid)">${esc(b.service)}${b.notes?` · ${esc(b.notes)}`:''}</div>
           </div>
-          <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold)">${esc(b.price)}</span>
+          <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold)">${dspPrice(b.price)}</span>
           <button class="a-btn a-btn-danger a-btn-sm" onclick="sdCancelBk('${b.id}')">取消</button>
         </div>`).join('')}
     </div>`).join('');
@@ -2738,7 +2738,7 @@ function aRenderStylSchedule(){
             <div style="font-size:13px;color:var(--atext)">${esc(b.name)} <span style="font-size:11px;color:var(--amid)">${esc(b.phone)}</span></div>
             <div style="font-size:11px;color:var(--amid);margin-top:2px">${esc(b.service)}${b.notes?` · <span style="color:var(--alight)">${esc(b.notes)}</span>`:''}</div>
           </div>
-          <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold)">${esc(b.price)}</span>
+          <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold)">${dspPrice(b.price)}</span>
           <button class="a-btn a-btn-danger a-btn-sm" onclick="aCancelBk('${b.id}');aRenderStylSchedule()">取消</button>
         </div>`).join('')}
     </div>`).join('');
@@ -2974,6 +2974,10 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 // ══ UTILS ══════════════════════════════════════════════════
 function fmt(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function dspDate(str){if(!str)return'';const[y,m,d]=str.split('-');const days=['日','一','二','三','四','五','六'];return`${y}年${parseInt(m)}月${parseInt(d)}日（週${days[new Date(str).getDay()]}）`;}
+function fmtPrice(v){if(!v)return '';const n=String(v).replace(/[^0-9]/g,'');return n?'NT$'+n:'';}
+function fmtDur(v){if(!v)return '';const n=String(v).replace(/[^0-9]/g,'');return n?n+'分':'';}
+function dspPrice(v){return fmtPrice(v)||String(v||'');}
+function dspDur(v){return fmtDur(v)||String(v||'');}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 // ══ INIT ═══════════════════════════════════════════════════
