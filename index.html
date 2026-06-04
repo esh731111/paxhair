@@ -1502,16 +1502,19 @@ async function fAddCalDots(){
     const set=getSet();
     const oh=toMins(set.openTime),ch=toMins(set.closeTime);
     const slotMin=set.slotMinutes||30;
-    const totalSlots=Math.floor((ch-oh)/slotMin);
-    // Count bookings per date
-    const dateCnt={};
-    bks.forEach(b=>{dateCnt[b.date]=(dateCnt[b.date]||0)+1;});
-    Object.entries(dateCnt).forEach(([date,cnt])=>{
+    const totalMins=ch-oh;
+    // Calculate occupied minutes per date (considering service duration)
+    const dateOccupied={};
+    bks.forEach(b=>{
+      const dur=b.duration?parseDurMins(b.duration):slotMin;
+      dateOccupied[b.date]=(dateOccupied[b.date]||0)+dur;
+    });
+    Object.entries(dateOccupied).forEach(([date,occupied])=>{
       const el=document.getElementById('fcd-'+date);
       if(!el)return;
-      const pct=cnt/Math.max(totalSlots,1);
+      const pct=occupied/Math.max(totalMins,1);
       const dot=document.createElement('div');
-      dot.style.cssText=`width:5px;height:5px;border-radius:50%;margin:1px auto 0;background:${pct>=0.8?'#E07070':pct>=0.5?'#FFA726':'#4CAF50'}`;
+      dot.style.cssText=`width:5px;height:5px;border-radius:50%;margin:1px auto 0;background:${pct>=1?'#E07070':pct>=0.5?'#FFA726':'#4CAF50'}`;
       el.appendChild(dot);
     });
   }catch(e){console.warn('fAddCalDots:',e);}
