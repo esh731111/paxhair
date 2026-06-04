@@ -2355,14 +2355,53 @@ function sdRenderCustomSvcs(){
   if(!customs.length){el.innerHTML='';return;}
   el.innerHTML=`<div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--amid);margin-bottom:10px;font-weight:600;padding-top:12px;border-top:1px solid var(--aborder)">我的專屬服務</div>`+
   customs.map(sv=>`
-    <div style="background:var(--bg-card);border:1px solid var(--aborder);border-radius:4px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
-      <div style="flex:1">
-        <div style="font-size:14px;color:var(--atext);font-weight:500">${esc(sv.name)}</div>
-        <div style="font-size:12px;color:var(--amid);margin-top:2px">${esc(sv.price)} · ${esc(sv.duration)}${sv.desc?` · ${esc(sv.desc)}`:''}</div>
+    <div style="background:var(--bg-card);border:1px solid var(--aborder);border-radius:4px;margin-bottom:8px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px">
+        <div style="flex:1">
+          <div style="font-size:14px;color:var(--atext);font-weight:500">${esc(sv.name)}</div>
+          <div style="font-size:12px;color:var(--amid);margin-top:2px">${esc(sv.price)} · ${esc(sv.duration)}${sv.desc?` · ${esc(sv.desc)}`:''}</div>
+        </div>
+        <button class="a-btn a-btn-outline a-btn-sm" onclick="sdTogEditSvc('${sv.id}')">編輯</button>
+        <button class="a-btn a-btn-danger a-btn-sm" onclick="sdDelCustomSvc('${sv.id}')">刪除</button>
       </div>
-      <button class="a-btn a-btn-danger a-btn-sm" onclick="sdDelCustomSvc('${sv.id}')">刪除</button>
+      <div id="sdEdit-${sv.id}" style="display:none;padding:12px 14px;border-top:1px solid var(--aborder);background:var(--apanel2)">
+        <div class="a-frow">
+          <div class="a-field"><label>服務名稱</label><input type="text" id="sdEName-${sv.id}" value="${esc(sv.name)}"></div>
+          <div class="a-field"><label>價格</label><input type="text" id="sdEPrice-${sv.id}" value="${esc(sv.price)}"></div>
+        </div>
+        <div class="a-frow">
+          <div class="a-field"><label>時長</label><input type="text" id="sdEDur-${sv.id}" value="${esc(sv.duration)}"></div>
+          <div class="a-field"><label>說明</label><input type="text" id="sdEDesc-${sv.id}" value="${esc(sv.desc||'')}"></div>
+        </div>
+        <div class="a-btn-row" style="margin-top:6px">
+          <button class="a-btn a-btn-outline" onclick="sdTogEditSvc('${sv.id}')">取消</button>
+          <button class="a-btn a-btn-gold" onclick="sdSaveEditSvc('${sv.id}')">儲存</button>
+        </div>
+      </div>
     </div>`).join('');
 }
+function sdTogEditSvc(svcId){
+  const el=document.getElementById('sdEdit-'+svcId);
+  if(el) el.style.display=el.style.display==='none'?'block':'none';
+}
+async function sdSaveEditSvc(svcId){
+  const name=document.getElementById('sdEName-'+svcId)?.value.trim();
+  const price=document.getElementById('sdEPrice-'+svcId)?.value.trim();
+  const dur=document.getElementById('sdEDur-'+svcId)?.value.trim();
+  const desc=document.getElementById('sdEDesc-'+svcId)?.value.trim();
+  if(!name||!price||!dur){toast('請填寫名稱、價格和時長');return;}
+  const styls=getStyls();
+  const idx=styls.findIndex(x=>Number(x.id)===Number(_sdStylId));
+  if(idx<0)return;
+  const svcIdx=(styls[idx].customServices||[]).findIndex(s=>s.id===svcId);
+  if(svcIdx<0)return;
+  styls[idx].customServices[svcIdx]={...styls[idx].customServices[svcIdx],name,price,duration:dur,desc};
+  ss('lm_styls',styls);_cache.styls=styls;
+  if(window.FB)(async()=>{await fbSaveList('stylists',styls);})();
+  sdRenderCustomSvcs();
+  toast('已儲存 ✦');
+}
+
 async function sdDelCustomSvc(svcId){
   if(!confirm('確定刪除此專屬服務？'))return;
   const styls=getStyls();
