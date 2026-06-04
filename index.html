@@ -2295,28 +2295,20 @@ function sdCalChMonth(d){
 }
 
 async function sdRenderBookings(){
-  // Show loading
   const listEl=document.getElementById('sdBookingList');
   if(listEl) listEl.innerHTML='<div style="color:var(--alight);font-size:13px;padding:16px 0">載入中…</div>';
 
-  // Fetch from Firebase directly
+  // Use simple query to avoid index requirements
   if(window.FB){
     try{
-      // Try both number and string versions of stylistId
-      const [snap1, snap2] = await Promise.all([
-        window.FB.db.collection('bookings').where('stylistId','==',Number(_sdStylId)).where('status','==','confirmed').get(),
-        window.FB.db.collection('bookings').where('stylistId','==',String(_sdStylId)).where('status','==','confirmed').get()
-      ]);
-      const ids=new Set();
-      const fbBks=[];
-      [...snap1.docs,...snap2.docs].forEach(d=>{
-        if(!ids.has(d.id)){ids.add(d.id);fbBks.push({...d.data(),id:d.id});}
-      });
-      // Update cache
-      const cache=getBks().filter(b=>!ids.has(b.id));
-      _cache.bks=[...fbBks,...cache];
-      ss('lm_bks',_cache.bks);
-    }catch(e){console.warn('sdRenderBookings Firebase fetch:',e);}
+      const snap=await window.FB.db.collection('bookings')
+        .where('status','==','confirmed').get();
+      const fbBks=snap.docs.map(d=>({...d.data(),id:d.id}));
+      _cache.bks=fbBks;
+      ss('lm_bks',fbBks);
+    }catch(e){
+      console.warn('sdRenderBookings fetch error:',e);
+    }
   }
   renderSdBkCal();
   const {y,m}=_sdCalState;
