@@ -413,6 +413,13 @@ tr:hover td{background:rgba(255,255,255,0.02)}
   </div>
 
   <div class="front-content">
+    <div id="frontShopBar" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;margin-bottom:8px;border-bottom:1px solid #E8E8E8">
+      <div id="frontShopName" style="font-family:'Noto Serif TC','Cormorant Garamond',serif;font-size:15px;color:#111;letter-spacing:2px;font-weight:300"></div>
+      <a id="frontShopPhone" href="" style="display:none;align-items:center;gap:6px;font-size:13px;color:#555;text-decoration:none;border:1px solid #ddd;padding:6px 14px;transition:all 0.2s" onmouseover="this.style.borderColor='#111'" onmouseout="this.style.borderColor='#ddd'">
+        <span>📞</span><span id="frontShopPhoneText"></span>
+      </a>
+    </div>
+    <div id="holidayNotice" style="display:none;background:#fafafa;border:1px solid #E8E8E8;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#555;letter-spacing:0.5px;line-height:1.7"></div>
     <div class="f-tabs">
       <button class="f-tab active" onclick="switchFrontTab('book')">線上預約</button>
       <button class="f-tab" onclick="switchFrontTab('mybk')">我的預約</button>
@@ -727,7 +734,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
     <!-- calendar -->
     <div class="a-panel" id="atab-calendar">
       <div class="a-phdr">
-        <div class="a-ptitle">預約<em>月曆</em></div>
+        <div class="a-ptitle">月曆<em>排班</em></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button class="a-btn a-btn-outline" onclick="aCalChMonth(-1)">‹ 上月</button>
           <span id="aCalTitle" style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--atext);min-width:120px;text-align:center"></span>
@@ -737,56 +744,47 @@ tr:hover td{background:rgba(255,255,255,0.02)}
           </select>
         </div>
       </div>
-      <!-- legend -->
-      <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--amid)"><span style="width:10px;height:10px;background:var(--gold);border-radius:50%;display:inline-block"></span>有預約</div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--amid)"><span style="width:10px;height:10px;background:rgba(224,112,112,0.5);border-radius:50%;display:inline-block"></span>封鎖時段</div>
+      <div style="display:flex;gap:4px;margin-bottom:16px">
+        <button id="calViewBtnCal" class="a-fbtn active" onclick="aSetCalView('cal')">月曆視圖</button>
+        <button id="calViewBtnSched" class="a-fbtn" onclick="aSetCalView('sched')">設計師排班</button>
       </div>
-      <div style="background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;overflow:hidden">
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--aborder)">
-          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">日</div>
-          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">一</div>
-          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">二</div>
-          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">三</div>
-          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">四</div>
-          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">五</div>
-          <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">六</div>
-        </div>
-        <div id="aCalGrid" style="display:grid;grid-template-columns:repeat(7,1fr)"></div>
+      <div id="calLegend" style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--amid)"><span style="width:8px;height:8px;background:#111;border-radius:50%;display:inline-block"></span>有預約</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--amid)"><span style="width:8px;height:8px;background:var(--red);border-radius:50%;display:inline-block"></span>封鎖時段</div>
       </div>
-      <!-- day detail panel -->
-      <div id="aCalDetail" style="display:none;margin-top:20px;background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;padding:20px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <div id="aCalDetailTitle" style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--atext)"></div>
-          <button class="a-btn a-btn-outline a-btn-sm" onclick="aOpenBlockSlot()">封鎖時段</button>
+      <div id="calViewCal">
+        <div style="background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--aborder)">
+            <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">日</div>
+            <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">一</div>
+            <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">二</div>
+            <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">三</div>
+            <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">四</div>
+            <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">五</div>
+            <div style="padding:10px;text-align:center;font-size:9px;letter-spacing:2px;color:var(--alight)">六</div>
+          </div>
+          <div id="aCalGrid" style="display:grid;grid-template-columns:repeat(7,1fr)"></div>
         </div>
-        <div id="aCalDetailList"></div>
+        <div id="aCalDetail" style="display:none;margin-top:20px;background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div id="aCalDetailTitle" style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--atext)"></div>
+            <button class="a-btn a-btn-outline a-btn-sm" onclick="aOpenBlockSlot()">封鎖時段</button>
+          </div>
+          <div id="aCalDetailList"></div>
+        </div>
+      </div>
+      <div id="calViewSched" style="display:none">
+        <div id="aSSStylTabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--aborder)"></div>
+        <div id="aSSInfo" style="display:none;margin-bottom:16px;background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;padding:14px 18px;align-items:center;gap:14px">
+          <div id="aSSAvatar" style="width:44px;height:44px;border-radius:50%;background:var(--agold-dim);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);flex-shrink:0"></div>
+          <div><div id="aSSName" style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--atext)"></div>
+          <div id="aSSSubtitle" style="font-size:11px;color:var(--amid);margin-top:2px"></div></div>
+          <div style="margin-left:auto;text-align:right"><div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold)" id="aSSCnt">0</div><div style="font-size:10px;color:var(--amid);letter-spacing:1px">本月預約</div></div>
+        </div>
+        <div id="aSSList"></div>
       </div>
     </div>
-
-    <!-- stylist schedule -->
-    <div class="a-panel" id="atab-stylschedule">
-      <div class="a-phdr">
-        <div class="a-ptitle">設計師<em>排班預約</em></div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <button class="a-btn a-btn-outline" onclick="aSSChMonth(-1)">‹ 上月</button>
-          <span id="aSSTitle" style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--atext);min-width:120px;text-align:center"></span>
-          <button class="a-btn a-btn-outline" onclick="aSSChMonth(1)">下月 ›</button>
-        </div>
-      </div>
-      <!-- stylist tabs -->
-      <div id="aSSStylTabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--aborder)"></div>
-      <!-- selected stylist info -->
-      <div id="aSSInfo" style="display:none;margin-bottom:16px;background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;padding:14px 18px;display:flex;align-items:center;gap:14px">
-        <div id="aSSAvatar" style="width:44px;height:44px;border-radius:50%;background:var(--agold-dim);border:1.5px solid var(--agold-border);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);flex-shrink:0"></div>
-        <div><div id="aSSName" style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--atext)"></div>
-        <div id="aSSSubtitle" style="font-size:11px;color:var(--amid);margin-top:2px"></div></div>
-        <div id="aSSMonthCount" style="margin-left:auto;text-align:right"><div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold)" id="aSSCnt">0</div><div style="font-size:10px;color:var(--amid);letter-spacing:1px">本月預約</div></div>
-      </div>
-      <!-- booking list for selected stylist -->
-      <div id="aSSList"></div>
-    </div>
-
+    <div class="a-panel" id="atab-stylschedule" style="display:none"></div>
     <!-- customers -->
     <div class="a-panel" id="atab-customers">
       <div class="a-phdr"><div class="a-ptitle">客戶<em>名單</em></div></div>
@@ -1130,7 +1128,8 @@ async function syncFromFirebase(){
       const activeTab=document.querySelector('.a-panel.active');
       if(activeTab&&document.getElementById('viewAdmin').style.display!=='none'){
         const tid=activeTab.id.replace('atab-','');
-        const map={dashboard:aRenderDash,bookings:aRenderBk,calendar:aRenderCalView,
+        const _origABk=()=>{aRenderBk();};
+const map={dashboard:aRenderDash,bookings:_origABk,calendar:aRenderCalView,
           stylschedule:aRenderCalView,customers:aRenderCustomers,stats:aRenderStats};
         if(map[tid])map[tid]();
       }
@@ -1787,7 +1786,8 @@ function aShowTab(id){
   document.querySelectorAll('.a-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('atab-'+id).classList.add('active');
   document.querySelectorAll('.a-sitem[data-tab]').forEach(s=>s.classList.toggle('active',s.dataset.tab===id));
-  const map={dashboard:aRenderDash,bookings:aRenderBk,calendar:aRenderCalView,stylschedule:aRenderCalView,customers:aRenderCustomers,stats:aRenderStats,shop:aRenderShop,stylists:aRenderStyls,hours:aRenderHours,services:aRenderSvcs,line:aRenderLine};
+  const _origABk=()=>{aRenderBk();};
+const map={dashboard:aRenderDash,bookings:_origABk,calendar:aRenderCalView,stylschedule:aRenderCalView,customers:aRenderCustomers,stats:aRenderStats,shop:aRenderShop,stylists:aRenderStyls,hours:aRenderHours,services:aRenderSvcs,line:aRenderLine};
   if(map[id])map[id]();
 }
 
@@ -1808,12 +1808,56 @@ function aRenderDash(){
 }
 
 let aBkFilter='all';
+let _aCalView='cal';
+let _aBkCal={y:new Date().getFullYear(),m:new Date().getMonth(),sel:null};
+
+function aSetCalView(v){
+  _aCalView=v;
+  const cv=document.getElementById('calViewCal');
+  const cs=document.getElementById('calViewSched');
+  if(cv) cv.style.display=v==='cal'?'block':'none';
+  if(cs) cs.style.display=v==='sched'?'block':'none';
+  document.getElementById('calLegend').style.display=v==='cal'?'flex':'none';
+  document.getElementById('calViewBtnCal')?.classList.toggle('active',v==='cal');
+  document.getElementById('calViewBtnSched')?.classList.toggle('active',v==='sched');
+  if(v==='sched') aRenderStylSchedule();
+}
+function renderABkCal(){
+  const {y,m,sel}=_aBkCal;
+  const titleEl=document.getElementById('aBkCalTitle');
+  if(titleEl) titleEl.textContent=y+'年'+(m+1)+'月';
+  const wrap=document.getElementById('aBkCalWrap');
+  if(!wrap) return;
+  const firstDay=new Date(y,m,1).getDay();
+  const dInM=new Date(y,m+1,0).getDate();
+  const todStr=fmt(new Date());
+  const monthStr=y+'-'+String(m+1).padStart(2,'0');
+  const bkDates={};
+  getBks().filter(b=>b.date?.startsWith(monthStr)&&b.status==='confirmed')
+    .forEach(b=>{bkDates[b.date]=(bkDates[b.date]||0)+1;});
+  let html=`<div style="display:grid;grid-template-columns:repeat(7,32px);gap:2px;text-align:center">`;
+  ['日','一','二','三','四','五','六'].forEach(d=>{html+=`<div style="font-size:10px;color:var(--alight);padding:3px 0;font-weight:600">${d}</div>`;});
+  for(let i=0;i<firstDay;i++) html+=`<div></div>`;
+  for(let day=1;day<=dInM;day++){
+    const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    const isToday=ds===todStr,isSel=ds===sel,hasBk=bkDates[ds]>0;
+    html+=`<div onclick="aBkSelDate('${ds}')" style="width:32px;height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-radius:4px;font-size:12px;background:${isSel?'#111':'transparent'};color:${isSel?'#fff':isToday?'#111':hasBk?'#111':'var(--alight)'};border:${isToday&&!isSel?'1px solid #111':'1px solid transparent'}">
+      <span>${day}</span>${hasBk?`<span style="width:4px;height:4px;border-radius:50%;background:${isSel?'#fff':'#111'};margin-top:1px"></span>`:''}
+    </div>`;
+  }
+  wrap.innerHTML=html+'</div>';
+}
+function aBkCalChMonth(d){_aBkCal.m+=d;if(_aBkCal.m<0){_aBkCal.m=11;_aBkCal.y--;}if(_aBkCal.m>11){_aBkCal.m=0;_aBkCal.y++;}renderABkCal();}
+function aBkClearDate(){_aBkCal.sel=null;renderABkCal();const el=document.getElementById('aBkDateLabel');if(el)el.textContent='';aRenderBk();}
+function aBkSelDate(ds){_aBkCal.sel=ds;renderABkCal();const el=document.getElementById('aBkDateLabel');if(el)el.textContent=dspDate(ds)+'的預約';aRenderBk();}
+
 function aSetFilter(f,btn){aBkFilter=f;document.querySelectorAll('.a-fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');aRenderBk();}
 function aRenderBk(){
   const q=(document.getElementById('aBkSearch')?.value||'').toLowerCase();
   let bks=getBks();
   if(aBkFilter!=='all')bks=bks.filter(b=>b.status===aBkFilter);
   if(q)bks=bks.filter(b=>b.name?.toLowerCase().includes(q)||b.phone?.includes(q));
+  if(_aBkCal?.sel)bks=bks.filter(b=>b.date===_aBkCal.sel);
   document.getElementById('aBkTbl').innerHTML=bks.length
     ?bks.map(b=>`<tr>
       <td style="font-size:10px;color:var(--amid)">${b.id}</td>
@@ -2197,6 +2241,50 @@ function sdShowTab(id){
   if(id==='holidays') sdRenderHolCal();
   if(id==='services') sdRenderServices();
   if(id==='profile') sdRenderProfile();
+}
+
+function sdClearDate(){
+  _sdBkSel=null;
+  renderSdBkCal();
+  const el=document.getElementById('sdDateLabel');
+  if(el)el.textContent='';
+  sdRenderBookings();
+}
+function sdBkSelDate(ds){
+  _sdBkSel=ds;
+  renderSdBkCal();
+  const el=document.getElementById('sdDateLabel');
+  if(el)el.textContent=dspDate(ds)+'的預約';
+  sdRenderBookings();
+}
+function renderSdBkCal(){
+  const {y,m}=_sdCalState;
+  const titleEl=document.getElementById('sdCalTitle');
+  if(titleEl)titleEl.textContent=y+'年'+(m+1)+'月';
+  const wrap=document.getElementById('sdBkCalWrap');
+  if(!wrap)return;
+  const firstDay=new Date(y,m,1).getDay();
+  const dInM=new Date(y,m+1,0).getDate();
+  const todStr=fmt(new Date());
+  const monthStr=y+'-'+String(m+1).padStart(2,'0');
+  const bkDates={};
+  getBks().filter(b=>b.date?.startsWith(monthStr)&&b.status==='confirmed'&&
+    (Number(b.stylistId)===Number(_sdStylId)||String(b.stylistId)===String(_sdStylId)))
+    .forEach(b=>{bkDates[b.date]=(bkDates[b.date]||0)+1;});
+  let html=`<div style="display:grid;grid-template-columns:repeat(7,32px);gap:2px;text-align:center">`;
+  ['日','一','二','三','四','五','六'].forEach(d=>{
+    html+=`<div style="font-size:10px;color:var(--alight);padding:3px 0;font-weight:600">${d}</div>`;
+  });
+  for(let i=0;i<firstDay;i++)html+=`<div></div>`;
+  for(let day=1;day<=dInM;day++){
+    const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    const isToday=ds===todStr,isSel=ds===_sdBkSel,hasBk=bkDates[ds]>0;
+    html+=`<div onclick="sdBkSelDate('${ds}')" style="width:32px;height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-radius:4px;font-size:12px;font-weight:${isToday?'700':'400'};background:${isSel?'#111':'transparent'};color:${isSel?'#fff':isToday?'#111':hasBk?'#111':'var(--alight)'};border:${isToday&&!isSel?'1px solid #111':'1px solid transparent'};transition:all 0.15s">
+      <span>${day}</span>${hasBk?`<span style="width:4px;height:4px;border-radius:50%;background:${isSel?'#fff':'#111'};margin-top:1px"></span>`:''}
+    </div>`;
+  }
+  html+='</div>';
+  wrap.innerHTML=html;
 }
 
 function sdCalChMonth(d){
