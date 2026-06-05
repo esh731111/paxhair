@@ -609,7 +609,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
   </div>
 
   <div class="front-content">
-    <div id="frontShopBar" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;margin-bottom:8px;border-bottom:1px solid #E8E8E8">
+    <div id="frontShopBar" style="display:none">
       <div id="frontShopName" style="font-family:'Noto Serif TC','Cormorant Garamond',serif;font-size:15px;color:#111;letter-spacing:2px;font-weight:300"></div>
       <a id="frontShopPhone" href="" style="display:none;align-items:center;gap:6px;font-size:13px;color:#555;text-decoration:none;border:1px solid #ddd;padding:6px 14px;transition:all 0.2s" onmouseover="this.style.borderColor='#111'" onmouseout="this.style.borderColor='#ddd'">
         <span>📞</span><span id="frontShopPhoneText"></span>
@@ -673,15 +673,15 @@ tr:hover td{background:rgba(255,255,255,0.02)}
         <div class="sec-title">填寫<em>客戶資料</em></div>
         <div class="sec-sub">您的資料僅用於預約確認與 Line 通知</div>
         <div class="form-grid">
-          <div class="form-field"><label>姓名 *</label><input type="text" id="fName" placeholder="您的姓名" oninput="fCheckForm()"></div>
-          <div class="form-field"><label>電話 *</label><input type="tel" id="fPhone" placeholder="0912-345-678" oninput="fCheckForm()"></div>
-          <div class="form-field"><label>電子郵件</label><input type="email" id="fEmail" placeholder="email@example.com"></div>
+          <div class="form-field"><label>姓名 *</label><input type="text" id="fName" placeholder="您的姓名" oninput="fCheckForm()"><div id="fNameErr" style="color:#C0614A;font-size:11px;margin-top:4px;display:none">請填寫姓名</div></div>
+          <div class="form-field"><label>電話 *</label><input type="tel" id="fPhone" placeholder="0912-345-678" oninput="fCheckForm()"><div id="fPhoneErr" style="color:#C0614A;font-size:11px;margin-top:4px;display:none">請填寫電話</div></div>
+          <div class="form-field"><label>電子郵件 *</label><input type="email" id="fEmail" placeholder="email@example.com" oninput="fCheckForm()"><div id="fEmailErr" style="color:#C0614A;font-size:11px;margin-top:4px;display:none">請填寫正確的電子郵件</div></div>
           <div class="form-field"><label>Line ID（接收通知用）</label><input type="text" id="fLineId" placeholder="您的 Line ID"></div>
           <div class="form-field full"><label>特殊需求或備註</label><textarea id="fNotes" placeholder="例：對某化學成分過敏…"></textarea></div>
         </div>
         <div class="btn-row">
           <button class="btn btn-secondary" onclick="fGoStep(3)">← 返回</button>
-          <button class="btn btn-primary" id="fbtn4" disabled onclick="fGoStep(5)">確認預約 →</button>
+          <button class="btn btn-primary" id="fbtn4" onclick="document.getElementById('fbtn4').disabled?fShowFormErrors():fGoStep(5)">確認預約 →</button>
         </div>
       </div>
       <!-- step 5 -->
@@ -1845,7 +1845,22 @@ async function fRenderSlots(){
 }
 function fSelTime(t,tk){if(tk)return;fst.time=t;fRenderSlots();document.getElementById('fbtn3').disabled=false;}
 
-function fCheckForm(){document.getElementById('fbtn4').disabled=!(document.getElementById('fName').value.trim()&&document.getElementById('fPhone').value.trim());}
+function fCheckForm(){
+  const name=document.getElementById('fName').value.trim();
+  const phone=document.getElementById('fPhone').value.trim();
+  const email=document.getElementById('fEmail').value.trim();
+  const emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  document.getElementById('fbtn4').disabled=!(name&&phone&&emailOk);
+}
+function fShowFormErrors(){
+  const name=document.getElementById('fName').value.trim();
+  const phone=document.getElementById('fPhone').value.trim();
+  const email=document.getElementById('fEmail').value.trim();
+  const emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  document.getElementById('fNameErr').style.display=name?'none':'block';
+  document.getElementById('fPhoneErr').style.display=phone?'none':'block';
+  document.getElementById('fEmailErr').style.display=emailOk?'none':'block';
+}
 
 function fRenderSummary(){
   fst.name=document.getElementById('fName').value.trim();
