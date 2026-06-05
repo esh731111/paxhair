@@ -2624,7 +2624,9 @@ function _sdRenderBkList(){
 
 function sdOpenAddBk(){
   const today=fmt(new Date());
-  document.getElementById('sdBSvc').innerHTML=getSvcs().map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.price)}</option>`).join('');
+  const styl=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
+  const svcs=getSvcForStyl(styl);
+  document.getElementById('sdBSvc').innerHTML=svcs.map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.price)}</option>`).join('');
   ['sdBName','sdBPhone','sdBNotes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('sdBDate').value=_sdBkSel||today;
   document.getElementById('sdBTime').value='';
@@ -2638,7 +2640,9 @@ async function sdSaveAddBk(){
   const time=document.getElementById('sdBTime').value;
   if(!date||!time){toast('請填寫日期與時段');return;}
   const svcId=parseInt(document.getElementById('sdBSvc').value);
-  const svc=getSvcs().find(s=>s.id===svcId)||getSvcs()[0];
+  const styl2=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
+  const svcs2=getSvcForStyl(styl2);
+  const svc=svcs2.find(s=>s.id===svcId)||svcs2[0];
   const styl=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
   const id='LM'+Date.now().toString().slice(-6);
   const bk={
