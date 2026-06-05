@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lumière — 預約系統</title>
+<title>Pax Hair Salon — 預約系統</title>
+  <meta name="description" content="Pax Hair Salon 線上預約系統，快速預約您的專屬造型服務。">
+  <meta property="og:title" content="Pax Hair Salon — 預約系統">
+  <meta property="og:description" content="Pax Hair Salon 線上預約系統，快速預約您的專屬造型服務。">
+  <meta property="og:site_name" content="Pax Hair Salon">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.paxhair.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <!-- Firebase loaded at bottom of body -->
 <style>
@@ -1334,6 +1340,10 @@ const map={dashboard:aRenderDash,bookings:_origABk,calendar:aRenderCalView,
     }
     document.getElementById('dbStatus').innerHTML='<span style="color:#5A9E72">● 已連線</span>';
     toast('已連線至雲端 ✦');
+    // 重新渲染前台（確保第一次載入時顯示正確資料）
+    if(document.getElementById('viewFront').style.display!=='none'){
+      applyShop();fRenderStyls();fRenderCal();
+    }
   }catch(e){
     console.warn('Firebase error:',e);
     document.getElementById('dbStatus').innerHTML='<span style="color:#C0614A">● 離線模式</span>';
