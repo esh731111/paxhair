@@ -628,7 +628,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
         <div class="sec-sub" id="frontWelcome">可指定設計師，或讓我們為您安排最合適人選</div>
         <div class="styl-grid" id="stylGrid"></div>
         <div class="btn-row" style="justify-content:flex-end">
-          <button class="btn btn-primary" id="fbtn1" disabled onclick="fGoStep(2)">選擇服務 →</button>
+          <button class="btn btn-primary" id="fbtn1" disabled onclick="if(!navigator.onLine){toast('目前無網路連線，請確認後再試 ⚠️');return;}fGoStep(2)">選擇服務 →</button>
         </div>
       </div>
       <!-- step 2 -->
