@@ -1396,7 +1396,7 @@ async function fbDeleteBlock(id){
 
 // ── GETTERS ────────────────────────────────────────────────
 const getSvcs=()=>{if(_cache.svcs)return _cache.svcs;let v=gs('lm_svcs',null);if(!v){v=DEF_SVCS;ss('lm_svcs',v);}return v;};
-const getStyls=()=>{if(_cache.styls)return _cache.styls;let v=gs('lm_styls',null);if(!v){v=DEF_STYLS;ss('lm_styls',v);}return v;};
+const getStyls=()=>{if(_cache.styls)return [..._cache.styls].sort((a,b)=>Number(a.id)-Number(b.id));let v=gs('lm_styls',null);if(!v){v=DEF_STYLS;ss('lm_styls',v);}return [...v].sort((a,b)=>Number(a.id)-Number(b.id));};
 const getBks=()=>_cache.bks||gs('lm_bks',[]);
 const getBlocks=()=>_cache.blocks||gs('lm_blocks',[]);
 
@@ -1661,7 +1661,7 @@ function fRenderStyls(){
     <div class="styl-avatar" style="font-size:16px">✦</div>
     <div class="styl-name">不指定</div><div class="styl-title">由店家安排最合適人選</div>
   </div>`;
-  html+=getStyls().map(s=>`
+  html+=getStyls().slice().sort((a,b)=>Number(a.id)-Number(b.id)).map(s=>`
     <div class="styl-card ${fst.styl?.id===s.id?'selected':''}" onclick="fSelStyl(${s.id})">
       <div class="styl-card-photo">
         ${s.photo?`<img src="${esc(s.photo)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:`<span style="font-size:22px">${esc(s.avatar)}</span>`}
