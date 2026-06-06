@@ -795,7 +795,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 
     <!-- bookings -->
     <div class="a-panel" id="atab-bookings">
-      <div class="a-phdr"><div class="a-ptitle">預約<em>管理</em></div><button class="a-btn a-btn-gold" onclick="aOpenAddBk()">+ 新增預約</button></div>
+      <div class="a-phdr"><div class="a-ptitle">預約<em>管理</em></div><div style="display:flex;gap:8px"><button class="a-btn a-btn-outline" onclick="aExportCSV()">↓ 匯出 CSV</button><button class="a-btn a-btn-gold" onclick="aOpenAddBk()">+ 新增預約</button></div></div>
       <!-- Mini calendar for date filter -->
       <div style="display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap;align-items:flex-start">
         <div style="flex-shrink:0;width:100%;max-width:280px;min-width:200px">
@@ -1790,41 +1790,60 @@ async function fRenderSlots(){
     }
   }
 
-  // Build blocked ranges from bookings for this stylist
-  const relevantBks=bks.filter(b=>
-    b.date===fst.date &&
-    b.status!=='cancelled' &&
-    (fst.styl?.id===0 || Number(b.stylistId)===Number(fst.styl?.id))
-  );
+  // Build blocked ranges
+  const allStyls=getStyls().filter(s=>s.id!==0);
+  const isUnspecified=fst.styl?.id===0;
 
-  const blockedRanges=relevantBks.map(b=>{
-    const start=toMins(b.time);
-    // Use duration stored in booking first, fallback to service lookup
-    let dur=slotMin;
-    if(b.duration){
-      dur=parseDurMins(b.duration);
-    }else{
-      const bkSvc=getSvcs().find(s=>Number(s.id)===Number(b.serviceId));
-      dur=bkSvc?parseDurMins(bkSvc.duration):slotMin;
-    }
-    return{start,end:start+dur};
-  });
-
-  // Add manually blocked slots (全店封鎖 or 指定設計師封鎖)
-  const blockSlots=getBlocks().filter(b=>
-    b.date===fst.date &&
-    (!b.stylistId || fst.styl?.id===0 || String(b.stylistId)===String(fst.styl?.id))
-  );
-  blockSlots.forEach(bl=>{blockedRanges.push({start:toMins(bl.start),end:toMins(bl.end)});});
+  function getBkDur(b){
+    if(b.duration)return parseDurMins(b.duration);
+    const bkSvc=getSvcs().find(s=>Number(s.id)===Number(b.serviceId));
+    return bkSvc?parseDurMins(bkSvc.duration):slotMin;
+  }
 
   function isBlocked(slotTime){
     const sStart=toMins(slotTime);
     const sEnd=sStart+svcMins;
     if(sEnd>ch)return true;
-    for(const r of blockedRanges){
-      if(sStart<r.end && sEnd>r.start)return true;
+
+    if(isUnspecified){
+      // 不指定：所有設計師都被佔用才封鎖
+      const availStyls=allStyls.filter(s=>{
+        // 排除休假
+        if(s.holidays&&s.holidays.includes(fst.date))return false;
+        // 檢查這位設計師在此時段有沒有預約衝突
+        const styBks=bks.filter(b=>b.date===fst.date&&b.status!=='cancelled'&&Number(b.stylistId)===Number(s.id));
+        const styBlocks=getBlocks().filter(b=>b.date===fst.date&&String(b.stylistId)===String(s.id));
+        for(const b of styBks){
+          const bStart=toMins(b.time);const bEnd=bStart+getBkDur(b);
+          if(sStart<bEnd&&sEnd>bStart)return false;
+        }
+        for(const bl of styBlocks){
+          const blStart=toMins(bl.start);const blEnd=toMins(bl.end);
+          if(sStart<blEnd&&sEnd>blStart)return false;
+        }
+        return true;
+      });
+      // 全店封鎖也要檢查
+      const globalBlocks=getBlocks().filter(b=>b.date===fst.date&&!b.stylistId);
+      for(const bl of globalBlocks){
+        const blStart=toMins(bl.start);const blEnd=toMins(bl.end);
+        if(sStart<blEnd&&sEnd>blStart)return true;
+      }
+      return availStyls.length===0;
+    }else{
+      // 指定設計師：只看這位設計師
+      const styBks=bks.filter(b=>b.date===fst.date&&b.status!=='cancelled'&&Number(b.stylistId)===Number(fst.styl?.id));
+      const styBlocks=getBlocks().filter(b=>b.date===fst.date&&(String(b.stylistId)===String(fst.styl?.id)||!b.stylistId));
+      for(const b of styBks){
+        const bStart=toMins(b.time);const bEnd=bStart+getBkDur(b);
+        if(sStart<bEnd&&sEnd>bStart)return true;
+      }
+      for(const bl of styBlocks){
+        const blStart=toMins(bl.start);const blEnd=toMins(bl.end);
+        if(sStart<blEnd&&sEnd>blStart)return true;
+      }
+      return false;
     }
-    return false;
   }
 
   const available=slots.filter(t=>!isBlocked(t)).length;
@@ -1897,29 +1916,50 @@ async function fConfirm(){
     alert('⚠️ 資料庫連線異常\n\n請重新整理頁面後再試。若問題持續，請直接電話預約。');
     return;
   }
-  // 4. Final check: verify slot is still available
+  // 4. Final check + 自動分配設計師（不指定時）
+  let assignedStylId=fst.styl?.id||0;
+  let assignedStylName=fst.styl?.name||'不指定';
   try{
     const snap=await window.FB.db.collection('bookings')
       .where('date','==',fst.date)
       .where('time','==',fst.time)
       .where('status','==','confirmed')
       .get();
-    const conflicts=snap.docs.filter(d=>{
-      const b=d.data();
-      return fst.styl?.id===0 || Number(b.stylistId)===Number(fst.styl?.id);
-    });
-    if(conflicts.length>0){
-      alert('抱歉！此時段剛被預約，請重新選擇時段。');
-      fGoStep(3);
-      await fRenderSlots();
-      return;
+    const takenStylIds=snap.docs.map(d=>Number(d.data().stylistId));
+
+    if(fst.styl?.id===0){
+      // 自動分配：找有空的設計師
+      const allStyls=getStyls().filter(s=>s.id!==0);
+      // 排除休假日
+      const available=allStyls.filter(s=>{
+        if(s.holidays&&s.holidays.includes(fst.date))return false;
+        return !takenStylIds.includes(Number(s.id));
+      });
+      if(available.length===0){
+        alert('抱歉！此時段所有設計師均已被預約，請重新選擇時段。');
+        fGoStep(3);
+        await fRenderSlots();
+        return;
+      }
+      // 隨機選一位
+      const picked=available[Math.floor(Math.random()*available.length)];
+      assignedStylId=picked.id;
+      assignedStylName=picked.name;
+    }else{
+      // 指定設計師：檢查有沒有衝突
+      if(takenStylIds.includes(Number(fst.styl?.id))){
+        alert('抱歉！此時段剛被預約，請重新選擇時段。');
+        fGoStep(3);
+        await fRenderSlots();
+        return;
+      }
     }
   }catch(e){
     console.warn('Conflict check failed:',e);
   }
   const id='LM'+Date.now().toString().slice(-6);
   const bk={id,service:fst.svc.name,serviceId:fst.svc.id,price:fst.svc.price,duration:fst.svc.duration,
-    stylistId:fst.styl?.id||0,stylistName:fst.styl?.name||'不指定',
+    stylistId:assignedStylId,stylistName:assignedStylName,
     date:fst.date,time:fst.time,name:fst.name,phone:fst.phone,
     email:fst.email,lineId:fst.lineId,notes:fst.notes,
     status:'confirmed',createdAt:new Date().toISOString()};
@@ -2122,6 +2162,35 @@ async function aCancelBk(id){
   aRenderBk();toast('預約已取消');
 }
 
+function aExportCSV(){
+  const bks=getBks();
+  if(!bks.length){toast('目前沒有預約資料');return;}
+  const headers=['預約編號','客戶姓名','電話','Email','服務','設計師','日期','時段','費用','備註','狀態','建立時間'];
+  const rows=bks.map(b=>[
+    b.id||'',
+    b.name||'',
+    b.phone||'',
+    b.email||'',
+    b.service||'',
+    b.stylistName||'',
+    b.date||'',
+    b.time||'',
+    b.price||'',
+    (b.notes||'').replace(/,/g,'，'),
+    b.status==='confirmed'?'已確認':'已取消',
+    b.createdAt?b.createdAt.slice(0,10):''
+  ]);
+    const csv="\uFEFF"+[headers,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  const today=new Date().toISOString().slice(0,10);
+  a.download=`paxhair_預約_${today}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('已匯出 CSV ✦');
+}
 function aOpenAddBk(){
   document.getElementById('mBSvc').innerHTML=getSvcs().map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.price)}</option>`).join('');
   document.getElementById('mBStyl').innerHTML=`<option value="0">不指定</option>`+getStyls().map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
