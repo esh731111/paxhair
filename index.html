@@ -1209,6 +1209,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="modal-title">新增<em>預約</em></div>
     <div class="a-frow"><div class="a-field"><label>客戶姓名 *</label><input type="text" id="sdBName" placeholder="姓名"></div>
     <div class="a-field"><label>電話 *</label><input type="tel" id="sdBPhone" placeholder="電話"></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>Email（選填）</label><input type="email" id="sdBEmail" placeholder="寄送確認信用"></div></div>
     <div class="a-frow s1"><div class="a-field"><label>服務項目</label><select id="sdBSvc"></select></div></div>
     <div class="a-frow"><div class="a-field"><label>日期 *</label><input type="date" id="sdBDate"></div>
     <div class="a-field"><label>時段 *</label><input type="time" id="sdBTime"></div></div>
@@ -2716,7 +2717,7 @@ function sdOpenAddBk(){
   const styl=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
   const svcs=getSvcForStyl(styl);
   document.getElementById('sdBSvc').innerHTML=svcs.map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.price)}</option>`).join('');
-  ['sdBName','sdBPhone','sdBNotes'].forEach(id=>document.getElementById(id).value='');
+  ['sdBName','sdBPhone','sdBEmail','sdBNotes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('sdBDate').value=_sdBkSel||today;
   document.getElementById('sdBTime').value='';
   openModal('mSdAddBk');
@@ -2738,6 +2739,7 @@ async function sdSaveAddBk(){
     id,service:svc.name,serviceId:svc.id,price:svc.price,duration:svc.duration,
     stylistId:Number(_sdStylId),stylistName:styl?.name||'',
     date,time,name,phone,
+    email:document.getElementById('sdBEmail').value.trim(),
     notes:document.getElementById('sdBNotes').value.trim(),
     status:'confirmed',createdAt:new Date().toISOString()
   };
