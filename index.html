@@ -717,9 +717,14 @@ tr:hover td{background:rgba(255,255,255,0.02)}
               <div id="vId" style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--charcoal);letter-spacing:3px"></div>
             </div>
           </div>
-          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px">
             <button class="btn btn-secondary" onclick="fNewBooking()">再次預約</button>
             <button class="btn btn-primary" onclick="window.print()">列印 / 儲存憑證</button>
+          </div>
+          <div style="text-align:center">
+            <button class="btn btn-secondary" id="fCalBtn" onclick="fAddToCalendar()" style="background:#fff;border-color:#4285F4;color:#4285F4;gap:8px">
+              <span>📅</span> 加入 Google 行事曆
+            </button>
           </div>
         </div>
       </div>
@@ -3309,7 +3314,24 @@ function aRenderStats(){
 }
 
 // ══ VOUCHER ════════════════════════════════════════════════
+function fAddToCalendar(){
+  const bk=_lastBk;
+  if(!bk)return;
+  // 計算開始和結束時間
+  const [h,m]=bk.time.split(':').map(Number);
+  const durMins=bk.duration?parseDurMins(bk.duration):60;
+  const start=new Date(bk.date+'T'+bk.time+':00');
+  const end=new Date(start.getTime()+durMins*60000);
+  const fmt=d=>d.toISOString().replace(/-|:|\.\d{3}/g,'').slice(0,15)+'Z';
+  const title=encodeURIComponent(`${bk.service} — ${getShop().name}`);
+  const details=encodeURIComponent(`設計師：${bk.stylistName}\n預約編號：#${bk.id}\n電話：${getShop().phone}`);
+  const location=encodeURIComponent(getShop().address||'');
+  const url=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(start)}/${fmt(end)}&details=${details}&location=${location}`;
+  window.open(url,'_blank');
+}
+let _lastBk=null;
 function renderVoucher(bk){
+  _lastBk=bk;
   const shop=getShop();
   document.getElementById('vShopName').textContent=shop.name;
   document.getElementById('vId').textContent='#'+bk.id;
