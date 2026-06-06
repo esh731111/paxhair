@@ -1203,6 +1203,27 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 
 <div class="toast" id="toast"></div>
 
+<!-- ══ EDIT BOOKING MODAL ══ -->
+<div class="modal-overlay" id="mEditBk">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">修改<em>預約</em></div>
+    <input type="hidden" id="eBkId">
+    <div class="a-frow"><div class="a-field"><label>客戶姓名</label><input type="text" id="eBkName"></div>
+    <div class="a-field"><label>電話</label><input type="tel" id="eBkPhone"></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>Email</label><input type="email" id="eBkEmail"></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>服務項目</label><select id="eBkSvc"></select></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>設計師</label><select id="eBkStyl"></select></div></div>
+    <div class="a-frow"><div class="a-field"><label>日期</label><input type="date" id="eBkDate"></div>
+    <div class="a-field"><label>時段</label><input type="time" id="eBkTime"></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>備註</label><textarea id="eBkNotes" style="height:60px"></textarea></div></div>
+    <div class="modal-footer">
+      <button class="a-btn a-btn-outline" onclick="closeModal('mEditBk')">取消</button>
+      <button class="a-btn a-btn-danger" onclick="aCancelBkFromEdit()">取消預約</button>
+      <button class="a-btn a-btn-gold" onclick="aSaveEditBk()">儲存</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ STYLIST ADD BOOKING MODAL ══ -->
 <div class="modal-overlay" id="mSdAddBk">
   <div class="modal" style="max-width:420px">
@@ -1740,6 +1761,15 @@ async function fAddCalDots(){
       const dot=document.createElement('div');
       dot.style.cssText=`width:5px;height:5px;border-radius:50%;margin:1px auto 0;background:${pct>=1?'#E07070':pct>=0.5?'#FFA726':'#4CAF50'}`;
       el.appendChild(dot);
+      // 約滿時加上標示並停用
+      if(pct>=1){
+        el.classList.add('dis');
+        el.onclick=null;
+        const full=document.createElement('div');
+        full.style.cssText='font-size:8px;color:#E07070;margin-top:1px;letter-spacing:0';
+        full.textContent='約滿';
+        el.appendChild(full);
+      }
     });
   }catch(e){console.warn('fAddCalDots:',e);}
 }
@@ -2158,9 +2188,51 @@ function aRenderBk(){
       <td data-label="日期時段" style="font-size:12px">${b.date} ${b.time}</td>
       <td data-label="電話" style="font-size:12px;color:var(--amid)">${esc(b.phone)}</td>
       <td data-label="狀態"><span class="badge ${b.status==='confirmed'?'badge-ok':'badge-cancel'}">${b.status==='confirmed'?'已確認':'已取消'}</span></td>
-      <td>${b.status==='confirmed'?`<button class="a-btn a-btn-danger a-btn-sm" onclick="aCancelBk('${b.id}')">取消</button>`:''}</td>
+      <td>${b.status==='confirmed'?`<button class="a-btn a-btn-outline a-btn-sm" onclick="aOpenEditBk('${b.id}')">編輯</button>`:''}</td>
     </tr>`).join('')
     :'<tr><td colspan="8" style="text-align:center;color:var(--alight);padding:24px">無預約紀錄</td></tr>';
+}
+function aOpenEditBk(id){
+  const bk=getBks().find(b=>b.id===id);
+  if(!bk)return;
+  document.getElementById('eBkId').value=id;
+  document.getElementById('eBkName').value=bk.name||'';
+  document.getElementById('eBkPhone').value=bk.phone||'';
+  document.getElementById('eBkEmail').value=bk.email||'';
+  document.getElementById('eBkDate').value=bk.date||'';
+  document.getElementById('eBkTime').value=bk.time||'';
+  document.getElementById('eBkNotes').value=bk.notes||'';
+  // 填服務下拉
+  document.getElementById('eBkSvc').innerHTML=getSvcs().map(s=>`<option value="${s.id}" ${Number(s.id)===Number(bk.serviceId)?'selected':''}>${esc(s.name)}</option>`).join('');
+  // 填設計師下拉
+  document.getElementById('eBkStyl').innerHTML=`<option value="0">不指定</option>`+getStyls().map(s=>`<option value="${s.id}" ${Number(s.id)===Number(bk.stylistId)?'selected':''}>${esc(s.name)}</option>`).join('');
+  openModal('mEditBk');
+}
+async function aSaveEditBk(){
+  const id=document.getElementById('eBkId').value;
+  const svcId=parseInt(document.getElementById('eBkSvc').value);
+  const svc=getSvcs().find(s=>s.id===svcId)||getSvcs()[0];
+  const stylId=parseInt(document.getElementById('eBkStyl').value);
+  const styl=getStyls().find(s=>Number(s.id)===stylId);
+  const updates={
+    name:document.getElementById('eBkName').value.trim(),
+    phone:document.getElementById('eBkPhone').value.trim(),
+    email:document.getElementById('eBkEmail').value.trim(),
+    date:document.getElementById('eBkDate').value,
+    time:document.getElementById('eBkTime').value,
+    notes:document.getElementById('eBkNotes').value.trim(),
+    service:svc.name,serviceId:svc.id,price:svc.price,duration:svc.duration,
+    stylistId:stylId,stylistName:styl?.name||'不指定',
+  };
+  if(!updates.name||!updates.phone||!updates.date||!updates.time){toast('請填寫必要欄位');return;}
+  await fbUpdateBooking(id,updates);
+  closeModal('mEditBk');aRenderBk();toast('預約已更新 ✦');
+}
+async function aCancelBkFromEdit(){
+  const id=document.getElementById('eBkId').value;
+  if(!confirm('確定要取消此預約？'))return;
+  await fbUpdateBooking(id,{status:'cancelled'});
+  closeModal('mEditBk');aRenderBk();toast('預約已取消');
 }
 async function aCancelBk(id){
   if(!confirm('確定要取消此預約？'))return;
