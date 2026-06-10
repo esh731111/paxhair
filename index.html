@@ -2343,9 +2343,11 @@ function aSaveShop(){
 }
 
 function aRenderStyls(){
-  document.getElementById('aSaGrid').innerHTML=getStyls().map(s=>`
-    <div class="sa-card">
-      <div class="sa-top"><div class="sa-avatar">${esc(s.avatar)}</div>
+  const grid=document.getElementById('aSaGrid');
+  grid.innerHTML=getStyls().map(s=>`
+    <div class="sa-card" draggable="true" data-stylid="${s.id}" style="cursor:grab;position:relative">
+      <div style="position:absolute;top:8px;right:8px;color:var(--alight);font-size:14px;cursor:grab" title="拖拉排序">⠿</div>
+      <div class="sa-top"><div class="sa-avatar">${s.photo?`<img src="${esc(s.photo)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:`${esc(s.avatar)}`}</div>
       <div><div class="sa-name">${esc(s.name)}</div><div class="sa-title">${esc(s.title)}</div></div></div>
       <div class="sa-specs">${s.specialties.map(t=>`<span class="sa-tag">${esc(t)}</span>`).join('')}</div>
       <div class="sa-hols">${s.holidays.length?`休假：${s.holidays.slice(0,3).join('、')}${s.holidays.length>3?`…等${s.holidays.length}天`:''}`:' 無設定休假日'}</div>
@@ -2354,6 +2356,32 @@ function aRenderStyls(){
         <button class="a-btn a-btn-danger a-btn-sm" onclick="aDelStylist(${s.id})">刪除</button>
       </div>
     </div>`).join('');
+  // Add drag events
+  let dragSrc=null;
+  grid.querySelectorAll('.sa-card').forEach(card=>{
+    card.addEventListener('dragstart',e=>{dragSrc=card;card.style.opacity='0.4';e.dataTransfer.effectAllowed='move';});
+    card.addEventListener('dragend',e=>{card.style.opacity='1';grid.querySelectorAll('.sa-card').forEach(c=>c.style.outline='');});
+    card.addEventListener('dragover',e=>{e.preventDefault();card.style.outline='2px solid var(--gold)';return false;});
+    card.addEventListener('dragleave',e=>{card.style.outline='';});
+    card.addEventListener('drop',e=>{
+      e.stopPropagation();
+      if(dragSrc!==card){
+        const cards=[...grid.querySelectorAll('.sa-card')];
+        const fromIdx=cards.indexOf(dragSrc);
+        const toIdx=cards.indexOf(card);
+        if(fromIdx<toIdx) card.after(dragSrc); else card.before(dragSrc);
+        // Save new order
+        const newOrder=[...grid.querySelectorAll('.sa-card')].map(c=>Number(c.dataset.stylid));
+        const styls=getStyls();
+        const sorted=newOrder.map(id=>styls.find(s=>Number(s.id)===id)).filter(Boolean);
+        ss('lm_styls',sorted);_cache.styls=sorted;
+        if(window.FB)(async()=>{await fbSaveList('stylists',sorted);})();
+        toast('排序已儲存 ✦');
+      }
+      card.style.outline='';
+      return false;
+    });
+  });
 }
 
 let mcSt={y:new Date().getFullYear(),m:new Date().getMonth(),hols:[],svcs:[]};
@@ -2407,8 +2435,8 @@ function renderStylistSvcList(stylistSvcs){
       </div>
       <div id="ssfields-${gs.id}" style="display:${en?'grid':'none'};grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
         <div class="a-field"><label>服務名稱</label><input type="text" id="ssname-${gs.id}" value="${esc(ov&&ov.enabled?ov.name:gs.name)}" placeholder="${esc(gs.name)}"></div>
-        <div class="a-field"><label>價格</label><input type="text" id="ssprice-${gs.id}" value="${(ov&&ov.enabled?ov.price:gs.price).replace(/[^0-9]/g,'')}" placeholder="${gs.price.replace(/[^0-9]/g,'')}"></div>
-        <div class="a-field"><label>時長</label><input type="text" id="ssdur-${gs.id}" value="${(ov&&ov.enabled?ov.duration:gs.duration).replace(/[^0-9]/g,'')}" placeholder="${gs.duration.replace(/[^0-9]/g,'')}"></div>
+        <div class="a-field"><label>價格</label><input type="text" id="ssprice-${gs.id}" value="${(ov&&ov.enabled?ov.price:gs.price)}" placeholder="${gs.price}"></div>
+        <div class="a-field"><label>時長</label><input type="text" id="ssdur-${gs.id}" value="${(ov&&ov.enabled?ov.duration:gs.duration)}" placeholder="${gs.duration}"></div>
         <div class="a-field"><label>說明</label><input type="text" id="ssdesc-${gs.id}" value="${esc(ov&&ov.enabled?ov.desc:gs.desc)}" placeholder="${esc(gs.desc)}"></div>
       </div>
     </div>`;
@@ -2587,8 +2615,8 @@ function aOpenSvc(svcId){
     const s=getSvcs().find(x=>Number(x.id)===sid);
     if(!s){toast('找不到服務');return;}
     document.getElementById('mVName').value=s.name;
-    document.getElementById('mVPrice').value=(s.price||'').replace(/[^0-9]/g,'');
-    document.getElementById('mVDur').value=(s.duration||'').replace(/[^0-9]/g,'');
+    document.getElementById('mVPrice').value=s.price||'';
+    document.getElementById('mVDur').value=(s.duration||'');
     document.getElementById('mVDesc').value=s.desc;
     document.getElementById('mVId').value=s.id;
     document.getElementById('mSvcTitle').innerHTML='編輯<em>服務項目</em>';
@@ -2930,8 +2958,8 @@ function sdRenderServices(){
       </div>
       <div id="sdsfields-${gs.id}" style="display:${en?'grid':'none'};grid-template-columns:1fr 1fr;gap:8px">
         <div class="a-field"><label>名稱</label><input type="text" id="sdsname-${gs.id}" value="${esc(ov&&ov.enabled?ov.name:gs.name)}" placeholder="${esc(gs.name)}"></div>
-        <div class="a-field"><label>價格</label><input type="text" id="sdsprice-${gs.id}" value="${(ov&&ov.enabled?ov.price:gs.price).replace(/[^0-9]/g,'')}" placeholder="${gs.price.replace(/[^0-9]/g,'')}"></div>
-        <div class="a-field"><label>時長</label><input type="text" id="sdsdur-${gs.id}" value="${(ov&&ov.enabled?ov.duration:gs.duration).replace(/[^0-9]/g,'')}" placeholder="${gs.duration.replace(/[^0-9]/g,'')}"></div>
+        <div class="a-field"><label>價格</label><input type="text" id="sdsprice-${gs.id}" value="${(ov&&ov.enabled?ov.price:gs.price)}" placeholder="${gs.price}"></div>
+        <div class="a-field"><label>時長</label><input type="text" id="sdsdur-${gs.id}" value="${(ov&&ov.enabled?ov.duration:gs.duration)}" placeholder="${gs.duration}"></div>
       </div>
     </div>`;
   }).join('');
@@ -2982,10 +3010,10 @@ function sdRenderCustomSvcs(){
       <div id="sdEdit-${sv.id}" style="display:none;padding:12px 14px;border-top:1px solid var(--aborder);background:var(--apanel2)">
         <div class="a-frow">
           <div class="a-field"><label>服務名稱</label><input type="text" id="sdEName-${sv.id}" value="${esc(sv.name)}"></div>
-          <div class="a-field"><label>價格</label><input type="text" id="sdEPrice-${sv.id}" value="${esc(sv.price).replace(/[^0-9]/g,'')}"></div>
+          <div class="a-field"><label>價格</label><input type="text" id="sdEPrice-${sv.id}" value="${esc(sv.price)}"></div>
         </div>
         <div class="a-frow">
-          <div class="a-field"><label>時長</label><input type="text" id="sdEDur-${sv.id}" value="${esc(sv.duration).replace(/[^0-9]/g,'')}"></div>
+          <div class="a-field"><label>時長</label><input type="text" id="sdEDur-${sv.id}" value="${esc(sv.duration)}"></div>
           <div class="a-field"><label>說明</label><input type="text" id="sdEDesc-${sv.id}" value="${esc(sv.desc||'')}"></div>
         </div>
         <div class="a-btn-row" style="margin-top:6px">
@@ -3545,8 +3573,8 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 // ══ UTILS ══════════════════════════════════════════════════
 function fmt(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function dspDate(str){if(!str)return'';const[y,m,d]=str.split('-');const days=['日','一','二','三','四','五','六'];return`${y}年${parseInt(m)}月${parseInt(d)}日（週${days[new Date(str).getDay()]}）`;}
-function fmtPrice(v){if(!v)return '';const n=String(v).replace(/[^0-9]/g,'');return n?'NT$'+n:'';}
-function fmtDur(v){if(!v)return '';const n=String(v).replace(/[^0-9]/g,'');return n?n+'分':'';}
+function fmtPrice(v){if(!v)return '';const s=String(v).trim();if(s.startsWith('NT$'))return s;const num=s;if(!num)return s;const suffix=s.replace(/^[0-9,\.]+/,'').replace(/^[^0-9]*/,'').replace(/^[0-9]+/,'').trim();return 'NT$'+parseInt(num).toLocaleString()+(suffix?' '+suffix:'');}
+function fmtDur(v){if(!v)return '';const n=String(v);return n?n+'分':'';}
 function dspPrice(v){return fmtPrice(v)||String(v||'');}
 function dspDur(v){return fmtDur(v)||String(v||'');}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
