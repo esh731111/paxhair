@@ -3616,7 +3616,7 @@ function dspDate(str){if(!str)return'';const[y,m,d]=str.split('-');const days=['
 function fmtPrice(v){if(!v)return '';const s=String(v).trim();if(s.startsWith('NT$'))return s;const num=s;if(!num)return s;const suffix=s.replace(/^[0-9,\.]+/,'').replace(/^[^0-9]*/,'').replace(/^[0-9]+/,'').trim();return 'NT$'+parseInt(num).toLocaleString()+(suffix?' '+suffix:'');}
 function fmtDur(v){if(!v)return '';const s=String(v).trim();if(s.includes('分')||s.includes('小時'))return s;const n=s.replace(/[^0-9]/g,'');return n?n+'分鐘':'';}
 function dspPrice(v){return fmtPrice(v)||String(v||'');}
-function dspDur(v){return fmtDur(v)||String(v||'');}
+function dspDur(v){if(!v)return '';const s=String(v).trim();if(s.includes('分')||s.includes('小時'))return s;const n=s.replace(/[^0-9]/g,'');return n?n+'分鐘':s;}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 // ══ INIT ═══════════════════════════════════════════════════
