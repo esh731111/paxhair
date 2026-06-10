@@ -900,7 +900,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="a-panel" id="atab-services">
       <div class="a-phdr"><div class="a-ptitle">服務<em>項目</em></div><button class="a-btn a-btn-gold" onclick="aOpenSvc()">+ 新增服務</button></div>
       <div class="a-tbl-wrap">
-        <table><thead><tr><th>名稱</th><th>說明</th><th>時長</th><th>費用</th><th></th></tr></thead>
+        <table><thead><tr><th style="width:30px"></th><th>名稱</th><th>說明</th><th>時長</th><th>費用</th><th></th></tr></thead>
         <tbody id="aSvcTbl"></tbody></table>
       </div>
     </div>
@@ -2544,13 +2544,42 @@ function aTogDay(dow){const s=getSet();const i=s.closedDays.indexOf(dow);if(i>=0
 function aSaveSettings(){const s=getSet();s.openTime=document.getElementById('aOpenTime').value||s.openTime;s.closeTime=document.getElementById('aCloseTime').value||s.closeTime;s.slotMinutes=parseInt(document.getElementById('aSlotMin').value)||30;ss('lm_set',s);_cache.set=s;if(window.FB)(async()=>{await window.FB.dbSet('config','settings',s);})();toast('設定已儲存');}
 
 function aRenderSvcs(){
-  document.getElementById('aSvcTbl').innerHTML=getSvcs().map(s=>`<tr>
+  const tbody=document.getElementById('aSvcTbl');
+  tbody.innerHTML=getSvcs().map(s=>`<tr draggable="true" data-svcid="${s.id}" style="cursor:grab">
+    <td style="color:var(--alight);font-size:16px;text-align:center;cursor:grab;user-select:none" title="拖拉排序">⠿</td>
     <td data-label="名稱"><strong>${esc(s.name)}</strong></td>
     <td data-label="說明" style="color:var(--amid);font-size:12px">${esc(s.desc)}</td>
     <td data-label="時長" style="font-size:12px;color:var(--amid)">${esc(s.duration)}</td>
     <td data-label="費用" style="color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:15px">${esc(s.price)}</td>
     <td><button class="a-btn a-btn-outline a-btn-sm" onclick="aOpenSvc(${s.id})" style="margin-right:6px">編輯</button><button class="a-btn a-btn-danger a-btn-sm" onclick="aDelSvc(${s.id})">刪除</button></td>
   </tr>`).join('');
+  // Add drag events
+  let dragSrc=null;
+  tbody.querySelectorAll('tr').forEach(row=>{
+    row.addEventListener('dragstart',e=>{dragSrc=row;row.style.opacity='0.4';e.dataTransfer.effectAllowed='move';});
+    row.addEventListener('dragend',e=>{row.style.opacity='1';tbody.querySelectorAll('tr').forEach(r=>r.style.background='');});
+    row.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';row.style.background='var(--agold-dim)';return false;});
+    row.addEventListener('dragleave',e=>{row.style.background='';});
+    row.addEventListener('drop',e=>{
+      e.stopPropagation();
+      if(dragSrc!==row){
+        // Reorder in DOM
+        const rows=[...tbody.querySelectorAll('tr')];
+        const fromIdx=rows.indexOf(dragSrc);
+        const toIdx=rows.indexOf(row);
+        if(fromIdx<toIdx) row.after(dragSrc); else row.before(dragSrc);
+        // Save new order
+        const newOrder=[...tbody.querySelectorAll('tr')].map(r=>Number(r.dataset.svcid));
+        const svcs=getSvcs();
+        const sorted=newOrder.map(id=>svcs.find(s=>Number(s.id)===id)).filter(Boolean);
+        ss('lm_svcs',sorted);_cache.svcs=sorted;
+        if(window.FB)(async()=>{await fbSaveList('services',sorted);})();
+        toast('排序已儲存 ✦');
+      }
+      row.style.background='';
+      return false;
+    });
+  });
 }
 function aOpenSvc(svcId){
   if(svcId!=null && svcId!==''){
