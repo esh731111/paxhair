@@ -1367,8 +1367,8 @@ async function syncFromFirebase(){
     if(setData){_cache.set=setData;ss('lm_set',setData);}
     if(shopData){_cache.shop=shopData;ss('lm_shop',shopData);}
     if(pwdData?.value){ss('lm_adminpwd', pwdData.value);}
-    if(svcs.length){_cache.svcs=svcs;ss('lm_svcs',svcs);}
-    if(styls.length){_cache.styls=styls;ss('lm_styls',styls);}
+    if(svcs.length){const sv=[...svcs].sort((a,b)=>(a.order??999)-(b.order??999));_cache.svcs=sv;ss('lm_svcs',sv);}
+    if(styls.length){const st=[...styls].sort((a,b)=>(a.order??999)-(b.order??999)||Number(a.id)-Number(b.id));_cache.styls=st;ss('lm_styls',st);}
     _cache.blocks=blocks;ss('lm_blocks',blocks);
 
     // Realtime bookings listener
@@ -1431,8 +1431,8 @@ async function fbDeleteBlock(id){
 }
 
 // ── GETTERS ────────────────────────────────────────────────
-const getSvcs=()=>{if(_cache.svcs)return _cache.svcs;let v=gs('lm_svcs',null);if(!v){v=DEF_SVCS;ss('lm_svcs',v);}return v;};
-const getStyls=()=>{if(_cache.styls)return [..._cache.styls].sort((a,b)=>Number(a.id)-Number(b.id));let v=gs('lm_styls',null);if(!v){v=DEF_STYLS;ss('lm_styls',v);}return [...v].sort((a,b)=>Number(a.id)-Number(b.id));};
+const getSvcs=()=>{const v=_cache.svcs||gs('lm_svcs',null)||DEF_SVCS;if(!_cache.svcs){ss('lm_svcs',v);}return [...v].sort((a,b)=>(a.order??999)-(b.order??999));};
+const getStyls=()=>{const v=_cache.styls||gs('lm_styls',null)||DEF_STYLS;if(!_cache.styls){ss('lm_styls',v);}return [...v].sort((a,b)=>(a.order??999)-(b.order??999)||Number(a.id)-Number(b.id));};
 const getBks=()=>_cache.bks||gs('lm_bks',[]);
 const getBlocks=()=>_cache.blocks||gs('lm_blocks',[]);
 
@@ -2379,10 +2379,10 @@ function aRenderStyls(){
         const fromIdx=cards.indexOf(dragSrc);
         const toIdx=cards.indexOf(card);
         if(fromIdx<toIdx) card.after(dragSrc); else card.before(dragSrc);
-        // Save new order
+        // Save new order with order field
         const newOrder=[...grid.querySelectorAll('.sa-card')].map(c=>Number(c.dataset.stylid));
         const styls=getStyls();
-        const sorted=newOrder.map(id=>styls.find(s=>Number(s.id)===id)).filter(Boolean);
+        const sorted=newOrder.map((id,i)=>{const s=styls.find(s=>Number(s.id)===id);return s?{...s,order:i}:null;}).filter(Boolean);
         ss('lm_styls',sorted);_cache.styls=sorted;
         if(window.FB)(async()=>{await fbSaveList('stylists',sorted);})();
         toast('排序已儲存 ✦');
@@ -2636,10 +2636,10 @@ function aRenderSvcs(){
         const fromIdx=rows.indexOf(dragSrc);
         const toIdx=rows.indexOf(row);
         if(fromIdx<toIdx) row.after(dragSrc); else row.before(dragSrc);
-        // Save new order
+        // Save new order with order field
         const newOrder=[...tbody.querySelectorAll('tr')].map(r=>Number(r.dataset.svcid));
         const svcs=getSvcs();
-        const sorted=newOrder.map(id=>svcs.find(s=>Number(s.id)===id)).filter(Boolean);
+        const sorted=newOrder.map((id,i)=>{const s=svcs.find(s=>Number(s.id)===id);return s?{...s,order:i}:null;}).filter(Boolean);
         ss('lm_svcs',sorted);_cache.svcs=sorted;
         if(window.FB)(async()=>{await fbSaveList('services',sorted);})();
         toast('排序已儲存 ✦');
