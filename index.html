@@ -781,6 +781,8 @@ tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="a-sitem" data-tab="hours" onclick="aShowTab('hours')"><span class="a-sicon">○</span>營業時間</div>
     <div class="a-sitem" data-tab="services" onclick="aShowTab('services')"><span class="a-sicon">◇</span>服務項目</div>
     <div class="a-sitem" data-tab="line" onclick="aShowTab('line')"><span class="a-sicon">◉</span>Line 通知</div>
+    <div style="flex:1"></div>
+    <div class="a-sitem" onclick="adminLogout()" style="color:var(--alight);margin-top:auto"><span class="a-sicon">⇤</span>登出</div>
   </div>
 
   <!-- content -->
@@ -790,11 +792,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="a-panel active" id="atab-dashboard">
       <div class="a-phdr"><div class="a-ptitle"><em>總覽</em>儀表板</div><div id="aDashDate" style="font-size:12px;color:var(--amid)"></div></div>
       <div class="a-stats" id="aStats"></div>
-      <div class="a-tbl-wrap">
-        <div class="a-tbl-hdr"><div class="a-tbl-title">今日預約</div></div>
-        <table><thead><tr><th>時段</th><th>客戶</th><th>服務</th><th>設計師</th><th>狀態</th></tr></thead>
-        <tbody id="aTodayTbl"></tbody></table>
-      </div>
+      <div id="aTodayWrap"></div>
     </div>
 
     <!-- bookings -->
@@ -1043,6 +1041,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="a-sitem" data-sd="holidays" onclick="sdShowTab('holidays')"><span class="a-sicon">○</span>休假日設定</div>
     <div class="a-sitem" data-sd="services" onclick="sdShowTab('services')"><span class="a-sicon">◇</span>服務與價格</div>
     <div class="a-sitem" data-sd="profile" onclick="sdShowTab('profile')"><span class="a-sicon">✦</span>個人資料</div>
+    <div class="a-sitem" onclick="stylLogout()" style="color:var(--alight);margin-top:8px"><span class="a-sicon">⇤</span>登出</div>
   </div>
   <div class="sd-content">
 
@@ -1241,7 +1240,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="a-frow s1"><div class="a-field"><label>Email（選填）</label><input type="email" id="sdBEmail" placeholder="寄送確認信用"></div></div>
     <div class="a-frow s1"><div class="a-field"><label>服務項目</label><select id="sdBSvc"></select></div></div>
     <div class="a-frow"><div class="a-field"><label>日期 *</label><input type="date" id="sdBDate"></div>
-    <div class="a-field"><label>時段 *</label><input type="time" id="sdBTime"></div></div>
+    <div class="a-field"><label>時段 *</label><select id="sdBTime"><option value="">選擇時段</option></select></div></div>
     <div class="a-frow s1"><div class="a-field"><label>備註</label><textarea id="sdBNotes" placeholder="選填" style="height:60px"></textarea></div></div>
     <div style="padding:8px 0 4px">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--amid)">
@@ -1491,8 +1490,17 @@ function askStylLogin(){
   if(document.getElementById('viewStylist').style.display!=='none'){
     switchMain('front');return;
   }
-  _loginStylId=null;
+  // 檢查是否有有效 session
   const styls=getStyls();
+  const validSession=styls.find(s=>{
+    const session=gs('lm_styl_session_'+s.id,null);
+    return session&&session.expires>Date.now();
+  });
+  if(validSession){
+    switchMain('stylist',validSession.id);
+    return;
+  }
+  _loginStylId=null;
   document.getElementById('stylLoginList').innerHTML=styls.map(s=>`
     <div class="role-option" id="slogin-${s.id}" onclick="selectStylForLogin(${s.id})">
       <div class="role-icon" style="background:var(--agold-dim);font-family:'Cormorant Garamond',serif;color:var(--gold);font-size:18px">${s.photo?`<img src="${esc(s.photo)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:`${esc(s.avatar)}`}</div>
@@ -1522,6 +1530,7 @@ async function doStylLogin(){
   // First check localStorage
   const localPwd=gs('lm_stylpwd_'+_loginStylId,'0000');
   if(input===localPwd){
+    ss('lm_styl_session_'+_loginStylId,{expires:Date.now()+7*24*60*60*1000});
     closeModal('mStylLogin');
     switchMain('stylist',_loginStylId);
     return;
@@ -1535,6 +1544,7 @@ async function doStylLogin(){
       // Update localStorage with latest password
       ss('lm_stylpwd_'+_loginStylId, fbPwd);
       if(input===fbPwd){
+        ss('lm_styl_session_'+_loginStylId,{expires:Date.now()+7*24*60*60*1000});
         closeModal('mStylLogin');
         switchMain('stylist',_loginStylId);
         return;
@@ -1549,9 +1559,26 @@ async function doStylLogin(){
   document.getElementById('stylLoginPwd').focus();
 }
 
+function adminLogout(){
+  ss('lm_admin_session',null);
+  switchMain('front');
+  toast('已登出');
+}
+function stylLogout(){
+  // 清除所有設計師 session
+  getStyls().forEach(s=>ss('lm_styl_session_'+s.id,null));
+  switchMain('front');
+  toast('已登出');
+}
 function askAdminPwd(){
   // If already in admin, just go front
   if(document.getElementById('viewAdmin').style.display!=='none'){switchMain('front');return;}
+  // 檢查是否有有效 session
+  const session=gs('lm_admin_session',null);
+  if(session&&session.expires>Date.now()){
+    switchMain('admin');
+    return;
+  }
   document.getElementById('adminPwdInput').value='';
   document.getElementById('adminPwdError').textContent='';
   openModal('mAdminPwd');
@@ -1561,6 +1588,9 @@ function askAdminPwd(){
 function verifyAdminPwd(){
   const input=document.getElementById('adminPwdInput').value;
   if(input===getAdminPwd()){
+    // 記住登入狀態7天
+    const expires=Date.now()+7*24*60*60*1000;
+    ss('lm_admin_session',{expires});
     closeModal('mAdminPwd');
     switchMain('admin');
   }else{
@@ -1802,13 +1832,13 @@ function fSelDate(ds,dis){
 // Parse duration string like "60 分鐘", "90分鐘", "1.5小時" → minutes
 function parseDurMins(str){
   if(!str)return 60;
-  const s=String(str);
+  const s=String(str).replace(/ |　/g,' ').trim();
   const hrMatch=s.match(/([\d.]+)\s*小時/);
   if(hrMatch)return Math.round(parseFloat(hrMatch[1])*60);
   const minMatch=s.match(/([\d.]+)\s*分/);
   if(minMatch)return Math.round(parseFloat(minMatch[1]));
-  const numOnly=s.match(/^(\d+)$/);
-  if(numOnly)return parseInt(numOnly[1]);
+  const numOnly=s.match(/^([\d.]+)$/);
+  if(numOnly)return Math.round(parseFloat(numOnly[1]));
   return 60;
 }
 // Convert "HH:MM" to minutes-since-midnight
@@ -1888,11 +1918,11 @@ async function fRenderSlots(){
       const styBlocks=getBlocks().filter(b=>b.date===fst.date&&(String(b.stylistId)===String(fst.styl?.id)||!b.stylistId));
       for(const b of styBks){
         const bStart=toMins(b.time);const bEnd=bStart+getBkDur(b);
-        if(sStart<bEnd&&sEnd>bStart)return true;
+        if(sStart<bEnd&&sEnd>=bStart)return true;
       }
       for(const bl of styBlocks){
         const blStart=toMins(bl.start);const blEnd=toMins(bl.end);
-        if(sStart<blEnd&&sEnd>blStart)return true;
+        if(sStart<blEnd&&sEnd>=blStart)return true;
       }
       return false;
     }
@@ -2132,15 +2162,47 @@ function aRenderDash(){
     <div class="a-stat"><div class="a-stat-lbl">本月預約</div><div class="a-stat-val">${thisM}</div><div class="a-stat-sub">筆</div></div>
     <div class="a-stat"><div class="a-stat-lbl">有效預約</div><div class="a-stat-val">${totalOk}</div><div class="a-stat-sub">筆</div></div>
     <div class="a-stat"><div class="a-stat-lbl">設計師</div><div class="a-stat-val">${getStyls().length}</div><div class="a-stat-sub">位</div></div>`;
-  document.getElementById('aTodayTbl').innerHTML=todBks.length
-    ?todBks.sort((a,b)=>a.time.localeCompare(b.time)).map(b=>`<tr>
-      <td data-label="時段">${b.time}</td>
-      <td data-label="客戶">${esc(b.name)}</td>
-      <td data-label="服務">${esc(b.service)}</td>
-      <td data-label="設計師">${esc(b.stylistName)}</td>
-      <td data-label="狀態"><span class="badge badge-ok"><span class="sdot sdot-g"></span>已確認</span></td>
-    </tr>`).join('')
-    :'<tr><td colspan="5" style="text-align:center;color:var(--alight);padding:24px">今日尚無預約</td></tr>';
+  // 依設計師分組
+  const styls=getStyls();
+  const wrap=document.getElementById('aTodayWrap');
+  if(!todBks.length){
+    wrap.innerHTML='<div style="text-align:center;color:var(--alight);padding:32px;font-size:13px">今日尚無預約</div>';
+    return;
+  }
+  // 取得有預約的設計師（保持設計師排序）
+  const stylIds=[...new Set(todBks.map(b=>String(b.stylistId)))];
+  const orderedStyls=styls.filter(s=>stylIds.includes(String(s.id)));
+  // 不指定的放最後
+  const hasUnspec=todBks.some(b=>!b.stylistId||Number(b.stylistId)===0);
+
+  wrap.innerHTML=[...orderedStyls,...(hasUnspec?[{id:0,name:'不指定',avatar:'?'}]:[])]
+    .map(styl=>{
+      const stylBks=todBks.filter(b=>String(b.stylistId)===String(styl.id)).sort((a,b)=>a.time.localeCompare(b.time));
+      if(!stylBks.length)return '';
+      return `<div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--aborder)">
+          <div style="width:30px;height:30px;border-radius:50%;background:${styl.id===0?'var(--aborder)':'var(--agold-dim)'};border:1px solid var(--agold-border);display:flex;align-items:center;justify-content:center;font-size:12px;overflow:hidden;flex-shrink:0">
+            ${styl.photo?`<img src="${esc(styl.photo)}" style="width:100%;height:100%;object-fit:cover">`:`${esc(styl.avatar||styl.name?.slice(0,2)||'?')}`}
+          </div>
+          <div style="font-size:13px;font-weight:500;color:var(--atext)">${esc(styl.name)}</div>
+          <div style="font-size:11px;color:var(--alight);margin-left:auto">${stylBks.length} 筆</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr>
+            <th style="padding:6px 8px;font-size:10px;color:var(--alight);font-weight:500;text-align:left;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--aborder)">時段</th>
+            <th style="padding:6px 8px;font-size:10px;color:var(--alight);font-weight:500;text-align:left;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--aborder)">客戶</th>
+            <th style="padding:6px 8px;font-size:10px;color:var(--alight);font-weight:500;text-align:left;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--aborder)">服務</th>
+            <th style="padding:6px 8px;font-size:10px;color:var(--alight);font-weight:500;text-align:left;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--aborder)">費用</th>
+          </tr></thead>
+          <tbody>${stylBks.map(b=>`<tr style="border-bottom:1px solid var(--aborder)">
+            <td style="padding:10px 8px;font-size:13px;color:var(--gold);font-family:'Cormorant Garamond',serif;white-space:nowrap">${b.time}</td>
+            <td style="padding:10px 8px;font-size:13px;color:var(--atext)">${esc(b.name)}<br><span style="font-size:11px;color:var(--alight)">${esc(b.phone||'')}</span></td>
+            <td style="padding:10px 8px;font-size:12px;color:var(--amid)">${esc(b.service)}${b.notes?`<br><span style="font-size:10px;color:var(--alight)">${esc(b.notes)}</span>`:''}</td>
+            <td style="padding:10px 8px;font-size:13px;color:var(--gold);font-family:'Cormorant Garamond',serif;white-space:nowrap">${esc(b.price||'')}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`;
+    }).join('');
 }
 
 let aBkFilter='all';
@@ -2894,7 +2956,17 @@ function sdOpenAddBk(){
   document.getElementById('sdBSvc').innerHTML=svcs.map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.price)}</option>`).join('');
   ['sdBName','sdBPhone','sdBEmail','sdBNotes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('sdBDate').value=_sdBkSel||today;
-  document.getElementById('sdBTime').value='';
+  // 產生時段選項（依營業時間，每30分鐘）
+  const set=getSet();
+  const oh=toMins(set.openTime||'10:00'),ch=toMins(set.closeTime||'19:00');
+  const slots=[];
+  for(let m=oh;m<ch;m+=30){
+    const h=Math.floor(m/60),min=m%60;
+    slots.push(`${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`);
+  }
+  const timeSel=document.getElementById('sdBTime');
+  timeSel.innerHTML='<option value="">選擇時段</option>'+slots.map(t=>`<option value="${t}">${t}</option>`).join('');
+  timeSel.value='';
   document.getElementById('sdBForce').checked=false;
   openModal('mSdAddBk');
 }
