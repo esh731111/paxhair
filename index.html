@@ -2022,12 +2022,6 @@ async function fConfirm(){
     alert('⚠️ 預約儲存失敗\n\n請重新整理頁面後再試。若問題持續，請直接電話預約。');
     return;
   }
-  const set=getSet();
-  if(set.lineToken){
-    const shop=getShop();
-    const msg=`✦ ${shop.name} 新預約通知\n────────────\n客戶：${fst.name}\n電話：${fst.phone}\n服務：${fst.svc.name}\n設計師：${bk.stylistName}\n日期：${dspDate(fst.date)} ${fst.time}\n預約編號：#${id}`;
-    try{ await sendLine(set.lineToken,msg); }catch(e){ console.warn('Line failed:',e); }
-  }
   document.getElementById('fBkId').textContent='#'+id;
   renderVoucher(bk);
   fGoStep(6);
@@ -2117,8 +2111,14 @@ function aShowTab(id){
   document.getElementById('atab-'+id).classList.add('active');
   document.querySelectorAll('.a-sitem[data-tab]').forEach(s=>s.classList.toggle('active',s.dataset.tab===id));
   const _origABk=()=>{aRenderBk();};
-const map={dashboard:aRenderDash,bookings:_origABk,calendar:aRenderCalView,stylschedule:aRenderCalView,customers:aRenderCustomers,stats:aRenderStats,shop:aRenderShop,stylists:aRenderStyls,hours:aRenderHours,services:aRenderSvcs,line:aRenderLine};
+const map={dashboard:aRenderDash,bookings:_origABk,customers:aRenderCustomers,stats:aRenderStats,shop:aRenderShop,stylists:aRenderStyls,hours:aRenderHours,services:aRenderSvcs,line:aRenderLine};
   if(map[id])map[id]();
+  if(id==='calendar'||id==='stylschedule'){
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      aRenderCalView();
+      setTimeout(()=>aRenderCalView(),200);
+    }));
+  }
 }
 
 function aRenderDash(){
