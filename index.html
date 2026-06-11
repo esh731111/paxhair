@@ -676,7 +676,6 @@ tr:hover td{background:rgba(255,255,255,0.02)}
           <div class="form-field"><label>姓名 *</label><input type="text" id="fName" placeholder="您的姓名" oninput="fCheckForm()"><div id="fNameErr" style="color:#C0614A;font-size:11px;margin-top:4px;display:none">請填寫姓名</div></div>
           <div class="form-field"><label>電話 *</label><input type="tel" id="fPhone" placeholder="0912-345-678" oninput="fCheckForm()"><div id="fPhoneErr" style="color:#C0614A;font-size:11px;margin-top:4px;display:none">請填寫電話</div></div>
           <div class="form-field"><label>電子郵件 *</label><input type="email" id="fEmail" placeholder="email@example.com" oninput="fCheckForm()"><div id="fEmailErr" style="color:#C0614A;font-size:11px;margin-top:4px;display:none">請填寫正確的電子郵件</div></div>
-          <div class="form-field"><label>Line ID（接收通知用）</label><input type="text" id="fLineId" placeholder="您的 Line ID"></div>
           <div class="form-field full"><label>特殊需求或備註</label><textarea id="fNotes" placeholder="例：對某化學成分過敏…"></textarea></div>
         </div>
         <div class="btn-row">
@@ -1244,6 +1243,12 @@ tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="a-frow"><div class="a-field"><label>日期 *</label><input type="date" id="sdBDate"></div>
     <div class="a-field"><label>時段 *</label><input type="time" id="sdBTime"></div></div>
     <div class="a-frow s1"><div class="a-field"><label>備註</label><textarea id="sdBNotes" placeholder="選填" style="height:60px"></textarea></div></div>
+    <div style="padding:8px 0 4px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--amid)">
+        <input type="checkbox" id="sdBForce" style="width:14px;height:14px;cursor:pointer">
+        略過時段衝突（可插入已預約時段）
+      </label>
+    </div>
     <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mSdAddBk')">取消</button><button class="a-btn a-btn-gold" onclick="sdSaveAddBk()">新增預約</button></div>
   </div>
 </div>
@@ -1616,7 +1621,7 @@ function confirmRoleLogin(){
 
 // ══ FRONT ══════════════════════════════════════════════════
 const today=new Date();
-let fst={step:1,svc:null,styl:null,date:null,time:null,name:'',phone:'',email:'',lineId:'',notes:'',calY:today.getFullYear(),calM:today.getMonth()};
+let fst={step:1,svc:null,styl:null,date:null,time:null,name:'',phone:'',email:'',notes:'',calY:today.getFullYear(),calM:today.getMonth()};
 
 function applyShop(){
   const s=getShop();
@@ -1932,7 +1937,6 @@ function fRenderSummary(){
   fst.name=document.getElementById('fName').value.trim();
   fst.phone=document.getElementById('fPhone').value.trim();
   fst.email=document.getElementById('fEmail').value.trim();
-  fst.lineId=document.getElementById('fLineId').value.trim();
   fst.notes=document.getElementById('fNotes').value.trim();
   document.getElementById('fSummary').innerHTML=`
     <div class="sum-row"><span class="sum-lbl">服務項目</span><span class="sum-val">${esc(fst.svc.name)}</span></div>
@@ -2008,7 +2012,7 @@ async function fConfirm(){
   const bk={id,service:fst.svc.name,serviceId:fst.svc.id,price:fst.svc.price,duration:fst.svc.duration,
     stylistId:assignedStylId,stylistName:assignedStylName,
     date:fst.date,time:fst.time,name:fst.name,phone:fst.phone,
-    email:fst.email,lineId:fst.lineId,notes:fst.notes,
+    email:fst.email,notes:fst.notes,
     status:'confirmed',createdAt:new Date().toISOString()};
   // Save to Firebase — if this fails, stop and warn user
   try{
@@ -2034,8 +2038,8 @@ async function sendLine(token,msg){
 }
 
 function fNewBooking(){
-  fst={step:1,svc:null,styl:null,date:null,time:null,name:'',phone:'',email:'',lineId:'',notes:'',calY:today.getFullYear(),calM:today.getMonth()};
-  ['fName','fPhone','fEmail','fLineId','fNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  fst={step:1,svc:null,styl:null,date:null,time:null,name:'',phone:'',email:'',notes:'',calY:today.getFullYear(),calM:today.getMonth()};
+  ['fName','fPhone','fEmail','fNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['fbtn1','fbtn2','fbtn3','fbtn4'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=true;});
   fRenderStyls();fRenderCal();fGoStep(1);
 }
@@ -2891,6 +2895,7 @@ function sdOpenAddBk(){
   ['sdBName','sdBPhone','sdBEmail','sdBNotes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('sdBDate').value=_sdBkSel||today;
   document.getElementById('sdBTime').value='';
+  document.getElementById('sdBForce').checked=false;
   openModal('mSdAddBk');
 }
 async function sdSaveAddBk(){
@@ -2900,6 +2905,28 @@ async function sdSaveAddBk(){
   const date=document.getElementById('sdBDate').value;
   const time=document.getElementById('sdBTime').value;
   if(!date||!time){toast('請填寫日期與時段');return;}
+  const force=document.getElementById('sdBForce').checked;
+  if(!force){
+    // 檢查時段衝突
+    const existing=getBks().filter(b=>
+      b.date===date&&b.status==='confirmed'&&
+      Number(b.stylistId)===Number(_sdStylId)
+    );
+    const styl2=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
+    const svcs2=getSvcForStyl(styl2);
+    const svcId2=parseInt(document.getElementById('sdBSvc').value);
+    const svc2=svcs2.find(s=>s.id===svcId2)||svcs2[0];
+    const newStart=toMins(time);
+    const newEnd=newStart+parseDurMins(svc2?.duration||'60分鐘');
+    const conflict=existing.find(b=>{
+      const bStart=toMins(b.time);
+      const bEnd=bStart+parseDurMins(b.duration||'60分鐘');
+      return newStart<bEnd&&newEnd>bStart;
+    });
+    if(conflict){
+      if(!confirm(`${time} 與「${conflict.name} ${conflict.time} ${conflict.service}」時段重疊，確定要強制新增嗎？`))return;
+    }
+  }
   const svcId=parseInt(document.getElementById('sdBSvc').value);
   const styl2=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
   const svcs2=getSvcForStyl(styl2);
@@ -3529,7 +3556,6 @@ function fRepeatBk(id){
     document.getElementById('fName').value=bk.name;
     document.getElementById('fPhone').value=bk.phone;
     if(bk.email)document.getElementById('fEmail').value=bk.email;
-    if(bk.lineId)document.getElementById('fLineId').value=bk.lineId;
     toast('已帶入上次客戶資料，請重新選擇服務');
   },100);
 }
