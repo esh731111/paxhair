@@ -680,7 +680,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
         </div>
         <div class="btn-row">
           <button class="btn btn-secondary" onclick="fGoStep(3)">← 返回</button>
-          <button class="btn btn-primary" id="fbtn4" onclick="document.getElementById('fbtn4').disabled?fShowFormErrors():fGoStep(5)">確認預約 →</button>
+          <button class="btn btn-primary" id="fbtn4" data-ready="0" style="opacity:0.45" onclick="this.dataset.ready==='1'?fGoStep(5):fShowFormErrors()">確認預約 →</button>
         </div>
       </div>
       <!-- step 5 -->
@@ -1958,7 +1958,14 @@ function fCheckForm(){
   const phone=document.getElementById('fPhone').value.trim();
   const email=document.getElementById('fEmail').value.trim();
   const emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  document.getElementById('fbtn4').disabled=!(name&&phone&&emailOk);
+  const ok=!!(name&&phone&&emailOk);
+  const btn=document.getElementById('fbtn4');
+  btn.style.opacity=ok?'1':'0.45';
+  btn.dataset.ready=ok?'1':'0';
+  // 已顯示的錯誤提示即時更新
+  if(document.getElementById('fNameErr').style.display==='block'||document.getElementById('fPhoneErr').style.display==='block'||document.getElementById('fEmailErr').style.display==='block'){
+    fShowFormErrors();
+  }
 }
 function fShowFormErrors(){
   const name=document.getElementById('fName').value.trim();
@@ -2071,7 +2078,9 @@ async function sendLine(token,msg){
 function fNewBooking(){
   fst={step:1,svc:null,styl:null,date:null,time:null,name:'',phone:'',email:'',notes:'',calY:today.getFullYear(),calM:today.getMonth()};
   ['fName','fPhone','fEmail','fNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['fbtn1','fbtn2','fbtn3','fbtn4'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=true;});
+  ['fbtn1','fbtn2','fbtn3'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=true;});
+  const b4=document.getElementById('fbtn4');if(b4){b4.dataset.ready='0';b4.style.opacity='0.45';}
+  ['fNameErr','fPhoneErr','fEmailErr'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   fRenderStyls();fRenderCal();fGoStep(1);
 }
 
