@@ -1001,7 +1001,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
         <input class="a-search" id="aCustSearch" placeholder="搜尋姓名、電話…" oninput="aRenderCustomers()">
       </div>
       <div class="a-tbl-wrap">
-        <table><thead><tr><th>姓名</th><th>電話</th><th>Email</th><th>預約次數</th><th>最近服務</th><th>最近日期</th><th></th></tr></thead>
+        <table><thead><tr><th>姓名</th><th>電話</th><th>備註</th><th>預約次數</th><th>最近服務</th><th>最近日期</th><th></th></tr></thead>
         <tbody id="aCustTbl"></tbody></table>
       </div>
     </div>
@@ -1360,6 +1360,10 @@ const DEF_STYLS=[
 async function syncFromFirebase(){
   if(!window.FB)return;
   try{
+    const cn=await window.FB.dbGet('config','custNotes');
+    if(cn){delete cn._id;_cache.custNotes=cn;ss('lm_custnotes',cn);}
+  }catch(e){}
+  try{
     const [setData,shopData,pwdData,svcs,styls,blocks]=await Promise.all([
       window.FB.dbGet('config','settings'),
       window.FB.dbGet('config','shop'),
@@ -1446,6 +1450,13 @@ const getSvcs=()=>{const v=_cache.svcs||gs('lm_svcs',null)||DEF_SVCS;if(!_cache.
 const getStyls=()=>{const v=_cache.styls||gs('lm_styls',null)||DEF_STYLS;if(!_cache.styls){ss('lm_styls',v);}return [...v].sort((a,b)=>(a.order??999)-(b.order??999)||Number(a.id)-Number(b.id));};
 const getBks=()=>_cache.bks||gs('lm_bks',[]);
 const getBlocks=()=>_cache.blocks||gs('lm_blocks',[]);
+const getCustNotes=()=>_cache.custNotes||gs('lm_custnotes',{});
+async function saveCustNote(phone,note){
+  const notes=getCustNotes();
+  if(note)notes[phone]=note;else delete notes[phone];
+  _cache.custNotes=notes;ss('lm_custnotes',notes);
+  if(window.FB){try{await window.FB.dbSet('config','custNotes',notes);}catch(e){console.warn(e);toast('⚠️ 雲端儲存失敗');}}
+}
 
 function getSvcForStyl(styl){
   if(!styl||styl.id===0)return getSvcs();
@@ -2210,7 +2221,7 @@ function aRenderDash(){
           </tr></thead>
           <tbody>${stylBks.map(b=>`<tr style="border-bottom:1px solid var(--aborder)">
             <td style="padding:10px 8px;font-size:13px;color:var(--gold);font-family:'Cormorant Garamond',serif;white-space:nowrap">${b.time}</td>
-            <td style="padding:10px 8px;font-size:13px;color:var(--atext)">${esc(b.name)}<br><span style="font-size:11px;color:var(--alight)">${esc(b.phone||'')}</span></td>
+            <td style="padding:10px 8px;font-size:13px;color:var(--atext)">${esc(b.name)}<br><span style="font-size:11px;color:var(--alight)">${esc(b.phone||'')}</span>${getCustNotes()[b.phone]?`<br><span style="font-size:11px;color:var(--red)">📌 ${esc(getCustNotes()[b.phone])}</span>`:''}</td>
             <td style="padding:10px 8px;font-size:12px;color:var(--amid)">${esc(b.service)}${b.notes?`<br><span style="font-size:10px;color:var(--alight)">${esc(b.notes)}</span>`:''}</td>
             <td style="padding:10px 8px;font-size:13px;color:var(--gold);font-family:'Cormorant Garamond',serif;white-space:nowrap">${esc(b.price||'')}</td>
           </tr>`).join('')}</tbody>
@@ -2273,7 +2284,7 @@ function aRenderBk(){
   document.getElementById('aBkTbl').innerHTML=bks.length
     ?bks.map(b=>`<tr>
       <td data-label="編號" style="font-size:10px;color:var(--amid)">${b.id}</td>
-      <td data-label="客戶">${esc(b.name)}</td>
+      <td data-label="客戶">${esc(b.name)}${getCustNotes()[b.phone]?`<br><span style="font-size:10px;color:var(--red)">📌 ${esc(getCustNotes()[b.phone])}</span>`:''}</td>
       <td data-label="服務">${esc(b.service)}</td>
       <td data-label="設計師">${esc(b.stylistName)}</td>
       <td data-label="日期時段" style="font-size:12px">${b.date} ${b.time}</td>
@@ -2946,6 +2957,7 @@ function _sdRenderBkList(){
           <div style="flex:1">
             <div style="font-size:13px;color:var(--atext)">${esc(b.name)} <span style="font-size:11px;color:var(--amid)">${esc(b.phone)}</span></div>
             <div style="font-size:11px;color:var(--amid)">${esc(b.service)}${b.notes?` · ${esc(b.notes)}`:''}</div>
+            ${getCustNotes()[b.phone]?`<div style="font-size:11px;color:var(--red);margin-top:2px">📌 ${esc(getCustNotes()[b.phone])}</div>`:''}
           </div>
           <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold)">${dspPrice(b.price)}</span>
           <button class="a-btn a-btn-danger a-btn-sm" onclick="sdCancelBk('${b.id}')">取消</button>
@@ -3527,13 +3539,21 @@ function aRenderCustomers(){
     ?rows.map(r=>`<tr>
       <td data-label="姓名">${esc(r.name)}</td>
       <td data-label="電話">${esc(r.phone)}</td>
-      <td data-label="Email" style="font-size:12px;color:var(--amid)">${esc(r.email)}</td>
+      <td data-label="備註" style="font-size:12px;color:${getCustNotes()[r.phone]?'var(--red)':'var(--alight)'};cursor:pointer;max-width:160px" onclick="aEditCustNote('${esc(r.phone)}','${esc(r.name)}')" title="點擊編輯備註">${esc(getCustNotes()[r.phone]||'＋ 新增備註')}</td>
       <td data-label="預約次數" style="text-align:left"><span style="background:var(--agold-dim);color:var(--gold);padding:2px 10px;border-radius:20px;font-size:12px">${r.count}</span></td>
       <td data-label="最近服務" style="font-size:12px">${esc(r.lastSvc)}</td>
       <td data-label="最近日期" style="font-size:12px;color:var(--amid)">${r.lastDate}</td>
       <td><button class="a-btn a-btn-outline a-btn-sm" onclick="aShowCustHistory('${esc(r.phone)}')">紀錄</button></td>
     </tr>`).join('')
     :'<tr><td colspan="7" style="text-align:center;color:var(--alight);padding:24px">無客戶資料</td></tr>';
+}
+async function aEditCustNote(phone,name){
+  const cur=getCustNotes()[phone]||'';
+  const note=prompt(`${name}（${phone}）的備註：\n例如：對某藥水過敏、習慣晚到、VIP`,cur);
+  if(note===null)return;
+  await saveCustNote(phone,note.trim());
+  aRenderCustomers();
+  toast(note.trim()?'備註已儲存 ✦':'備註已清除');
 }
 function aShowCustHistory(phone){
   const bks=getBks().filter(b=>b.phone===phone).sort((a,b)=>b.date.localeCompare(a.date));
