@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pax Hair Salon — 預約系統</title>
+  <meta name="theme-color" content="#FEFCF9">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FEFCF9'/%3E%3Ctext x='32' y='44' font-size='36' text-anchor='middle' fill='%23C9A96E'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FEFCF9'/%3E%3Ctext x='32' y='44' font-size='36' text-anchor='middle' fill='%23C9A96E'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
   <meta name="description" content="Pax Hair Salon 線上預約系統，快速預約您的專屬造型服務。">
   <meta property="og:title" content="Pax Hair Salon — 預約系統">
   <meta property="og:description" content="Pax Hair Salon 線上預約系統，快速預約您的專屬造型服務。">
@@ -409,6 +412,25 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 .t-slot{transition:all 0.2s ease}
 .t-slot:not(.tk):hover{transform:translateY(-1px);border-color:var(--gold,#C9A96E)}
 
+/* 選中卡片的 ✦ 角標 */
+.styl-card.selected,.svc-card.selected{position:relative}
+.styl-card.selected::after,.svc-card.selected::after{content:'✦';position:absolute;top:8px;right:10px;font-size:13px;color:var(--gold,#C9A96E);animation:starIn 0.4s cubic-bezier(0.2,0.9,0.3,1.2) both}
+
+/* 反白選取 */
+::selection{background:rgba(201,169,110,0.25);color:#111}
+
+/* 按鈕按壓回饋 */
+.btn:active,.a-btn:active{transform:scale(0.97)}
+
+/* 細捲軸 */
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#D8CEC0;border-radius:5px;border:2px solid #FEFCF9}
+::-webkit-scrollbar-thumb:hover{background:#C9A96E}
+
+/* 平滑捲動 */
+html{scroll-behavior:smooth}
+
 /* 尊重減少動態偏好 */
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}
@@ -780,7 +802,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
               <div style="font-size:10px;letter-spacing:2px;color:var(--light);text-transform:uppercase">預約憑證</div>
             </div>
             <div id="vDetails"></div>
-            <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #EDE8E1;text-align:center">
+            <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #EDE8E1;text-align:center;position:relative"><span style="position:absolute;top:-9px;left:14px;background:#fff;padding:0 5px;font-size:11px;color:#C0B4A4">✂</span>
               <div style="font-size:11px;color:var(--light);letter-spacing:1px;margin-bottom:4px">預約編號</div>
               <div id="vId" style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--charcoal);letter-spacing:3px"></div>
             </div>
