@@ -3292,6 +3292,11 @@ async function sdSaveProfile(){
 let aCalState={y:new Date().getFullYear(),m:new Date().getMonth(),selDate:null,stylId:''};
 function aCalChMonth(d){aCalState.m+=d;if(aCalState.m<0){aCalState.m=11;aCalState.y--;}if(aCalState.m>11){aCalState.m=0;aCalState.y++;}aRenderCalView();}
 function aRenderCalView(){
+  // 確保容器有寬度才渲染，否則重試
+  const calGrid=document.getElementById('aCalGrid');
+  if(calGrid&&calGrid.offsetWidth===0){
+    setTimeout(aRenderCalView,100);return;
+  }
   const {y,m}=aCalState;
   document.getElementById('aCalTitle').textContent=y+'年'+(m+1)+'月';
   // Populate stylist dropdown
