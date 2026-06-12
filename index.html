@@ -1409,9 +1409,16 @@ const map={dashboard:aRenderDash,bookings:_origABk,calendar:aRenderCalView,
 // ── FIREBASE WRITE HELPERS ─────────────────────────────────
 async function fbSaveList(col,list){
   if(!window.FB)return;
-  const existing=await window.FB.dbList(col);
-  await Promise.all(existing.map(item=>window.FB.dbDelete(col,item._id)));
-  await Promise.all(list.map(item=>window.FB.dbAdd(col,{...item})));
+  try{
+    const existing=await window.FB.dbList(col);
+    await Promise.all(existing.map(item=>window.FB.dbDelete(col,item._id)));
+    await Promise.all(list.map(item=>window.FB.dbAdd(col,{...item})));
+    return true;
+  }catch(e){
+    console.error('fbSaveList failed:',col,e);
+    toast('⚠️ 雲端儲存失敗，請重試');
+    return false;
+  }
 }
 async function fbAddBooking(bk){
   if(window.FB)await window.FB.dbSet('bookings',bk.id,bk);
@@ -3210,8 +3217,13 @@ async function sdSaveServices(){
   if(idx<0)return;
   styls[idx].services=services;
   ss('lm_styls',styls);_cache.styls=styls;
-  if(window.FB)(async()=>{await fbSaveList('stylists',styls);})();
-  toast('服務設定已儲存 ✦');
+  if(window.FB){
+    toast('儲存中…');
+    const ok=await fbSaveList('stylists',styls);
+    if(ok)toast('服務設定已儲存 ✦');
+  }else{
+    toast('服務設定已儲存 ✦');
+  }
 }
 
 // Stylist profile
