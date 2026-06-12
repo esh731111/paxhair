@@ -356,6 +356,64 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 .lightbox.open{display:flex}
 .lightbox img{max-width:100%;max-height:90vh;object-fit:contain;border-radius:2px}
 .lightbox-close{position:absolute;top:16px;right:16px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer}
+/* ══ 品牌開場動畫 ══════════════════════════ */
+#brandIntro{position:fixed;inset:0;z-index:9999;background:#FEFCF9;display:flex;align-items:center;justify-content:center;transition:transform 0.9s cubic-bezier(0.7,0,0.2,1)}
+#brandIntro.bi-exit{transform:translateY(-100%)}
+#brandIntro.bi-hidden{display:none}
+.bi-inner{text-align:center}
+.bi-star{font-size:26px;color:#C9A96E;opacity:0;animation:biStar 0.9s cubic-bezier(0.2,0.9,0.3,1.15) 0.2s both}
+@keyframes biStar{from{opacity:0;transform:scale(0.3) rotate(-150deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
+.bi-name{font-family:'Cormorant Garamond','Noto Serif TC',serif;font-size:clamp(26px,6vw,44px);font-weight:300;color:#111;letter-spacing:clamp(6px,2vw,14px);margin:22px 0 0;white-space:nowrap}
+.bi-name span{opacity:0;display:inline-block;animation:biLetter 0.55s ease both}
+@keyframes biLetter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.bi-line{width:0;height:1px;background:linear-gradient(90deg,transparent,#C9A96E,transparent);margin:20px auto 0;animation:biLine 0.8s ease 1.6s both}
+@keyframes biLine{to{width:150px}}
+.bi-sub{font-size:10px;letter-spacing:6px;color:#A09480;margin-top:16px;opacity:0;animation:biLetter 0.6s ease 2s both}
+.bi-skip{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);background:none;border:none;color:#C0B4A4;font-size:11px;letter-spacing:3px;cursor:pointer;padding:8px 16px;opacity:0;animation:biLetter 0.5s ease 1s both;transition:color 0.2s}
+.bi-skip:hover{color:#111}
+@media(prefers-reduced-motion:reduce){#brandIntro{display:none!important}}
+
+/* ══ 質感美化 ══════════════════════════════ */
+/* 章節標題下的金色細線 */
+.sec-title::after{content:'';display:block;width:46px;height:1px;background:linear-gradient(90deg,var(--gold,#C9A96E) 0%,rgba(201,169,110,0.15) 100%);margin-top:12px}
+.sec-title{position:relative}
+
+/* 卡片懸停：輕浮起 + 金色邊框漸亮 */
+.styl-card{transition:all 0.25s cubic-bezier(0.25,0.8,0.4,1)}
+.styl-card:hover{background:#fff;transform:translateY(-3px);box-shadow:0 8px 24px rgba(160,130,90,0.10);border-color:rgba(201,169,110,0.45)!important;z-index:1;position:relative}
+.svc-card{transition:all 0.25s cubic-bezier(0.25,0.8,0.4,1)}
+.svc-card:hover{background:#fff;transform:translateY(-3px);box-shadow:0 8px 24px rgba(160,130,90,0.10);border-color:rgba(201,169,110,0.45);z-index:1;position:relative}
+
+/* 卡片進場：交錯浮現 */
+.styl-grid .styl-card,.svc-grid .svc-card{animation:fadeUp 0.45s ease both}
+.styl-grid .styl-card:nth-child(2),.svc-grid .svc-card:nth-child(2){animation-delay:0.05s}
+.styl-grid .styl-card:nth-child(3),.svc-grid .svc-card:nth-child(3){animation-delay:0.1s}
+.styl-grid .styl-card:nth-child(4),.svc-grid .svc-card:nth-child(4){animation-delay:0.15s}
+.styl-grid .styl-card:nth-child(5),.svc-grid .svc-card:nth-child(5){animation-delay:0.2s}
+.styl-grid .styl-card:nth-child(n+6),.svc-grid .svc-card:nth-child(n+6){animation-delay:0.25s}
+
+/* 預約成功：✦ 旋入 + 金色呼吸 + 憑證浮現 */
+.success-icon{border-color:var(--gold,#C9A96E)!important;color:var(--gold,#C9A96E);animation:starIn 0.7s cubic-bezier(0.2,0.9,0.3,1.2) both,goldBreath 3s ease-in-out 0.9s infinite}
+@keyframes starIn{from{opacity:0;transform:scale(0.3) rotate(-120deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
+@keyframes goldBreath{0%,100%{box-shadow:0 0 0 0 rgba(201,169,110,0.35)}50%{box-shadow:0 0 0 12px rgba(201,169,110,0)}}
+.success-wrap .sec-title{animation:fadeUp 0.5s ease 0.25s both}
+.success-wrap .booking-id{animation:fadeUp 0.5s ease 0.4s both}
+.success-wrap .success-note{animation:fadeUp 0.5s ease 0.5s both}
+#fVoucher{animation:voucherIn 0.6s cubic-bezier(0.2,0.9,0.35,1.05) 0.55s both}
+@keyframes voucherIn{from{opacity:0;transform:translateY(20px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* 月曆今日：金色呼吸 */
+.cal-day.tod{animation:goldBreath 3s ease-in-out infinite}
+
+/* 時段按鈕懸停 */
+.t-slot{transition:all 0.2s ease}
+.t-slot:not(.tk):hover{transform:translateY(-1px);border-color:var(--gold,#C9A96E)}
+
+/* 尊重減少動態偏好 */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}
+}
+
 @media print{
   .app-nav,.progress-wrap,.f-tabs,.btn-row,.bk-item{display:none!important}
   #fVoucher{box-shadow:none!important;border:1.5px solid #ccc!important}
@@ -570,6 +628,17 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 </style>
 </head>
 <body>
+
+<!-- ══ 品牌開場 ══ -->
+<div id="brandIntro">
+  <div class="bi-inner">
+    <div class="bi-star">✦</div>
+    <div class="bi-name" id="biName"></div>
+    <div class="bi-line"></div>
+    <div class="bi-sub">HAIR &amp; BEAUTY</div>
+  </div>
+  <button class="bi-skip" onclick="endIntro()">跳過</button>
+</div>
 
 <div id="appShell">
 
@@ -1414,9 +1483,13 @@ const map={dashboard:aRenderDash,bookings:_origABk,calendar:aRenderCalView,
 async function fbSaveList(col,list){
   if(!window.FB)return;
   try{
+    // 安全寫入：先用固定 ID 覆蓋寫入全部資料（資料永遠不會出現空窗）
+    await Promise.all(list.map(item=>window.FB.dbSet(col,'doc_'+String(item.id),{...item})));
+    // 再刪除已不存在於清單中的舊文件（包含舊版自動產生 ID 的文件）
+    const keepIds=new Set(list.map(item=>'doc_'+String(item.id)));
     const existing=await window.FB.dbList(col);
-    await Promise.all(existing.map(item=>window.FB.dbDelete(col,item._id)));
-    await Promise.all(list.map(item=>window.FB.dbAdd(col,{...item})));
+    const stale=existing.filter(d=>!keepIds.has(d._id));
+    await Promise.all(stale.map(d=>window.FB.dbDelete(col,d._id)));
     return true;
   }catch(e){
     console.error('fbSaveList failed:',col,e);
@@ -1468,6 +1541,30 @@ function getSvcForStyl(styl){
 }
 const getSet=()=>{const s=_cache.set||gs('lm_set',{openTime:'10:00',closeTime:'19:00',slotMinutes:30,closedDays:[0],lineToken:'',shopHolidays:[]});if(!s.shopHolidays)s.shopHolidays=[];return s;};
 const getShop=()=>_cache.shop||gs('lm_shop',{name:'Pax Hair Salon',tagline:'Hair & Beauty',welcome:'每項服務皆由資深造型師親自操作',phone:'',email:'',address:'',ig:'',fb:'',noticeTitle:'',noticeContent:'',noticeStart:'',noticeEnd:''});
+
+// ══ 品牌開場 ════════════════════════════════════════════
+(function(){
+  const intro=document.getElementById('brandIntro');
+  if(!intro)return;
+  // 同一瀏覽階段只播一次；減少動態偏好者直接略過
+  const seen=sessionStorage.getItem('lm_intro_seen');
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(seen||reduced){intro.classList.add('bi-hidden');return;}
+  sessionStorage.setItem('lm_intro_seen','1');
+  // 店名逐字浮現
+  const nameEl=document.getElementById('biName');
+  const text='PAX HAIR SALON';
+  nameEl.innerHTML=[...text].map((ch,i)=>`<span style="animation-delay:${0.55+i*0.06}s">${ch===' '?'&nbsp;':ch}</span>`).join('');
+  // 3.2 秒後自動揭幕
+  window._introTimer=setTimeout(endIntro,3200);
+})();
+function endIntro(){
+  clearTimeout(window._introTimer);
+  const intro=document.getElementById('brandIntro');
+  if(!intro||intro.classList.contains('bi-exit'))return;
+  intro.classList.add('bi-exit');
+  setTimeout(()=>intro.classList.add('bi-hidden'),950);
+}
 
 // ══ MAIN SWITCH ════════════════════════════════════════════
 function switchMain(v, stylId){
