@@ -1382,7 +1382,7 @@ async function syncFromFirebase(){
       const activeTab=document.querySelector('.a-panel.active');
       if(activeTab&&document.getElementById('viewAdmin').style.display!=='none'){
         const tid=activeTab.id.replace('atab-','');
-        const _origABk=()=>{aRenderBk();};
+        const _origABk=()=>{aRenderBk();renderABkCal();};
 const map={dashboard:aRenderDash,bookings:_origABk,calendar:aRenderCalView,
           stylschedule:aRenderCalView,customers:aRenderCustomers,stats:aRenderStats};
         if(map[tid])map[tid]();
@@ -2140,14 +2140,12 @@ function aShowTab(id){
   document.querySelectorAll('.a-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('atab-'+id).classList.add('active');
   document.querySelectorAll('.a-sitem[data-tab]').forEach(s=>s.classList.toggle('active',s.dataset.tab===id));
-  const _origABk=()=>{aRenderBk();};
+  const _origABk=()=>{aRenderBk();renderABkCal();};
 const map={dashboard:aRenderDash,bookings:_origABk,customers:aRenderCustomers,stats:aRenderStats,shop:aRenderShop,stylists:aRenderStyls,hours:aRenderHours,services:aRenderSvcs,line:aRenderLine};
   if(map[id])map[id]();
   if(id==='calendar'||id==='stylschedule'){
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      aRenderCalView();
-      setTimeout(()=>aRenderCalView(),200);
-    }));
+    setTimeout(()=>aRenderCalView(),50);
+    setTimeout(()=>aRenderCalView(),300);
   }
 }
 
@@ -3292,11 +3290,6 @@ async function sdSaveProfile(){
 let aCalState={y:new Date().getFullYear(),m:new Date().getMonth(),selDate:null,stylId:''};
 function aCalChMonth(d){aCalState.m+=d;if(aCalState.m<0){aCalState.m=11;aCalState.y--;}if(aCalState.m>11){aCalState.m=0;aCalState.y++;}aRenderCalView();}
 function aRenderCalView(){
-  // 確保容器有寬度才渲染，否則重試
-  const calGrid=document.getElementById('aCalGrid');
-  if(calGrid&&calGrid.offsetWidth===0){
-    setTimeout(aRenderCalView,100);return;
-  }
   const {y,m}=aCalState;
   document.getElementById('aCalTitle').textContent=y+'年'+(m+1)+'月';
   // Populate stylist dropdown
