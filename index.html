@@ -2055,11 +2055,11 @@ async function fRenderSlots(){
       const styBlocks=getBlocks().filter(b=>b.date===fst.date&&(String(b.stylistId)===String(fst.styl?.id)||!b.stylistId));
       for(const b of styBks){
         const bStart=toMins(b.time);const bEnd=bStart+getBkDur(b);
-        if(sStart<bEnd&&sEnd>=bStart)return true;
+        if(sStart<bEnd&&sEnd>bStart)return true;
       }
       for(const bl of styBlocks){
         const blStart=toMins(bl.start);const blEnd=toMins(bl.end);
-        if(sStart<blEnd&&sEnd>=blStart)return true;
+        if(sStart<blEnd&&sEnd>blStart)return true;
       }
       return false;
     }
@@ -2141,61 +2141,80 @@ async function fConfirm(){
     alert('⚠️ 資料庫連線異常\n\n請重新整理頁面後再試。若問題持續，請直接電話預約。');
     return;
   }
-  // 4. Final check + 自動分配設計師（不指定時）
+  // 4. Final check + 自動分配設計師（不指定時）— 用 transaction 把「檢查」與「寫入」包成原子操作，
+  //    避免兩人幾乎同時送出同一時段時都通過檢查，造成雙重預約
+  const id='LM'+Date.now().toString().slice(-6);
+  const svcMins=parseDurMins(fst.svc.duration);
+  const sStart=toMins(fst.time),sEnd=sStart+svcMins;
+  function getBkDur(b){
+    if(b.duration)return parseDurMins(b.duration);
+    const bkSvc=getSvcs().find(s=>Number(s.id)===Number(b.serviceId));
+    return bkSvc?parseDurMins(bkSvc.duration):svcMins;
+  }
   let assignedStylId=fst.styl?.id||0;
   let assignedStylName=fst.styl?.name||'不指定';
+  let bk=null;
   try{
-    const snap=await window.FB.db.collection('bookings')
-      .where('date','==',fst.date)
-      .where('time','==',fst.time)
-      .where('status','==','confirmed')
-      .get();
-    const takenStylIds=snap.docs.map(d=>Number(d.data().stylistId));
+    await window.FB.db.runTransaction(async (tx)=>{
+      const snap=await tx.get(
+        window.FB.db.collection('bookings')
+          .where('date','==',fst.date)
+          .where('status','==','confirmed')
+      );
+      // 只看「時段真正重疊」的預約，而不是只比對完全相同的開始時間
+      const overlapping=snap.docs
+        .map(d=>d.data())
+        .filter(b=>{
+          const bStart=toMins(b.time),bEnd=bStart+getBkDur(b);
+          return sStart<bEnd&&sEnd>bStart;
+        });
+      const takenStylIds=overlapping.map(b=>Number(b.stylistId));
 
-    if(fst.styl?.id===0){
-      // 自動分配：找有空的設計師
-      const allStyls=getStyls().filter(s=>s.id!==0);
-      // 排除休假日
-      const available=allStyls.filter(s=>{
-        if(s.holidays&&s.holidays.includes(fst.date))return false;
-        return !takenStylIds.includes(Number(s.id));
-      });
-      if(available.length===0){
-        alert('抱歉！此時段所有設計師均已被預約，請重新選擇時段。');
-        fGoStep(3);
-        await fRenderSlots();
-        return;
+      if(fst.styl?.id===0){
+        // 自動分配：找有空的設計師
+        const allStyls=getStyls().filter(s=>s.id!==0);
+        const available=allStyls.filter(s=>{
+          if(s.holidays&&s.holidays.includes(fst.date))return false;
+          return !takenStylIds.includes(Number(s.id));
+        });
+        if(available.length===0){
+          throw {code:'NO_STYLIST'};
+        }
+        const picked=available[Math.floor(Math.random()*available.length)];
+        assignedStylId=picked.id;
+        assignedStylName=picked.name;
+      }else{
+        // 指定設計師：檢查有沒有衝突
+        if(takenStylIds.includes(Number(fst.styl?.id))){
+          throw {code:'CONFLICT'};
+        }
       }
-      // 隨機選一位
-      const picked=available[Math.floor(Math.random()*available.length)];
-      assignedStylId=picked.id;
-      assignedStylName=picked.name;
-    }else{
-      // 指定設計師：檢查有沒有衝突
-      if(takenStylIds.includes(Number(fst.styl?.id))){
-        alert('抱歉！此時段剛被預約，請重新選擇時段。');
-        fGoStep(3);
-        await fRenderSlots();
-        return;
-      }
+      bk={id,service:fst.svc.name,serviceId:fst.svc.id,price:fst.svc.price,duration:fst.svc.duration,
+        stylistId:assignedStylId,stylistName:assignedStylName,
+        date:fst.date,time:fst.time,name:fst.name,phone:fst.phone,
+        email:fst.email,notes:fst.notes,
+        status:'confirmed',createdAt:new Date().toISOString()};
+      tx.set(window.FB.db.collection('bookings').doc(id),bk);
+    });
+  }catch(e){
+    if(e&&e.code==='NO_STYLIST'){
+      alert('抱歉！此時段所有設計師均已被預約，請重新選擇時段。');
+      fGoStep(3);
+      await fRenderSlots();
+      return;
     }
-  }catch(e){
-    console.warn('Conflict check failed:',e);
-  }
-  const id='LM'+Date.now().toString().slice(-6);
-  const bk={id,service:fst.svc.name,serviceId:fst.svc.id,price:fst.svc.price,duration:fst.svc.duration,
-    stylistId:assignedStylId,stylistName:assignedStylName,
-    date:fst.date,time:fst.time,name:fst.name,phone:fst.phone,
-    email:fst.email,notes:fst.notes,
-    status:'confirmed',createdAt:new Date().toISOString()};
-  // Save to Firebase — if this fails, stop and warn user
-  try{
-    await fbAddBooking(bk);
-  }catch(e){
+    if(e&&e.code==='CONFLICT'){
+      alert('抱歉！此時段剛被預約，請重新選擇時段。');
+      fGoStep(3);
+      await fRenderSlots();
+      return;
+    }
     console.error('Booking save failed:',e);
     alert('⚠️ 預約儲存失敗\n\n請重新整理頁面後再試。若問題持續，請直接電話預約。');
     return;
   }
+  // Keep local cache in sync (transaction writes directly to Firestore)
+  const bks=getBks();bks.unshift(bk);_cache.bks=bks;ss('lm_bks',bks);
   document.getElementById('fBkId').textContent='#'+id;
   renderVoucher(bk);
   fGoStep(6);
@@ -2765,8 +2784,15 @@ function aSaveStylist(){
     else{data.id=sid;styls.push(data);}
   }else{data.id=Date.now();styls.push(data);}
   ss('lm_styls',styls);_cache.styls=styls;
-  if(window.FB)(async()=>{await fbSaveList('stylists',styls);})();
-  closeModal('mStylist');aRenderStyls();toast('設計師資料已儲存 ✦');
+  closeModal('mStylist');aRenderStyls();
+  if(window.FB){
+    toast('儲存中…');
+    fbSaveList('stylists',styls).then(ok=>{
+      toast(ok?'設計師資料已儲存 ✦':'⚠️ 雲端儲存失敗，請重試');
+    });
+  }else{
+    toast('設計師資料已儲存 ✦');
+  }
 }
 async function aDelStylist(id){
   if(!confirm('確定要刪除此設計師？'))return;
