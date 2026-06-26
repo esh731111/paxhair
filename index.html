@@ -1926,11 +1926,20 @@ async function fAddCalDots(){
     const monthStr=`${fst.calY}-${String(fst.calM+1).padStart(2,'0')}`;
     const snap=await window.FB.db.collection('bookings')
       .where('status','==','confirmed').get();
-    const bks=snap.docs.map(d=>d.data()).filter(b=>b.date?.startsWith(monthStr));
+    let bks=snap.docs.map(d=>d.data()).filter(b=>b.date?.startsWith(monthStr));
     const set=getSet();
     const oh=toMins(set.openTime),ch=toMins(set.closeTime);
     const slotMin=set.slotMinutes||30;
     const totalMins=ch-oh;
+    const allStyls=getStyls().filter(s=>s.id!==0);
+    let capacityMins=totalMins;
+    if(fst.styl&&fst.styl.id!==0){
+      // 指定設計師：只看這位設計師自己的預約，跟自己一天的營業時長比較
+      bks=bks.filter(b=>Number(b.stylistId)===Number(fst.styl.id));
+    }else{
+      // 不指定設計師：看全店所有設計師的預約總和，跟「全部設計師人數 x 一天營業時長」比較
+      capacityMins=totalMins*Math.max(allStyls.length,1);
+    }
     // Calculate occupied minutes per date (considering service duration)
     const dateOccupied={};
     bks.forEach(b=>{
@@ -1940,7 +1949,7 @@ async function fAddCalDots(){
     Object.entries(dateOccupied).forEach(([date,occupied])=>{
       const el=document.getElementById('fcd-'+date);
       if(!el)return;
-      const pct=occupied/Math.max(totalMins,1);
+      const pct=occupied/Math.max(capacityMins,1);
       const dot=document.createElement('div');
       dot.style.cssText=`width:5px;height:5px;border-radius:50%;margin:1px auto 0;background:${pct>=1?'#E07070':pct>=0.5?'#FFA726':'#4CAF50'}`;
       el.appendChild(dot);
