@@ -1220,11 +1220,6 @@ html{scroll-behavior:smooth}
         </div></div>
       </div>
       <div class="a-fsect">
-        <div class="a-fsect-title">每週上班時間</div>
-        <div style="font-size:12px;color:var(--amid);margin-bottom:10px">取消勾選的星期＝當天不營業；時間範圍外的時段顧客無法預約您。預設沿用全店營業時間。</div>
-        <div id="sdWorkHours"></div>
-      </div>
-      <div class="a-fsect">
         <div class="a-fsect-title">修改密碼</div>
         <div class="a-frow">
           <div class="a-field"><label>新密碼</label><input type="password" id="sdNewPwd" placeholder="輸入新密碼（至少4位）"></div>
@@ -2506,6 +2501,20 @@ async function aSaveEditBk(){
     stylistId:stylId,stylistName:styl?.name||'不指定',
   };
   if(!updates.name||!updates.phone||!updates.date||!updates.time){toast('請填寫必要欄位');return;}
+  if(stylId!==0){
+    // 檢查時段衝突（排除自己原本這一筆）
+    const existing=getBks().filter(b=>b.id!==id&&b.date===updates.date&&b.status==='confirmed'&&Number(b.stylistId)===stylId);
+    const newStart=toMins(updates.time);
+    const newEnd=newStart+parseDurMins(updates.duration||'60分鐘');
+    const conflict=existing.find(b=>{
+      const bStart=toMins(b.time);
+      const bEnd=bStart+parseDurMins(b.duration||'60分鐘');
+      return newStart<bEnd&&newEnd>bStart;
+    });
+    if(conflict){
+      if(!confirm(`${updates.time} 與「${conflict.name} ${conflict.time} ${conflict.service}」時段重疊，確定要強制更新嗎？`))return;
+    }
+  }
   await fbUpdateBooking(id,updates);
   closeModal('mEditBk');aRenderBk();toast('預約已更新 ✦');
 }
@@ -2562,12 +2571,29 @@ async function aSaveAddBk(){
   if(!name||!phone){toast('請填寫姓名與電話');return;}
   const svcId=parseInt(document.getElementById('mBSvc').value);
   const stylId=parseInt(document.getElementById('mBStyl').value);
+  const date=document.getElementById('mBDate').value;
+  const time=document.getElementById('mBTime').value;
+  if(!date||!time){toast('請填寫日期與時段');return;}
   const svc=getSvcs().find(s=>s.id===svcId)||getSvcs()[0];
   const styl=getStyls().find(s=>s.id===stylId);
+  if(stylId!==0){
+    // 檢查時段衝突（跟設計師自助新增預約用同一套重疊判斷邏輯）
+    const existing=getBks().filter(b=>b.date===date&&b.status==='confirmed'&&Number(b.stylistId)===stylId);
+    const newStart=toMins(time);
+    const newEnd=newStart+parseDurMins(svc?.duration||'60分鐘');
+    const conflict=existing.find(b=>{
+      const bStart=toMins(b.time);
+      const bEnd=bStart+parseDurMins(b.duration||'60分鐘');
+      return newStart<bEnd&&newEnd>bStart;
+    });
+    if(conflict){
+      if(!confirm(`${time} 與「${conflict.name} ${conflict.time} ${conflict.service}」時段重疊，確定要強制新增嗎？`))return;
+    }
+  }
   const id='LM'+Date.now().toString().slice(-6);
   const bk={id,service:svc.name,serviceId:svc.id,price:svc.price,duration:svc.duration,
     stylistId:stylId,stylistName:styl?.name||'不指定',
-    date:document.getElementById('mBDate').value,time:document.getElementById('mBTime').value,
+    date,time,
     name,phone,notes:document.getElementById('mBNotes').value,status:'confirmed',createdAt:new Date().toISOString()};
   await fbAddBooking(bk);
   closeModal('mAddBk');aRenderBk();toast('預約已新增 ✦');
@@ -3197,9 +3223,8 @@ function _sdRenderBkList(){
           <div style="font-size:12px;color:var(--red);width:50px;flex-shrink:0;text-align:center">⊘<br><span style="font-size:10px">${bl.start}–${bl.end}</span></div>
           <div style="flex:1">
             <div style="font-size:12px;color:var(--red);font-weight:500">封鎖時段</div>
-            <div style="font-size:11px;color:var(--amid)">${bl.reason||'無備註'}</div>
+            <div style="font-size:11px;color:var(--amid)">${bl.reason||'無備註'}（由店家設定）</div>
           </div>
-          <button class="a-btn a-btn-danger a-btn-sm" onclick="sdDeleteBlock('${bl.id}')">解除</button>
         </div>`).join('')}
     </div>`;
   }).join('');
@@ -3273,20 +3298,6 @@ async function sdSaveAddBk(){
   closeModal('mSdAddBk');
   sdRenderBookings();
   toast('預約已新增 ✦');
-}
-function sdOpenBlock(){
-  const today=fmt(new Date());
-  document.getElementById('mBlkDate').value=_sdBkSel||today;
-  document.getElementById('mBlkStart').value='';
-  document.getElementById('mBlkEnd').value='';
-  document.getElementById('mBlkReason').value='';
-  document.getElementById('mBlkStylistId').value=_sdStylId||'';
-  openModal('mBlockSlot');
-}
-async function sdDeleteBlock(id){
-  if(!confirm('確定要解除此封鎖？'))return;
-  await fbDeleteBlock(id);
-  sdRenderBookings();toast('已解除封鎖');
 }
 async function sdCancelBk(id){
   if(!confirm('確定要取消此預約？'))return;
@@ -3523,7 +3534,6 @@ function sdRenderProfile(){
   document.getElementById('sdTitle2').value=s.title||'';
   document.getElementById('sdBio').value=s.bio||'';
   document.getElementById('sdPortfolio').value=(s.portfolio||[]).join('\n');
-  renderWorkHoursEditor('sdWorkHours',s.workHours||{});
   document.getElementById('sdNewPwd').value='';
   document.getElementById('sdConfPwd').value='';
 }
@@ -3536,7 +3546,6 @@ async function sdSaveProfile(){
   styls[idx].bio=document.getElementById('sdBio').value.trim();
   const portRaw=document.getElementById('sdPortfolio').value;
   styls[idx].portfolio=portRaw.split('\n').map(s=>s.trim()).filter(s=>s.startsWith('http')).slice(0,6);
-  styls[idx].workHours=collectWorkHours('sdWorkHours');
   // Password
   const np=document.getElementById('sdNewPwd').value;
   const cp=document.getElementById('sdConfPwd').value;
