@@ -2056,6 +2056,8 @@ async function fRenderSlots(){
   // Build blocked ranges
   const allStyls=getStyls().filter(s=>s.id!==0);
   const isUnspecified=fst.styl?.id===0;
+  const isToday=fst.date===fmt(new Date());
+  const nowMins=isToday?(new Date().getHours()*60+new Date().getMinutes()):-1;
 
   function getBkDur(b){
     if(b.duration)return parseDurMins(b.duration);
@@ -2066,6 +2068,7 @@ async function fRenderSlots(){
   function isBlocked(slotTime){
     const sStart=toMins(slotTime);
     const sEnd=sStart+svcMins;
+    if(isToday&&sStart<=nowMins+60)return true;
     if(sEnd>ch)return true;
     const dow=new Date(fst.date+'T00:00:00').getDay();
 
@@ -2195,6 +2198,13 @@ async function fConfirm(){
     await window.FB.db.collection('config').doc('settings').get();
   }catch(e){
     alert('⚠️ 資料庫連線異常\n\n請重新整理頁面後再試。若問題持續，請直接電話預約。');
+    return;
+  }
+  // 3b. 若選的日期是今天，確認時段還沒過去（避免頁面開太久後送出過去的時段）
+  if(fst.date===fmt(new Date())&&toMins(fst.time)<=(new Date().getHours()*60+new Date().getMinutes()+60)){
+    alert('此時段需提前至少1小時預約，請重新選擇時段。');
+    fGoStep(3);
+    await fRenderSlots();
     return;
   }
   // 4. Final check + 自動分配設計師（不指定時）— 用 transaction 把「檢查」與「寫入」包成原子操作，
