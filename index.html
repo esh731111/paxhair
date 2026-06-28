@@ -3603,7 +3603,7 @@ async function sdSaveProfile(){
 
 // ══ CALENDAR VIEW ═════════════════════════════════════════
 let aCalState={y:new Date().getFullYear(),m:new Date().getMonth(),selDate:null,stylId:''};
-function aCalChMonth(d){aCalState.m+=d;if(aCalState.m<0){aCalState.m=11;aCalState.y--;}if(aCalState.m>11){aCalState.m=0;aCalState.y++;}aRenderCalView();}
+function aCalChMonth(d){aCalState.m+=d;if(aCalState.m<0){aCalState.m=11;aCalState.y--;}if(aCalState.m>11){aCalState.m=0;aCalState.y++;}aRenderCalView();if(_aCalView==='sched')aRenderStylSchedule();}
 function aRenderCalView(){
   const {y,m}=aCalState;
   document.getElementById('aCalTitle').textContent=y+'年'+(m+1)+'月';
@@ -3713,11 +3713,11 @@ function aCalShowDayDetail(ds){
 }
 
 // ══ STYLIST SCHEDULE ══════════════════════════════════════
-let aSSState={y:new Date().getFullYear(),m:new Date().getMonth(),stylId:null};
-function aSSChMonth(d){aSSState.m+=d;if(aSSState.m<0){aSSState.m=11;aSSState.y--;}if(aSSState.m>11){aSSState.m=0;aSSState.y++;}aRenderStylSchedule();}
+let aSSState={stylId:null};
 
 function aRenderStylSchedule(){
-  const {y,m,stylId}=aSSState;
+  const {y,m}=aCalState;
+  const {stylId}=aSSState;
   if(document.getElementById('aSSTitle'))document.getElementById('aSSTitle').textContent=y+'年'+(m+1)+'月';
   const styls=getStyls();
   // Render stylist tab buttons
