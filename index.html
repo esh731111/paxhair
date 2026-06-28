@@ -1355,7 +1355,7 @@ html{scroll-behavior:smooth}
   <div class="modal" style="max-width:400px">
     <div class="modal-title">封鎖<em>時段</em></div>
     <p style="font-size:12px;color:var(--amid);margin-bottom:16px">封鎖後該時段不開放客人預約</p>
-    <input type="hidden" id="mBlkStylistId">
+    <div class="a-frow s1"><div class="a-field"><label>設計師</label><select id="mBlkStylistId"><option value="">全店（不指定設計師）</option></select></div></div>
     <div class="a-frow s1"><div class="a-field"><label>日期</label><input type="date" id="mBlkDate"></div></div>
     <div class="a-frow"><div class="a-field"><label>開始時間</label><input type="time" id="mBlkStart"></div>
     <div class="a-field"><label>結束時間</label><input type="time" id="mBlkEnd"></div></div>
@@ -2616,7 +2616,7 @@ async function aSaveAddBk(){
   const time=document.getElementById('mBTime').value;
   if(!date||!time){toast('請填寫日期與時段');return;}
   const svc=getSvcs().find(s=>s.id===svcId)||getSvcs()[0];
-  const styl=getStyls().find(s=>s.id===stylId);
+  const styl=getStyls().find(s=>Number(s.id)===stylId);
   if(stylId!==0){
     // 檢查時段衝突（跟設計師自助新增預約用同一套重疊判斷邏輯）
     const existing=getBks().filter(b=>b.date===date&&b.status==='confirmed'&&Number(b.stylistId)===stylId);
@@ -3723,9 +3723,9 @@ function aRenderStylSchedule(){
   // Render stylist tab buttons
   const tabsEl=document.getElementById('aSSStylTabs');
   tabsEl.innerHTML=styls.map(s=>`
-    <button onclick="aSSSelStyl(${s.id})" style="display:flex;align-items:center;gap:8px;padding:8px 16px;border:1.5px solid ${stylId===s.id?'var(--gold)':'var(--aborder)'};background:${stylId===s.id?'var(--agold-dim)':'transparent'};border-radius:4px;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif">
+    <button onclick="aSSSelStyl(${s.id})" style="display:flex;align-items:center;gap:8px;padding:8px 16px;border:1.5px solid ${Number(stylId)===Number(s.id)?'var(--gold)':'var(--aborder)'};background:${Number(stylId)===Number(s.id)?'var(--agold-dim)':'transparent'};border-radius:4px;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif">
       <div style="width:28px;height:28px;border-radius:50%;background:var(--agold-dim);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--gold)">${esc(s.avatar)}</div>
-      <span style="font-size:12px;color:${stylId===s.id?'var(--gold)':'var(--amid)'}">${esc(s.name)}</span>
+      <span style="font-size:12px;color:${Number(stylId)===Number(s.id)?'var(--gold)':'var(--amid)'}">${esc(s.name)}</span>
     </button>`).join('');
 
   if(!stylId){
@@ -3734,7 +3734,7 @@ function aRenderStylSchedule(){
     return;
   }
 
-  const styl=styls.find(s=>s.id===stylId);
+  const styl=styls.find(s=>Number(s.id)===Number(stylId));
   if(!styl)return;
 
   // Update stylist info bar
@@ -3746,7 +3746,7 @@ function aRenderStylSchedule(){
 
   // Get bookings for this stylist this month
   const monthStr=y+'-'+String(m+1).padStart(2,'0');
-  const bks=getBks().filter(b=>b.stylistId===stylId&&b.status==='confirmed'&&b.date?.startsWith(monthStr))
+  const bks=getBks().filter(b=>Number(b.stylistId)===Number(stylId)&&b.status==='confirmed'&&b.date?.startsWith(monthStr))
     .sort((a,b)=>a.date===b.date?a.time.localeCompare(b.time):a.date.localeCompare(b.date));
   document.getElementById('aSSCnt').textContent=bks.length;
 
@@ -3782,6 +3782,11 @@ function aSSSelStyl(id){
 
 // ══ BLOCK SLOTS ════════════════════════════════════════════
 function aOpenBlockSlot(){
+  const sel=document.getElementById('mBlkStylistId');
+  const prevVal=aCalState.stylId||'';
+  sel.innerHTML='<option value="">全店（不指定設計師）</option>'+
+    getStyls().filter(s=>s.id!==0).map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  sel.value=prevVal;
   if(aCalState.selDate)document.getElementById('mBlkDate').value=aCalState.selDate;
   document.getElementById('mBlkStart').value='';document.getElementById('mBlkEnd').value='';document.getElementById('mBlkReason').value='';
   openModal('mBlockSlot');
