@@ -2221,13 +2221,18 @@ async function fConfirm(){
   let assignedStylId=fst.styl?.id||0;
   let assignedStylName=fst.styl?.name||'不指定';
   let bk=null;
+  const lockRef=window.FB.db.collection('_dateLocks').doc(fst.date);
   try{
     await window.FB.db.runTransaction(async (tx)=>{
-      const snap=await tx.get(
-        window.FB.db.collection('bookings')
-          .where('date','==',fst.date)
-          .where('status','==','confirmed')
-      );
+      // Firestore 瀏覽器版的 transaction.get() 只能讀「單一文件」，不支援查詢(query)。
+      // 所以這裡改成：讀一個跟「日期」綁定的鎖定文件來強制序列化（兩個同時送出的交易，
+      // 只有一個能先寫入這個鎖定文件，另一個會被 Firestore 自動重新執行整個 callback），
+      // 真正的衝突檢查查詢則放在 callback 內部，確保每次重試都會抓到最新的預約資料。
+      await tx.get(lockRef);
+      const snap=await window.FB.db.collection('bookings')
+        .where('date','==',fst.date)
+        .where('status','==','confirmed')
+        .get();
       // 只看「時段真正重疊」的預約，而不是只比對完全相同的開始時間
       const overlapping=snap.docs
         .map(d=>d.data())
@@ -2272,6 +2277,7 @@ async function fConfirm(){
         email:fst.email,notes:fst.notes,
         status:'confirmed',createdAt:new Date().toISOString()};
       tx.set(window.FB.db.collection('bookings').doc(id),bk);
+      tx.set(lockRef,{touchedAt:Date.now()}); // 寫入鎖定文件，才能讓 Firestore 偵測到衝突並序列化
     });
   }catch(e){
     if(e&&e.code==='NO_STYLIST'){
