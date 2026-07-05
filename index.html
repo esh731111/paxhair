@@ -651,6 +651,402 @@ html{scroll-behavior:smooth}
   /* ── FOOTER ── */
   #frontFooter{padding:20px 16px 28px}
 }
+
+/* ══════════════════════════════════════════════════════════════
+   ✦ 前台美化層 v3 — Contemporary Seoul · 極簡高級（HERA 取向）
+   黑白為主 · 大量留白 · 細線條 · 金色退為極淡暖光
+   （僅作用於顧客預約流程，後台 / 設計師端不受影響）
+══════════════════════════════════════════════════════════════ */
+:root{
+  --pax-ink:#181613;         /* 主墨黑 */
+  --pax-graphite:#74706A;    /* 次級灰墨 */
+  --pax-mute:#A09A90;        /* 弱化文字 */
+  --pax-line:#E9E6E0;        /* 中性細線 */
+  --pax-line-2:#F0EDE7;      /* 更淡細線 */
+  --pax-bg:#F8F7F4;          /* 近白底（微暖中性）*/
+  --pax-sel:#F3F1EC;         /* 選取底 */
+  --pax-whisper:#9A8B76;     /* 極淡暖光，僅用於細節點綴 */
+}
+
+/* —— 底色 & 導覽：安靜近白、細線 —— */
+.front-wrap{background:var(--pax-bg)!important}
+.app-nav{background:rgba(248,247,244,0.86)!important;backdrop-filter:saturate(1.1) blur(12px);-webkit-backdrop-filter:saturate(1.1) blur(12px);border-bottom:1px solid var(--pax-line)!important;height:62px!important}
+.app-logo{letter-spacing:8px!important;color:var(--pax-ink)!important}
+.progress-wrap{background:transparent!important;border-bottom:1px solid var(--pax-line)!important;padding:26px 40px 22px!important}
+#frontFooter{background:var(--pax-bg)!important;border-top:1px solid var(--pax-line)!important}
+#holidayNotice{background:#FBFAF8!important;border:1px solid var(--pax-line)!important}
+
+/* —— 更大留白 —— */
+.front-content{padding:76px 40px 120px!important}
+.sec-sub{margin-bottom:46px!important}
+.styl-strip,.svc-list{margin-bottom:52px!important}
+
+/* —— 進度列：黑白極簡 —— */
+.steps{max-width:760px!important}
+.step{gap:11px!important}
+.step-num{width:30px!important;height:30px!important;border:1px solid var(--pax-line)!important;background:transparent!important;color:var(--pax-mute)!important;font-family:'Cormorant Garamond',serif!important;font-size:14px!important;font-weight:400!important}
+.step.active .step-num{background:var(--pax-ink)!important;border-color:var(--pax-ink)!important;color:#fff!important}
+.step.done .step-num{border-color:var(--pax-ink)!important;color:var(--pax-ink)!important;background:transparent!important}
+.step-label{font-size:10px!important;letter-spacing:1.6px!important;color:var(--pax-mute)!important;font-weight:500!important}
+.step.active .step-label{color:var(--pax-ink)!important;font-weight:600!important}
+.step.done .step-label{color:var(--pax-graphite)!important}
+.step-line{height:1px!important;background:var(--pax-line)!important;margin:0 12px!important}
+
+/* —— 章節標題：放大、輕量、寬鬆 —— */
+.sec-title{font-size:clamp(32px,4.6vw,46px)!important;letter-spacing:0.5px!important;color:var(--pax-ink)!important;font-weight:300!important;line-height:1.08!important}
+.sec-title em{color:var(--pax-ink)!important;font-style:italic!important;font-family:'Cormorant Garamond','Noto Serif TC',serif!important}
+.sec-title::after{width:40px!important;height:1px!important;background:var(--pax-whisper)!important;opacity:0.55;margin-top:18px!important}
+.sec-sub{color:var(--pax-mute)!important;letter-spacing:0.3px!important;font-size:14px!important}
+
+/* —— 分頁標籤 —— */
+.f-tabs{border-bottom-color:var(--pax-line)!important;margin-bottom:44px!important}
+.f-tab{color:var(--pax-mute)!important;letter-spacing:1.5px!important}
+.f-tab.active{color:var(--pax-ink)!important;border-bottom-color:var(--pax-ink)!important;font-weight:600!important}
+
+/* —— 設計師磚：editorial、墨黑細框選取 —— */
+.styl-strip{gap:2px!important}
+.styl-tile,.anyone-tile{aspect-ratio:3/4.2!important}
+.styl-tile{background:#E7E3DB!important}
+.anyone-tile{background:#F1EEE8!important}
+.styl-tile-letter{color:rgba(24,22,19,0.18)!important}
+.styl-tile:hover{box-shadow:0 10px 30px rgba(24,22,19,0.16)!important}
+.styl-tile.selected,.anyone-tile.selected{box-shadow:inset 0 0 0 1.5px var(--pax-ink),0 10px 28px rgba(24,22,19,0.18)!important;animation:none!important}
+.styl-tile-cap{padding:16px 12px 13px!important;background:linear-gradient(transparent,rgba(16,14,11,0.62))!important}
+.styl-name{font-size:15px!important;letter-spacing:0.5px!important}
+.styl-title{font-size:8px!important;letter-spacing:1.6px!important;color:rgba(255,255,255,0.78)!important}
+.styl-tile-info{background:rgba(255,255,255,0.92)!important;color:var(--pax-ink)!important}
+.anyone-tile .styl-tile-letter{color:#B8B0A4!important}
+.anyone-tile .anyone-label{color:var(--pax-graphite)!important;letter-spacing:0.5px}
+
+/* —— 服務菜單：寬鬆、墨黑、襯線價格 —— */
+.svc-row{padding:23px 6px!important;border-bottom-color:var(--pax-line-2)!important}
+.svc-name{font-size:18px!important;color:var(--pax-ink)!important;letter-spacing:0.6px!important}
+.svc-desc{color:#B6AE9F!important;margin-top:6px!important;letter-spacing:0.3px}
+.svc-dots{border-bottom:1px dotted #E4DFD6!important}
+.svc-row:hover{background:#FCFBF9!important}
+.svc-row.selected{background:var(--pax-sel)!important}
+.svc-row.selected::before{background:var(--pax-ink)!important;width:2px!important}
+.svc-row.selected .svc-dots{border-bottom-color:#D8D2C7!important}
+.svc-price{font-family:'Cormorant Garamond',serif!important;font-size:21px!important;font-weight:400!important;color:var(--pax-ink)!important;letter-spacing:0.5px!important}
+
+/* —— 日曆 / 時段卡：細線、墨黑選取 —— */
+.cal-wrap,.time-wrap{border:1px solid var(--pax-line)!important;border-radius:0!important;box-shadow:none!important;background:#fff!important;padding:26px!important}
+.cal-mon,.time-wrap h3{color:var(--pax-ink)!important}
+.cal-nav-btn{border-color:var(--pax-line)!important;border-radius:0!important}
+.cal-nav-btn:hover{border-color:var(--pax-ink)!important;color:var(--pax-ink)!important}
+.cal-wkday{color:var(--pax-mute)!important}
+.cal-day:hover:not(.dis):not(.emp){border-color:var(--pax-ink)!important;background:var(--pax-sel)!important}
+.cal-day.sel{background:var(--pax-ink)!important;border-color:var(--pax-ink)!important;color:#fff!important;box-shadow:none!important}
+.cal-day.tod{border-color:var(--pax-ink)!important;color:var(--pax-ink)!important;animation:none!important}
+.cal-day.tod.sel{color:#fff!important}
+.cal-day.hol::after{background:var(--pax-whisper)!important}
+.t-slot{border-color:var(--pax-line)!important;border-radius:0!important}
+.t-slot:hover{border-color:var(--pax-ink)!important;background:var(--pax-sel)!important;color:var(--pax-ink)!important;transform:none!important}
+.t-slot.sel{background:var(--pax-ink)!important;border-color:var(--pax-ink)!important;color:#fff!important;box-shadow:none!important}
+
+/* —— 表單：細線、墨黑聚焦 —— */
+.form-field label{color:var(--pax-mute)!important}
+.form-field input,.form-field select,.form-field textarea,#myBkPhone{border:1px solid var(--pax-line)!important;border-radius:0!important;background:#fff!important}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--pax-ink)!important;box-shadow:none!important}
+
+/* —— 按鈕：描邊、銳利、寬字距 —— */
+.btn{border-radius:0!important;letter-spacing:2.5px!important;padding:14px 36px!important}
+.btn-primary{background:transparent!important;border:1px solid var(--pax-ink)!important;color:var(--pax-ink)!important}
+.btn-primary:not(:disabled):hover{background:var(--pax-ink)!important;border-color:var(--pax-ink)!important;color:#fff!important;transform:none!important;box-shadow:none!important}
+.btn-primary:disabled{opacity:0.3!important;border-color:var(--pax-mute)!important;color:var(--pax-mute)!important}
+.btn-secondary{color:var(--pax-graphite)!important;border:1px solid var(--pax-line)!important}
+.btn-secondary:hover{border-color:var(--pax-ink)!important;color:var(--pax-ink)!important}
+
+/* —— 摘要卡 —— */
+.summary-card{background:#fff!important;border:1px solid var(--pax-line)!important;border-radius:0!important;box-shadow:none!important}
+.summary-card::after{color:var(--pax-ink)!important;opacity:0.04!important}
+.sum-row{border-bottom-color:var(--pax-line)!important}
+.sum-lbl{color:var(--pax-mute)!important}
+.sum-price .sum-val{color:var(--pax-ink)!important}
+.line-badge{background:var(--pax-ink)!important;color:#EDE9E2!important;border-radius:0!important}
+
+/* —— 成功頁 —— */
+.success-icon{border-color:var(--pax-ink)!important;color:var(--pax-ink)!important;animation:starIn 0.7s cubic-bezier(0.2,0.9,0.3,1.2) both!important}
+.booking-id{color:var(--pax-ink)!important}
+
+/* —— 我的預約 —— */
+.bk-item{border-bottom-color:var(--pax-line)!important}
+.bk-item:hover{background:#FCFBF9!important}
+.bk-svc{color:var(--pax-ink)!important}
+.btn-cancel-sm{border-radius:0!important}
+.btn-cancel-sm:hover{border-color:var(--pax-ink)!important;color:var(--pax-ink)!important}
+
+/* —— 細節 —— */
+#dbStatus{color:var(--pax-mute)!important}
+::selection{background:rgba(24,22,19,0.12)!important;color:var(--pax-ink)!important}
+
+/* ══════════════════════════════════════════════════════════════
+   ✦ 前台美化層 v4 — 放大編輯感（巨型展示字 · 序號索引 · 數字進度）
+══════════════════════════════════════════════════════════════ */
+
+/* —— 更開闊的版面 —— */
+.front-content{max-width:980px!important;padding:84px 48px 132px!important}
+
+/* —— 展示標題 + 步驟眉標 —— */
+.sec-title{font-family:'Cormorant Garamond','Noto Serif TC',serif!important;font-size:clamp(28px,3.6vw,40px)!important;line-height:1.12!important;letter-spacing:0.5px!important;font-weight:400!important;margin-bottom:14px!important}
+.sec-title::after{display:none!important}
+.sec-title::before{display:block;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:4.5px;color:var(--pax-whisper);font-weight:600;text-transform:uppercase;margin-bottom:20px}
+#fp1 .sec-title::before{content:'Step 01 — Stylist'}
+#fp2 .sec-title::before{content:'Step 02 — Service'}
+#fp3 .sec-title::before{content:'Step 03 — Date & Time'}
+#fp4 .sec-title::before{content:'Step 04 — Details'}
+#fp5 .sec-title::before{content:'Step 05 — Confirm'}
+.sec-sub{font-size:15px!important;margin-bottom:58px!important;color:var(--pax-graphite)!important}
+
+/* —— 進度列：襯線數字 01–05、無圓圈 —— */
+.progress-wrap{padding:30px 40px 26px!important}
+.steps{max-width:820px!important}
+.step{gap:13px!important}
+.step-num{width:auto!important;height:auto!important;min-width:0!important;border:0!important;background:none!important;border-radius:0!important;font-family:'Cormorant Garamond',serif!important;font-size:25px!important;font-weight:400!important;color:#D6D1C8!important;line-height:1!important}
+.step-num::before{content:'0'}
+.step.active .step-num{background:none!important;color:var(--pax-ink)!important;font-weight:500!important}
+.step.done .step-num{background:none!important;color:var(--pax-graphite)!important}
+.step-label{font-size:9.5px!important;letter-spacing:1.8px!important}
+.step-line{margin:0 14px!important;background:var(--pax-line)!important}
+
+/* —— 服務菜單：編號索引 + 放大 —— */
+.svc-list{counter-reset:svc!important}
+.svc-row{counter-increment:svc!important;padding:30px 6px 30px 58px!important;border-bottom-color:var(--pax-line)!important}
+.svc-row.selected{padding-left:58px!important}
+.svc-row::after{content:counter(svc,decimal-leading-zero);position:absolute;left:8px;top:50%;transform:translateY(-50%);font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--pax-mute);letter-spacing:1px;transition:color 0.25s}
+.svc-row:hover::after,.svc-row.selected::after{color:var(--pax-ink)}
+.svc-name{font-size:21px!important;letter-spacing:0.4px!important;transition:transform 0.28s ease!important}
+.svc-row:hover .svc-name{transform:translateX(5px)!important}
+.svc-price{font-size:25px!important}
+.svc-desc{margin-top:7px!important}
+
+/* —— 設計師磚：拉長比例 + 影像緩放 —— */
+.styl-strip{gap:4px!important}
+.styl-tile,.anyone-tile{aspect-ratio:3/4.5!important}
+.styl-tile-img{transition:transform 0.7s cubic-bezier(0.2,0.7,0.3,1)!important}
+.styl-tile:hover .styl-tile-img{transform:scale(1.06)!important}
+.styl-tile-letter{transition:transform 0.7s cubic-bezier(0.2,0.7,0.3,1)!important}
+.styl-tile:hover .styl-tile-letter{transform:scale(1.08)!important}
+.styl-name{font-family:'Cormorant Garamond','Noto Serif TC',serif!important;font-size:19px!important;letter-spacing:0.6px!important}
+.styl-title{font-size:8px!important;letter-spacing:2px!important;margin-top:4px!important}
+
+/* —— 黏底操作列 —— */
+.pax-sticky{position:sticky;bottom:0;z-index:20;background:rgba(248,247,244,0.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--pax-line);margin:28px -48px 0;padding:14px 48px}
+.bar-sel{flex:1;font-size:12.5px;color:var(--pax-graphite);letter-spacing:0.5px;text-align:left;padding:0 14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#barSel1{padding-left:0}
+@media(max-width:680px){
+  .pax-sticky{margin:20px -18px 0;padding:10px 18px;flex-direction:row!important;gap:10px}
+  .pax-sticky .btn{width:auto;flex-shrink:0;padding:12px 18px}
+  .bar-sel{display:none}
+}
+
+/* —— 分頁標籤：改由頂部導覽列控制，隱藏內文重複的分頁 —— */
+.f-tabs{display:none!important}
+
+/* ══════════════════════════════════════════════════════════════
+   ✦ 前台美化層 v5 — HERA 風黑色頂部導覽（置中襯線字標 · 雙層）
+══════════════════════════════════════════════════════════════ */
+.app-nav{flex-direction:column!important;height:auto!important;min-height:0!important;padding:0!important;background:#0F0D0B!important;border-bottom:none!important;align-items:stretch!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.nav-top{position:relative;display:flex;align-items:center;justify-content:space-between;height:76px;padding:0 32px}
+.nav-left{display:flex;align-items:center;gap:13px;flex:1;min-width:0}
+.nav-right{display:flex;align-items:center;gap:6px;flex:1;justify-content:flex-end}
+.nav-ic{display:inline-flex;align-items:center;color:rgba(255,255,255,0.82);text-decoration:none;transition:color 0.2s}
+.nav-ic:hover{color:#fff}
+.app-logo{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;margin:0!important;color:#fff!important;font-family:'Cormorant Garamond','Noto Serif TC',serif!important;font-size:28px!important;font-weight:300!important;letter-spacing:12px!important;text-transform:uppercase!important;white-space:nowrap;line-height:1}
+.app-logo span{color:#fff!important;font-style:normal}
+#dbStatus{color:rgba(255,255,255,0.4)!important;letter-spacing:1px}
+.nav-top .nav-btn{border:none!important;background:none!important;color:rgba(255,255,255,0.72)!important;font-size:11px!important;letter-spacing:1.6px!important;font-weight:400!important;padding:6px 9px!important;text-transform:none}
+.nav-top .nav-btn:hover{color:#fff!important;border:none!important;background:none!important}
+.nav-bottom{display:flex;align-items:center;justify-content:center;gap:38px;height:50px;border-top:1px solid rgba(255,255,255,0.1)}
+.nav-link{border:none!important;background:none!important;color:rgba(255,255,255,0.66)!important;font-size:12px!important;letter-spacing:2.5px!important;font-weight:400!important;padding:0 2px 5px!important;border-radius:0!important;position:relative}
+.nav-link:hover{color:#fff!important;border:none!important;background:none!important}
+.nav-link.active{color:#fff!important;background:none!important;border:none!important;font-weight:600!important}
+.nav-link.active::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1.5px;background:#fff}
+
+@media(max-width:620px){
+  .nav-top{height:58px;padding:0 16px}
+  .app-logo{font-size:18px!important;letter-spacing:5px!important}
+  .nav-top .nav-btn{font-size:10px!important;letter-spacing:1px!important;padding:5px 6px!important}
+  .nav-bottom{height:42px;gap:24px}
+  .nav-link{font-size:11px!important;letter-spacing:1.6px!important}
+  #dbStatus{display:none!important}
+  .nav-left{flex:0 0 auto}
+  .nav-ic svg{width:16px;height:16px}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ✦ 前台美化層 v6 — 黑色頁尾（與頂部導覽首尾呼應）
+══════════════════════════════════════════════════════════════ */
+#frontFooter{background:#0F0D0B!important;border-top:none!important;padding:52px 32px!important;margin-top:auto}
+#footerShopName{color:#fff!important;letter-spacing:3px!important}
+#frontFooter a{color:rgba(255,255,255,0.7)!important;transition:color 0.2s}
+#frontFooter a:hover{color:#fff!important}
+#frontFooter > div > div:last-child{color:rgba(255,255,255,0.4)!important}
+
+/* ══════════════════════════════════════════════════════════════
+   ✦ 前台美化層 v7 — 手機版校正（重新調校 v3–v6 在小螢幕的表現）
+══════════════════════════════════════════════════════════════ */
+@media(max-width:680px){
+  /* 導覽 */
+  .nav-top{height:56px!important;padding:0 16px!important}
+  .app-logo{font-size:17px!important;letter-spacing:4px!important}
+  .nav-top .nav-btn{font-size:10px!important;letter-spacing:0.5px!important;padding:5px 6px!important}
+  .nav-bottom{height:42px!important;gap:22px!important}
+  .nav-link{font-size:11px!important;letter-spacing:1.4px!important}
+  #dbStatus{display:none!important}
+  .nav-left{flex:0 0 auto!important}
+
+  /* 內容留白 + 標題 */
+  .front-content{padding:30px 18px 92px!important}
+  .sec-title{font-size:26px!important;line-height:1.12!important;letter-spacing:0!important;margin-bottom:10px!important}
+  .sec-title::before{font-size:10px!important;letter-spacing:3px!important;margin-bottom:13px!important}
+  .sec-sub{font-size:13px!important;margin-bottom:30px!important}
+
+  /* 進度列：數字縮小、標籤隱藏 */
+  .progress-wrap{padding:16px 14px 12px!important}
+  .steps{max-width:100%!important;gap:0!important}
+  .step-num{font-size:16px!important}
+  .step-label{display:none!important}
+  .step-line{margin:0 5px!important}
+
+  /* 服務菜單 */
+  .svc-list,.styl-strip{margin-bottom:34px!important}
+  .svc-row{padding:20px 4px 20px 40px!important}
+  .svc-row.selected{padding-left:40px!important}
+  .svc-row::after{font-size:13px!important;left:4px!important}
+  .svc-name{font-size:16px!important}
+  .svc-row:hover .svc-name{transform:none!important}
+  .svc-price{font-size:19px!important}
+
+  /* 設計師磚（兩欄） */
+  .styl-strip{gap:3px!important}
+  .styl-strip .styl-tile,.styl-strip .anyone-tile{aspect-ratio:3/4!important}
+  .styl-name{font-size:15px!important}
+
+  /* 頁尾 */
+  #frontFooter{padding:36px 18px!important}
+}
+@media(max-width:400px){
+  .app-logo{font-size:15px!important;letter-spacing:2.5px!important}
+  .nav-bottom{gap:16px!important}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ✦ 前台美化層 v8 — 完整設計批次
+   hero · 設計師 hover · 票券/收據 · 頁尾 · 轉場 · 我的預約 · 時段
+══════════════════════════════════════════════════════════════ */
+
+/* —— 1. 全幅開場 hero —— */
+.pax-hero{position:relative;height:340px;margin:0 0 64px;background:linear-gradient(135deg,#2A2520 0%,#15120F 100%);overflow:hidden;display:flex;align-items:flex-end}
+.pax-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 30%,rgba(10,8,6,0.55));pointer-events:none}
+.pax-hero-inner{position:relative;z-index:2;padding:0 0 44px 4px;max-width:640px}
+.pax-hero-eyebrow{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,0.6);font-weight:600;margin-bottom:18px}
+.pax-hero-stmt{font-family:'Cormorant Garamond','Noto Serif TC',serif;font-size:clamp(40px,6.5vw,68px);line-height:1.02;color:#fff;font-weight:300;letter-spacing:0.5px}
+.pax-hero-stmt em{font-style:italic;color:#fff}
+.pax-hero-line{margin-top:18px;font-size:14px;letter-spacing:1px;color:rgba(255,255,255,0.72);font-weight:300}
+.pax-hero-tag{position:absolute;top:16px;right:16px;z-index:2;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.32);border:1px solid rgba(255,255,255,0.22);padding:4px 9px}
+.pax-hero-upload{position:absolute;top:14px;right:14px;z-index:4;display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,0.12);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.4);color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:1.5px;padding:8px 14px;cursor:pointer;transition:all 0.2s}
+.pax-hero-upload:hover{background:rgba(255,255,255,0.95);color:var(--pax-ink);border-color:#fff}
+.pax-hero-remove{position:absolute;top:14px;right:14px;z-index:4;display:none;background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.4);color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:1.5px;padding:8px 14px;cursor:pointer;transition:all 0.2s;opacity:0}
+.pax-hero:hover .pax-hero-remove{opacity:1}
+.pax-hero-remove:hover{background:rgba(0,0,0,0.8)}
+.pax-hero.has-img .pax-hero-upload{display:none}
+.pax-hero.has-img .pax-hero-remove{display:inline-flex}
+.pax-hero-inner{animation:heroUp 0.8s cubic-bezier(0.2,0.8,0.3,1) both}
+@keyframes heroUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+
+/* —— 2. 設計師磚 hover 揭示 —— */
+.styl-tile{position:relative}
+.styl-specs{font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.78);margin-top:7px;line-height:1.5;max-height:0;opacity:0;overflow:hidden;transition:max-height 0.4s ease,opacity 0.35s ease,margin-top 0.4s ease}
+.styl-tile:hover .styl-specs{max-height:48px;opacity:1}
+.styl-tile-cap{transition:padding-bottom 0.4s ease}
+.styl-view{position:absolute;top:14px;left:14px;z-index:3;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#fff;border:1px solid rgba(255,255,255,0.55);padding:4px 10px;opacity:0;transform:translateY(-4px);transition:opacity 0.3s ease,transform 0.3s ease;pointer-events:none}
+.styl-tile:hover .styl-view{opacity:1;transform:translateY(0)}
+.styl-tile.selected .styl-view{opacity:1;background:#fff;color:var(--pax-ink);border-color:#fff}
+
+/* —— 3. 預約憑證票券 —— */
+#fVoucher{position:relative;background:#fff!important;border:1px solid var(--pax-line)!important;border-radius:0!important;padding:0!important;max-width:380px;margin:8px auto 28px!important;text-align:left;box-shadow:0 18px 50px rgba(20,16,12,0.1)!important;overflow:hidden}
+#fVoucher::before{content:'';position:absolute;left:0;right:0;top:0;height:5px;background:repeating-linear-gradient(90deg,var(--pax-ink) 0 9px,transparent 9px 18px)}
+.voucher-head{background:var(--pax-ink);color:#fff;padding:22px 26px 20px;display:flex;justify-content:space-between;align-items:flex-start}
+.voucher-brand{font-family:'Cormorant Garamond',serif;font-size:19px;letter-spacing:4px;text-transform:uppercase;font-weight:300}
+.voucher-kind{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-top:5px}
+.voucher-no{text-align:right;font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:2px;line-height:1}
+.voucher-no small{display:block;font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;color:rgba(255,255,255,0.5);margin-bottom:4px}
+.voucher-perf{position:relative;height:0;border-top:1px dashed var(--pax-line)}
+.voucher-perf::before,.voucher-perf::after{content:'';position:absolute;top:-9px;width:18px;height:18px;border-radius:50%;background:var(--pax-bg)}
+.voucher-perf::before{left:-9px;border:1px solid var(--pax-line)}
+.voucher-perf::after{right:-9px;border:1px solid var(--pax-line)}
+.voucher-body{padding:24px 26px 26px}
+.voucher-row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--pax-line-2)}
+.voucher-row:last-child{border-bottom:none}
+.voucher-row .vk{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--pax-mute);font-weight:600}
+.voucher-row .vv{font-size:14px;color:var(--pax-ink);text-align:right;letter-spacing:0.3px}
+.voucher-row .vv.big{font-family:'Cormorant Garamond',serif;font-size:19px}
+
+/* —— 4. 確認頁：質感收據 —— */
+.summary-card{padding:0!important;overflow:visible!important}
+.summary-card::after{display:none!important}
+.summary-card .sum-head{display:flex;justify-content:space-between;align-items:baseline;padding:0 2px 16px;border-bottom:1px solid var(--pax-ink);margin-bottom:6px}
+.summary-card .sum-head .sh-t{font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:1px;color:var(--pax-ink)}
+.summary-card .sum-head .sh-n{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--pax-mute)}
+.sum-row{padding:13px 2px!important}
+.sum-row.sum-price{border-top:1px solid var(--pax-ink)!important;margin-top:6px;padding-top:17px!important;border-bottom:none!important}
+.sum-row.sum-price .sum-lbl{font-size:12px!important}
+.sum-row.sum-price .sum-val{font-family:'Cormorant Garamond',serif!important;font-size:27px!important;font-weight:400!important}
+.line-badge{display:inline-flex!important}
+
+/* —— 5. 頁尾擴充 —— */
+#frontFooter{padding:0!important;color:#fff}
+.foot-top{max-width:980px;margin:0 auto;padding:56px 32px 40px;display:grid;grid-template-columns:1.1fr 2fr;gap:48px}
+.foot-brand #footerShopName{font-family:'Cormorant Garamond','Noto Serif TC',serif!important;font-size:24px!important;color:#fff!important;letter-spacing:4px!important;font-weight:300!important;margin-bottom:12px!important}
+.foot-tagline{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4);line-height:1.7}
+.foot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.foot-col{display:flex;flex-direction:column;gap:9px}
+.foot-h{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:3px;font-weight:600}
+.foot-col a{font-size:13px;color:rgba(255,255,255,0.78)!important;text-decoration:none;transition:color 0.2s;letter-spacing:0.3px}
+.foot-col a:hover{color:#fff!important}
+.foot-note{font-size:13px;color:rgba(255,255,255,0.55);letter-spacing:0.3px;line-height:1.5}
+.foot-base{border-top:1px solid rgba(255,255,255,0.1);max-width:980px;margin:0 auto;padding:18px 32px;display:flex;justify-content:space-between;align-items:center}
+.foot-base > div:first-child{font-size:11px;letter-spacing:1px;color:rgba(255,255,255,0.4)}
+.foot-base-wm{font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:4px;color:rgba(255,255,255,0.3)}
+
+/* —— 6. 步驟切換轉場 —— */
+.f-page{animation:fpIn 0.5s cubic-bezier(0.2,0.8,0.3,1) both}
+@keyframes fpIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* —— 7. 我的預約頁面 —— */
+#fViewMybk{max-width:680px}
+.mybk-search{display:flex;gap:0!important;border:1px solid var(--pax-line);background:#fff;margin-bottom:8px}
+#myBkPhone{border:none!important;flex:1;padding:16px 18px!important}
+#myBkPhone:focus{box-shadow:none!important}
+#fViewMybk .btn-row,#fViewMybk > div:has(#myBkPhone){margin-bottom:40px}
+.bk-item{padding:24px 4px!important;border-bottom:1px solid var(--pax-line)!important;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;transition:background 0.2s}
+.bk-name{font-family:'Cormorant Garamond','Noto Serif TC',serif!important;font-size:18px!important;color:var(--pax-ink)!important;letter-spacing:0.5px}
+.bk-svc{font-size:13px!important;color:var(--pax-ink)!important;margin-top:7px!important;letter-spacing:0.3px}
+.bk-time{font-size:12px!important;color:var(--pax-mute)!important;margin-top:5px!important;letter-spacing:0.5px}
+.empty-state{padding:48px 32px!important;color:var(--pax-mute)!important;font-family:'Cormorant Garamond',serif;font-size:16px;letter-spacing:1px}
+
+/* —— 8. 時段選擇精緻化 —— */
+.time-grid{gap:8px!important}
+.t-slot{padding:13px 6px!important;font-size:13px!important;letter-spacing:1px!important;font-family:'DM Sans',sans-serif}
+.t-slot.taken{background:transparent!important;color:#D8D2C7!important;border-color:var(--pax-line-2)!important}
+.time-wrap h3{font-size:13px!important;letter-spacing:2px!important;text-transform:uppercase;color:var(--pax-mute)!important;margin-bottom:16px!important}
+
+/* —— v8 手機校正 —— */
+@media(max-width:680px){
+  .pax-hero{height:230px;margin-bottom:40px}
+  .pax-hero-inner{padding-bottom:28px}
+  .pax-hero-stmt{font-size:34px}
+  .pax-hero-line{font-size:12px;margin-top:12px}
+  .pax-hero-tag{display:none}
+  #fVoucher{margin:8px 0 20px!important;max-width:100%}
+  .foot-top{grid-template-columns:1fr;gap:30px;padding:40px 18px 28px}
+  .foot-grid{grid-template-columns:1fr 1fr;gap:22px}
+  .foot-base{flex-direction:column;gap:10px;padding:16px 18px;text-align:center}
+  .summary-card .sum-row.sum-price .sum-val{font-size:23px!important}
+  .styl-specs{display:none!important}
+  .styl-view{top:10px;left:10px}
+}
 </style>
 </head>
 <body>
@@ -670,15 +1066,23 @@ html{scroll-behavior:smooth}
 
 <!-- ══ TOP NAV ══════════════════════════════════════════ -->
 <div class="app-nav">
-  <div style="display:flex;align-items:center;gap:10px">
+  <div class="nav-top">
+    <div class="nav-left">
+      <a class="nav-ic" href="https://maps.google.com/?q=台北市士林區文林路97號2樓" target="_blank" rel="noopener" aria-label="店家位置">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+      </a>
+      <span id="dbStatus" style="font-size:10px">● 連線中…</span>
+    </div>
     <div class="app-logo" id="appLogo" onclick="switchMain('front');fNewBooking()">Pax<span> Hair</span></div>
-    <div id="dbStatus" style="font-size:10px;color:var(--mid)">● 連線中…</div>
+    <div class="nav-right">
+      <button class="nav-btn" id="navAdmin" onclick="askAdminPwd()" style="display:none">後台管理</button>
+      <button class="nav-btn" id="stylEntryBtn" onclick="askStylLogin()">設計師</button>
+      <button class="nav-btn" id="adminEntryBtn" onclick="askAdminPwd()">管理</button>
+    </div>
   </div>
-  <div class="nav-btns">
-    <button class="nav-btn active" id="navFront" onclick="switchMain('front');fNewBooking()">線上預約</button>
-    <button class="nav-btn" id="navAdmin" onclick="askAdminPwd()" style="opacity:0;pointer-events:none;width:0;padding:0;border:none">後台管理</button>
-    <button class="nav-btn" id="stylEntryBtn" onclick="askStylLogin()" style="font-size:11px;letter-spacing:0.5px;opacity:0.7;color:#1A1208;border-color:var(--aborder)">設計師</button>
-    <button class="nav-btn" id="adminEntryBtn" onclick="askAdminPwd()" style="font-size:11px;letter-spacing:0.5px;opacity:0.6;color:#1A1208;border-color:var(--aborder)">管理</button>
+  <div class="nav-bottom">
+    <button class="nav-btn nav-link active" id="navFront" onclick="switchMain('front');switchFrontTab('book');fNewBooking()">線上預約</button>
+    <button class="nav-btn nav-link" onclick="switchMain('front');switchFrontTab('mybk')">我的預約</button>
   </div>
 </div>
 
@@ -719,10 +1123,17 @@ html{scroll-behavior:smooth}
     <div id="fViewBook">
       <!-- step 1 -->
       <div class="f-page active" id="fp1">
+        <div class="pax-hero" id="paxHero">
+          <div class="pax-hero-inner">
+            <div class="pax-hero-stmt">預約你的<em>專屬風格</em></div>
+            <div class="pax-hero-line">由資深設計師親自打造，從這裡開始</div>
+          </div>
+        </div>
         <div class="sec-title">選擇<em>設計師</em></div>
         <div class="sec-sub" id="frontWelcome">可指定設計師，或讓我們為您安排最合適人選</div>
         <div class="styl-strip" id="stylGrid"></div>
-        <div class="btn-row" style="justify-content:flex-end">
+        <div class="btn-row pax-sticky">
+          <span class="bar-sel" id="barSel1"></span>
           <button class="btn btn-primary" id="fbtn1" disabled onclick="if(!navigator.onLine){toast('目前無網路連線，請確認後再試 ⚠️');return;}fGoStep(2)">選擇服務 →</button>
         </div>
       </div>
@@ -731,8 +1142,9 @@ html{scroll-behavior:smooth}
         <div class="sec-title">選擇<em>服務項目</em></div>
         <div class="sec-sub" id="svcSubText">請選擇您想要的服務</div>
         <div class="svc-list" id="svcGrid"></div>
-        <div class="btn-row">
+        <div class="btn-row pax-sticky">
           <button class="btn btn-secondary" onclick="fGoStep(1)">← 返回</button>
+          <span class="bar-sel" id="barSel2"></span>
           <button class="btn btn-primary" id="fbtn2" disabled onclick="fGoStep(3)">選擇時間 →</button>
         </div>
       </div>
@@ -758,8 +1170,9 @@ html{scroll-behavior:smooth}
             <div id="fTimeContent"><div class="no-date-msg">← 請從左側日曆<br>選擇預約日期</div></div>
           </div>
         </div>
-        <div class="btn-row">
+        <div class="btn-row pax-sticky">
           <button class="btn btn-secondary" onclick="fGoStep(2)">← 返回</button>
+          <span class="bar-sel" id="barSel3"></span>
           <button class="btn btn-primary" id="fbtn3" disabled onclick="fGoStep(4)">填寫資料 →</button>
         </div>
       </div>
@@ -773,7 +1186,7 @@ html{scroll-behavior:smooth}
           <div class="form-field"><label>電子郵件 *</label><input type="email" id="fEmail" placeholder="email@example.com" oninput="fCheckForm()"><div id="fEmailErr" style="color:#C0614A;font-size:11px;margin-top:4px;display:none">請填寫正確的電子郵件</div></div>
           <div class="form-field full"><label>特殊需求或備註</label><textarea id="fNotes" placeholder="例：對某化學成分過敏…"></textarea></div>
         </div>
-        <div class="btn-row">
+        <div class="btn-row pax-sticky">
           <button class="btn btn-secondary" onclick="fGoStep(3)">← 返回</button>
           <button class="btn btn-primary" id="fbtn4" data-ready="0" style="opacity:0.45" onclick="this.dataset.ready==='1'?fGoStep(5):fShowFormErrors()">確認預約 →</button>
         </div>
@@ -787,7 +1200,7 @@ html{scroll-behavior:smooth}
           預約確認後自動發送 Email 通知
         </div>
         <div class="summary-card" id="fSummary"></div>
-        <div class="btn-row">
+        <div class="btn-row pax-sticky">
           <button class="btn btn-secondary" onclick="fGoStep(4)">← 修改資料</button>
           <button class="btn btn-primary" onclick="fConfirm()">✓ 確認預約</button>
         </div>
@@ -800,16 +1213,16 @@ html{scroll-behavior:smooth}
           <div class="booking-id" id="fBkId"></div>
           <p class="success-note">感謝您！如需取消請前往「我的預約」，輸入您的電話號碼查詢。</p>
           <!-- voucher -->
-          <div id="fVoucher" style="background:#fff;border:1.5px solid #EDE8E1;border-radius:4px;padding:24px 28px;max-width:380px;margin:0 auto 24px;text-align:left;box-shadow:0 4px 24px rgba(0,0,0,0.06)">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px dashed #EDE8E1">
-              <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold)" id="vShopName"></div>
-              <div style="font-size:10px;letter-spacing:2px;color:var(--light);text-transform:uppercase">預約憑證</div>
+          <div id="fVoucher">
+            <div class="voucher-head">
+              <div>
+                <div class="voucher-brand" id="vShopName">Pax</div>
+                <div class="voucher-kind">Reservation Voucher</div>
+              </div>
+              <div class="voucher-no"><small>No.</small><span id="vId"></span></div>
             </div>
-            <div id="vDetails"></div>
-            <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #EDE8E1;text-align:center;position:relative"><span style="position:absolute;top:-9px;left:14px;background:#fff;padding:0 5px;font-size:11px;color:#C0B4A4">✂</span>
-              <div style="font-size:11px;color:var(--light);letter-spacing:1px;margin-bottom:4px">預約編號</div>
-              <div id="vId" style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--charcoal);letter-spacing:3px"></div>
-            </div>
+            <div class="voucher-perf"></div>
+            <div class="voucher-body" id="vDetails"></div>
           </div>
           <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px">
             <button class="btn btn-secondary" onclick="fNewBooking()">再次預約</button>
@@ -827,10 +1240,8 @@ html{scroll-behavior:smooth}
     <div id="fViewMybk" style="display:none">
       <div class="sec-title">我的<em>預約紀錄</em></div>
       <div class="sec-sub">輸入預約時填寫的電話號碼查詢</div>
-      <div style="display:flex;gap:10px;margin-bottom:24px;max-width:480px">
+      <div class="mybk-search" style="max-width:480px">
         <input type="tel" id="myBkPhone" placeholder="輸入電話號碼，例：0912345678"
-          style="flex:1;background:var(--bg-card);border:1.5px solid #EDE8E1;border-radius:2px;padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--charcoal);outline:none;transition:border-color 0.2s"
-          onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='#EDE8E1'"
           onkeydown="if(event.key==='Enter')fSearchMyBk()">
         <button class="btn btn-primary" onclick="fSearchMyBk()" style="white-space:nowrap">查詢</button>
       </div>
@@ -840,22 +1251,35 @@ html{scroll-behavior:smooth}
 </div><!-- /viewFront -->
 
 <!-- ══ FRONT FOOTER ══════════════════════════════════════════ -->
-<div id="frontFooter" style="background:#fff;border-top:1px solid #E8E8E8;padding:32px 28px;margin-top:auto">
-  <div style="max-width:840px;margin:0 auto;display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between">
-    <div>
-      <div id="footerShopName" style="font-family:'Noto Serif TC','Cormorant Garamond',serif;font-size:15px;color:#111;letter-spacing:2px;font-weight:300;margin-bottom:10px"></div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        <a href="tel:0228827887" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#111'" onmouseout="this.style.color='#555'">
-          <span style="font-size:13px">📞</span>
-          <span>02-2882-7887</span>
-        </a>
-        <a href="https://maps.google.com/?q=台北市士林區文林路97號2樓" target="_blank" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#111'" onmouseout="this.style.color='#555'">
-          <span style="font-size:13px">📍</span>
-          <span>台北市士林區文林路97號2樓</span>
-        </a>
+<div id="frontFooter" style="margin-top:auto">
+  <div class="foot-top">
+    <div class="foot-brand">
+      <div id="footerShopName"></div>
+      <div class="foot-tagline">台北士林</div>
+    </div>
+    <div class="foot-grid">
+      <div class="foot-col">
+        <div class="foot-h">聯絡</div>
+        <a href="tel:0228827887">02-2882-7887</a>
+        <a href="https://maps.google.com/?q=台北市士林區文林路97號2樓" target="_blank" rel="noopener">台北市士林區文林路97號2樓</a>
+      </div>
+      <div class="foot-col">
+        <div class="foot-h">營業時間</div>
+        <span id="footerHours" class="foot-note">10:00–19:00</span>
+        <span id="footerClosed" class="foot-note">全年無休</span>
+        <span class="foot-note">24 小時線上預約</span>
+      </div>
+      <div class="foot-col">
+        <div class="foot-h">追蹤</div>
+        <a id="footerIG" href="#" target="_blank" rel="noopener" style="display:none">Instagram</a>
+        <a id="footerFB" href="#" target="_blank" rel="noopener" style="display:none">Facebook</a>
+        <span id="footerSocialNote" class="foot-note">敬請期待</span>
       </div>
     </div>
-    <div style="font-size:11px;color:#ccc;letter-spacing:1px">© 2025 Pax Hair Salon</div>
+  </div>
+  <div class="foot-base">
+    <div>© 2025 Pax Hair Salon</div>
+    <div class="foot-base-wm">PAX HAIR SALON</div>
   </div>
 </div>
 
@@ -928,6 +1352,19 @@ html{scroll-behavior:smooth}
         <div class="a-frow"><div class="a-field"><label>店名 *</label><input type="text" id="sShopName" placeholder="例：Lumière Hair Studio"></div>
         <div class="a-field"><label>副標語</label><input type="text" id="sShopTagline" placeholder="例：Hair &amp; Beauty"></div></div>
         <div class="a-frow s1"><div class="a-field"><label>預約頁歡迎語</label><input type="text" id="sShopWelcome" placeholder="例：每項服務皆由資深造型師親自操作"></div></div>
+        <div class="a-frow s1"><div class="a-field"><label>預約頁主圖（顯示在預約首頁上方，建議橫幅高解析）</label>
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:8px">
+            <div id="sHeroPreview" style="width:160px;height:90px;background:var(--apanel2);border:2px solid var(--aborder);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;font-size:11px;color:var(--alight)">無主圖</div>
+            <div style="flex:1">
+              <label style="display:inline-block;padding:8px 16px;background:var(--gold);color:#fff;border-radius:2px;cursor:pointer;font-size:11px;letter-spacing:1px;text-transform:uppercase">
+                選擇圖片 <input type="file" id="sHeroFile" accept="image/*" style="display:none" onchange="handleHeroImgUpload(this)">
+              </label>
+              <button type="button" class="a-btn a-btn-outline a-btn-sm" onclick="document.getElementById('sHeroImg').value='';updateHeroImgPreview('')" style="margin-left:6px">移除</button>
+              <div style="font-size:11px;color:var(--alight);margin-top:6px">或直接貼網址：</div>
+              <input type="text" id="sHeroImg" placeholder="https://..." oninput="updateHeroImgPreview(this.value)" style="margin-top:4px">
+            </div>
+          </div>
+        </div></div>
       </div>
       <div class="a-fsect">
         <div class="a-fsect-title">聯絡資訊</div>
@@ -1477,16 +1914,19 @@ async function syncFromFirebase(){
     if(styls.length){const st=[...styls].sort((a,b)=>(a.order??999)-(b.order??999)||Number(a.id)-Number(b.id));_cache.styls=st;ss('lm_styls',st);}
     _cache.blocks=blocks;ss('lm_blocks',blocks);
 
-    // 前台只需要近期資料：抓最近30天內的預約（供查詢預約紀錄等用途），
-    // 不再於前台就啟動「全部預約」的即時監聽（那會把所有歷史預約都下載下來，客人越多網頁越慢）
-    try{
-      const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
-      const recentSnap=await window.FB.db.collection('bookings')
-        .where('date','>=',cutoff).get();
-      const bks=recentSnap.docs.map(d=>({...d.data(),id:d.id}))
-        .sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+    // Realtime bookings listener
+    window.FB.db.collection('bookings').orderBy('createdAt','desc').onSnapshot(snap=>{
+      const bks=snap.docs.map(d=>({...d.data(),id:d.id}));
       _cache.bks=bks;ss('lm_bks',bks);
-    }catch(e){console.warn('recent bookings load:',e);}
+      const activeTab=document.querySelector('.a-panel.active');
+      if(activeTab&&document.getElementById('viewAdmin').style.display!=='none'){
+        const tid=activeTab.id.replace('atab-','');
+        const _origABk=()=>{aRenderBk();renderABkCal();};
+const map={dashboard:aRenderDash,bookings:_origABk,calendar:aRenderCalView,
+          stylschedule:aRenderCalView,customers:aRenderCustomers,stats:aRenderStats};
+        if(map[tid])map[tid]();
+      }
+    });
     // Load stylist passwords
     const styls2=getStyls();
     for(const s of styls2){
@@ -1593,30 +2033,6 @@ function endIntro(){
 }
 
 // ══ MAIN SWITCH ════════════════════════════════════════════
-// 後台專用的預約即時監聽：只在進入後台時啟動一次（前台客人不需要、也不該負擔這個成本），
-// 且只監聽近90天的資料，避免歷史預約越積越多拖慢速度
-let _bkListenerStarted=false;
-function startBkListener(){
-  if(_bkListenerStarted||!window.FB)return;
-  _bkListenerStarted=true;
-  const cutoff=new Date(Date.now()-90*24*60*60*1000).toISOString().slice(0,10);
-  window.FB.db.collection('bookings').where('date','>=',cutoff).onSnapshot(snap=>{
-    const bks=snap.docs.map(d=>({...d.data(),id:d.id}))
-      .sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
-    _cache.bks=bks;ss('lm_bks',bks);
-    const activeTab=document.querySelector('.a-panel.active');
-    if(activeTab&&document.getElementById('viewAdmin').style.display!=='none'){
-      const tid=activeTab.id.replace('atab-','');
-      const _origABk=()=>{aRenderBk();renderABkCal();};
-      const map={dashboard:aRenderDash,bookings:_origABk,calendar:aRenderCalView,
-        stylschedule:aRenderCalView,customers:aRenderCustomers,stats:aRenderStats};
-      if(map[tid])map[tid]();
-    }
-    if(document.getElementById('viewStylist').style.display!=='none'&&typeof sdRenderBookings==='function'&&typeof _sdStylId!=='undefined'&&_sdStylId){
-      sdRenderBookings();
-    }
-  });
-}
 function switchMain(v, stylId){
   document.getElementById('viewFront').style.display=v==='front'?'block':'none';
   document.getElementById('viewAdmin').style.display=v==='admin'?'flex':'none';
@@ -1640,9 +2056,9 @@ function switchMain(v, stylId){
     stylBtn.textContent='設計師';stylBtn.onclick=askStylLogin;stylBtn.style.opacity='0.7';stylBtn.style.color='#1A1208';
   }
 
-  if(v==='admin'){startBkListener();aRenderDash();}
+  if(v==='admin') aRenderDash();
   if(v==='front') applyShop();
-  if(v==='stylist'&&stylId){startBkListener();requestAnimationFrame(()=>setTimeout(()=>sdInit(stylId),50));}
+  if(v==='stylist'&&stylId) requestAnimationFrame(()=>setTimeout(()=>sdInit(stylId),50));
 }
 
 function getAdminPwd(){return gs('lm_adminpwd','1234');}
@@ -1847,6 +2263,19 @@ function applyShop(){
   }
   const sub=document.getElementById('frontWelcome');
   if(sub&&s.welcome) sub.textContent=s.welcome;
+  paxApplyHero();
+  // 頁尾：營業時間 + 社群（依實際設定）
+  try{
+    const set=getSet();const dn=['日','一','二','三','四','五','六'];
+    const closed=(set.closedDays||[]).map(d=>'週'+dn[d]);
+    const fh=document.getElementById('footerHours');
+    if(fh) fh.textContent=(set.openTime||'10:00')+'–'+(set.closeTime||'19:00');
+    const fc=document.getElementById('footerClosed');
+    if(fc) fc.textContent=closed.length?(closed.join('、')+' 公休'):'全年無休';
+    const ig=document.getElementById('footerIG');if(ig){if(s.ig){ig.style.display='block';ig.href=s.ig;}else ig.style.display='none';}
+    const fb=document.getElementById('footerFB');if(fb){if(s.fb){fb.style.display='block';fb.href=s.fb;}else fb.style.display='none';}
+    const sn=document.getElementById('footerSocialNote');if(sn) sn.style.display=(s.ig||s.fb)?'none':'block';
+  }catch(e){}
 }
 
 function switchFrontTab(v){
@@ -1858,6 +2287,9 @@ function switchFrontTab(v){
     document.getElementById('myBkList').innerHTML='';
     document.getElementById('myBkPhone').value='';
   }
+  var _nls=document.querySelectorAll('.nav-link');
+  if(_nls[0])_nls[0].classList.toggle('active',v==='book');
+  if(_nls[1])_nls[1].classList.toggle('active',v==='mybk');
 }
 
 function fGoStep(n){
@@ -1907,6 +2339,7 @@ function fSelSvc(id){
   // Match by string first (custom services), then by number (global services)
   fst.svc=svcs.find(s=>String(s.id)===String(id))||svcs.find(s=>Number(s.id)===Number(id));
   fMarkSvcSelection();document.getElementById('fbtn2').disabled=false;
+  var b2=document.getElementById('barSel2');if(b2)b2.textContent=fst.svc?('已選：'+fst.svc.name+'　'+(fst.svc.price||'')):'';
 }
 
 function fRenderStyls(){
@@ -1922,7 +2355,9 @@ function fRenderStyls(){
       <div class="styl-tile-cap">
         <div class="styl-name">${esc(s.name)}</div>
         <div class="styl-title">${esc(s.title)}</div>
+        ${(s.specialties&&s.specialties.length)?`<div class="styl-specs">${s.specialties.slice(0,3).map(esc).join(' · ')}</div>`:''}
       </div>
+      <span class="styl-view">View</span>
     </div>`).join('');
   document.getElementById('stylGrid').innerHTML=html;
   document.getElementById('stylGrid').classList.toggle('has-sel',!!fst.styl);
@@ -1941,6 +2376,8 @@ function fSelStyl(id){
   fst.styl=id===0?{id:0,name:'不指定',holidays:[],services:[]}:getStyls().find(s=>Number(s.id)===Number(id));
   fst.svc=null;fst.date=null;fst.time=null;
   fMarkStylSelection();document.getElementById('fbtn1').disabled=false;
+  var b1=document.getElementById('barSel1');if(b1)b1.textContent=fst.styl?('已選：'+fst.styl.name):'';
+  var b2s=document.getElementById('barSel2');if(b2s)b2s.textContent='';
   document.getElementById('fbtn3').disabled=true;fRenderCal();
 }
 
@@ -1982,10 +2419,8 @@ async function fAddCalDots(){
   try{
     const monthStr=`${fst.calY}-${String(fst.calM+1).padStart(2,'0')}`;
     const snap=await window.FB.db.collection('bookings')
-      .where('date','>=',monthStr+'-01')
-      .where('date','<=',monthStr+'-31')
-      .get();
-    let bks=snap.docs.map(d=>d.data()).filter(b=>b.status==='confirmed');
+      .where('status','==','confirmed').get();
+    let bks=snap.docs.map(d=>d.data()).filter(b=>b.date?.startsWith(monthStr));
     const set=getSet();
     const oh=toMins(set.openTime),ch=toMins(set.closeTime);
     const slotMin=set.slotMinutes||30;
@@ -2027,6 +2462,7 @@ async function fAddCalDots(){
 function fChMonth(d){fst.calM+=d;if(fst.calM<0){fst.calM=11;fst.calY--;}if(fst.calM>11){fst.calM=0;fst.calY++;}fRenderCal();}
 function fSelDate(ds,dis){
   if(dis)return;fst.date=ds;fst.time=null;document.getElementById('fbtn3').disabled=true;
+  var b3d=document.getElementById('barSel3');if(b3d)b3d.textContent='';
   fRenderCal();
   // Show loading state
   document.getElementById('fTimeTitle').textContent=dspDate(ds);
@@ -2164,7 +2600,8 @@ async function fRenderSlots(){
       return`<div class="t-slot ${tk?'taken':''} ${sel?'sel':''}" onclick="fSelTime('${t}',${tk})">${t}</div>`;
     }).join('')+'</div>';
 }
-function fSelTime(t,tk){if(tk)return;fst.time=t;fRenderSlots();document.getElementById('fbtn3').disabled=false;}
+function fSelTime(t,tk){if(tk)return;fst.time=t;fRenderSlots();document.getElementById('fbtn3').disabled=false;
+  var b3=document.getElementById('barSel3');if(b3)b3.textContent='已選：'+dspDate(fst.date)+'　'+t;}
 
 function fCheckForm(){
   const name=document.getElementById('fName').value.trim();
@@ -2196,6 +2633,7 @@ function fRenderSummary(){
   fst.email=document.getElementById('fEmail').value.trim();
   fst.notes=document.getElementById('fNotes').value.trim();
   document.getElementById('fSummary').innerHTML=`
+    <div class="sum-head"><span class="sh-t">Reservation</span><span class="sh-n">Pax Hair Salon</span></div>
     <div class="sum-row"><span class="sum-lbl">服務項目</span><span class="sum-val">${esc(fst.svc.name)}</span></div>
     <div class="sum-row"><span class="sum-lbl">指定設計師</span><span class="sum-val">${esc(fst.styl?.name||'不指定')}</span></div>
     <div class="sum-row"><span class="sum-lbl">預約日期</span><span class="sum-val">${dspDate(fst.date)}</span></div>
@@ -2349,23 +2787,14 @@ async function fSearchMyBk(){
   el.innerHTML='<div class="empty-state">查詢中…</div>';
   const normPhone=phone.replace(/\D/g,'');
 
-  // 用電話直接查詢（同時試原始輸入與純數字格式），不再下載全部預約
+  // Directly fetch from Firebase if available
   if(window.FB){
     try{
-      const queries=[...new Set([phone,normPhone])].map(p=>
-        window.FB.db.collection('bookings').where('phone','==',p).get()
-      );
-      const snaps=await Promise.all(queries);
-      const seen={};
-      const found=[];
-      snaps.forEach(s=>s.docs.forEach(d=>{
-        if(!seen[d.id]){seen[d.id]=1;found.push({...d.data(),id:d.id});}
-      }));
-      // 合併進 cache（保留其他既有資料），讓 fRenderMyBk 能查到
-      const cur=getBks();
-      const curIds=new Set(cur.map(b=>b.id));
-      const merged=[...cur,...found.filter(b=>!curIds.has(b.id))];
-      _cache.bks=merged;ss('lm_bks',merged);
+      const snap=await window.FB.db.collection('bookings')
+        .orderBy('createdAt','desc').get();
+      const allBks=snap.docs.map(d=>({...d.data(),id:d.id}));
+      // Update cache
+      _cache.bks=allBks;
       fRenderMyBk(phone);
       return;
     }catch(e){
@@ -2683,6 +3112,8 @@ function aRenderShop(){
   document.getElementById('sShopName').value=s.name;
   document.getElementById('sShopTagline').value=s.tagline;
   document.getElementById('sShopWelcome').value=s.welcome;
+  document.getElementById('sHeroImg').value=s.heroImg||'';
+  updateHeroImgPreview(s.heroImg||'');
   document.getElementById('sShopPhone').value=s.phone;
   document.getElementById('sShopEmail').value=s.email;
   document.getElementById('sShopAddr').value=s.address;
@@ -2698,6 +3129,7 @@ function aSaveShop(){
     name:document.getElementById('sShopName').value.trim()||'Lumière',
     tagline:document.getElementById('sShopTagline').value.trim(),
     welcome:document.getElementById('sShopWelcome').value.trim(),
+    heroImg:document.getElementById('sHeroImg').value.trim(),
     phone:document.getElementById('sShopPhone').value.trim(),
     email:document.getElementById('sShopEmail').value.trim(),
     address:document.getElementById('sShopAddr').value.trim(),
@@ -2709,6 +3141,7 @@ function aSaveShop(){
     noticeEnd:document.getElementById('sNoticeEnd').value,
   };
   ss('lm_shop',s);_cache.shop=s;
+  paxApplyHero();
   if(window.FB)(async()=>{await window.FB.dbSet('config','shop',s);})();
   // Handle password change
   const np=document.getElementById('sNewPwd')?.value;
@@ -3226,20 +3659,14 @@ async function sdRenderBookings(){
   renderSdBkCal();
   _sdRenderBkList();
 
-  // 背景從 Firebase 更新（只抓目前瀏覽月份的資料，不抓全部）
+  // 背景從 Firebase 更新
   if(window.FB){
     try{
-      const monthStr=_sdCalState.y+'-'+String(_sdCalState.m+1).padStart(2,'0');
       const snap=await window.FB.db.collection('bookings')
-        .where('date','>=',monthStr+'-01')
-        .where('date','<=',monthStr+'-31')
-        .get();
+        .where('status','==','confirmed').get();
       const fbBks=snap.docs.map(d=>({...d.data(),id:d.id}));
-      // 合併進 cache：以查詢月份的最新資料取代 cache 中同月份的舊資料
-      const others=getBks().filter(b=>!b.date?.startsWith(monthStr));
-      const merged=[...others,...fbBks];
-      _cache.bks=merged;
-      ss('lm_bks',merged);
+      _cache.bks=fbBks;
+      ss('lm_bks',fbBks);
     }catch(e){
       console.warn('sdRenderBookings fetch error:',e);
     }
@@ -3972,19 +4399,51 @@ function fAddToCalendar(){
   window.open(url,'_blank');
 }
 let _lastBk=null;
+// ── Hero 主圖（存於 Firebase shop 設定，所有訪客共用）──
+function paxApplyHero(){
+  try{
+    var img=(getShop()||{}).heroImg;
+    var hero=document.getElementById('paxHero');
+    if(!hero)return;
+    if(img){
+      hero.style.backgroundImage="linear-gradient(transparent 20%,rgba(10,8,6,0.62)), url('"+img+"')";
+      hero.style.backgroundSize='cover';
+      hero.style.backgroundPosition='center';
+      hero.classList.add('has-img');
+    }else{
+      hero.style.backgroundImage='';
+      hero.classList.remove('has-img');
+    }
+  }catch(e){}
+}
+// 後台：主圖上傳（上傳至 Firebase Storage，回傳網址）
+function handleHeroImgUpload(input){
+  const preview=document.getElementById('sHeroPreview');
+  handleImageUpload(input, preview, (url)=>{
+    document.getElementById('sHeroImg').value=url;
+    updateHeroImgPreview(url);
+  });
+}
+function updateHeroImgPreview(url){
+  const el=document.getElementById('sHeroPreview');
+  if(!el)return;
+  if(url){
+    el.innerHTML=`<img src="${esc(url)}" style="width:100%;height:100%;object-fit:cover">`;
+  }else{
+    el.innerHTML='無主圖';
+  }
+}
 function renderVoucher(bk){
   _lastBk=bk;
   const shop=getShop();
-  document.getElementById('vShopName').textContent=shop.name;
-  document.getElementById('vId').textContent='#'+bk.id;
+  document.getElementById('vShopName').textContent=shop.name||'Pax';
+  document.getElementById('vId').textContent=bk.id;
   document.getElementById('vDetails').innerHTML=`
-    <div style="display:grid;grid-template-columns:80px 1fr;gap:6px 12px;font-size:12px">
-      <span style="color:var(--light);letter-spacing:1px;font-size:10px;text-transform:uppercase">服務</span><span style="color:var(--charcoal)">${esc(bk.service)}</span>
-      <span style="color:var(--light);letter-spacing:1px;font-size:10px;text-transform:uppercase">設計師</span><span style="color:var(--charcoal)">${esc(bk.stylistName)}</span>
-      <span style="color:var(--light);letter-spacing:1px;font-size:10px;text-transform:uppercase">日期</span><span style="color:var(--charcoal)">${dspDate(bk.date)}</span>
-      <span style="color:var(--light);letter-spacing:1px;font-size:10px;text-transform:uppercase">時段</span><span style="color:var(--charcoal)">${bk.time}</span>
-      <span style="color:var(--light);letter-spacing:1px;font-size:10px;text-transform:uppercase">費用</span><span style="color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:16px">${esc(bk.price)}</span>
-    </div>`;
+    <div class="voucher-row"><span class="vk">服務</span><span class="vv">${esc(bk.service)}</span></div>
+    <div class="voucher-row"><span class="vk">設計師</span><span class="vv">${esc(bk.stylistName)}</span></div>
+    <div class="voucher-row"><span class="vk">日期</span><span class="vv big">${dspDate(bk.date)}</span></div>
+    <div class="voucher-row"><span class="vk">時段</span><span class="vv big">${bk.time}</span></div>
+    <div class="voucher-row"><span class="vk">費用</span><span class="vv big">${esc(bk.price)}</span></div>`;
 }
 
 // ══ REPEAT BOOKING ═════════════════════════════════════════
