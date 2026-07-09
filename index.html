@@ -1049,15 +1049,15 @@ html{scroll-behavior:smooth}
 }
 
 /* —— 後台預約表格:精簡欄位後不需橫向捲動,保留安全捲軸 —— */
-@media(min-width:1101px){
+@media(min-width:1401px){
   .a-tbl-wrap{overflow-x:auto}
   .a-tbl-wrap th,.a-tbl-wrap td{white-space:nowrap}
 }
 /* 中等寬度:日曆堆疊到表格上方 + 預約列表改卡片式(所有欄位直排可見) */
-@media(min-width:681px) and (max-width:1100px){
+@media(min-width:681px) and (max-width:1400px){
   #atab-bookings > .a-phdr + div{flex-direction:column;align-items:stretch}
 }
-@media(min-width:681px) and (max-width:1100px){
+@media(min-width:681px) and (max-width:1400px){
   #atab-bookings .a-tbl-wrap table thead{display:none}
   #atab-bookings .a-tbl-wrap table tbody tr{
     display:flex;flex-direction:column;
@@ -1824,15 +1824,19 @@ html{scroll-behavior:smooth}
 
 <!-- ══ BLOCK SLOT MODAL ══ -->
 <div class="modal-overlay" id="mSdResched">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-title">預約<em>改期</em></div>
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">編輯<em>預約</em></div>
     <div id="sdRsInfo" style="font-size:12px;color:var(--amid);margin-bottom:14px;line-height:1.6"></div>
+    <div class="a-frow"><div class="a-field"><label>客戶姓名</label><input type="text" id="sdRsName"></div>
+    <div class="a-field"><label>電話</label><input type="tel" id="sdRsPhone"></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>服務項目</label><select id="sdRsSvc"></select></div></div>
     <div class="a-frow">
-      <div class="a-field"><label>新日期</label><input type="date" id="sdRsDate"></div>
-      <div class="a-field"><label>新時段</label><input type="time" id="sdRsTime" step="1800"></div>
+      <div class="a-field"><label>日期</label><input type="date" id="sdRsDate"></div>
+      <div class="a-field"><label>時段</label><input type="time" id="sdRsTime" step="1800"></div>
     </div>
+    <div class="a-frow s1"><div class="a-field"><label>備註</label><textarea id="sdRsNotes" style="height:56px"></textarea></div></div>
     <input type="hidden" id="sdRsId">
-    <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mSdResched')">取消</button><button class="a-btn a-btn-gold" onclick="sdSaveResched()">確認改期</button></div>
+    <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mSdResched')">取消</button><button class="a-btn a-btn-gold" onclick="sdSaveResched()">儲存</button></div>
   </div>
 </div>
 
@@ -3783,7 +3787,7 @@ function _sdRenderBkList(){
             ${getCustNotes()[b.phone]?`<div style="font-size:11px;color:var(--red);margin-top:2px">📌 ${esc(getCustNotes()[b.phone])}</div>`:''}
           </div>
           <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold)">${dspPrice(b.price)}</span>
-          <button class="a-btn a-btn-outline a-btn-sm" onclick="sdOpenResched('${b.id}')">改期</button>
+          <button class="a-btn a-btn-outline a-btn-sm" onclick="sdOpenResched('${b.id}')">編輯</button>
           <button class="a-btn a-btn-danger a-btn-sm" onclick="sdCancelBk('${b.id}')">取消</button>
         </div>`).join('')}
       ${dayBls.map(bl=>`
@@ -3870,28 +3874,46 @@ async function sdSaveAddBk(){
 function sdOpenResched(id){
   const bk=getBks().find(b=>b.id===id);if(!bk)return;
   document.getElementById('sdRsId').value=id;
-  document.getElementById('sdRsInfo').textContent=bk.name+' · '+bk.service+'　原：'+dspDate(bk.date)+' '+bk.time;
+  document.getElementById('sdRsInfo').textContent='編號 '+bk.id+'　原：'+dspDate(bk.date)+' '+bk.time;
+  document.getElementById('sdRsName').value=bk.name||'';
+  document.getElementById('sdRsPhone').value=bk.phone||'';
+  document.getElementById('sdRsNotes').value=bk.notes||'';
   document.getElementById('sdRsDate').value=bk.date;
   document.getElementById('sdRsTime').value=bk.time;
+  const styl=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
+  const svcs=styl?getSvcForStyl(styl):getSvcs();
+  const hasCur=svcs.some(s=>String(s.id)===String(bk.serviceId));
+  document.getElementById('sdRsSvc').innerHTML=
+    (hasCur?'':`<option value="${esc(String(bk.serviceId))}" selected>${esc(bk.service)}（目前）</option>`)+
+    svcs.map(s=>`<option value="${esc(String(s.id))}" ${String(s.id)===String(bk.serviceId)?'selected':''}>${esc(s.name)}</option>`).join('');
   openModal('mSdResched');
 }
 async function sdSaveResched(){
   const id=document.getElementById('sdRsId').value;
   const bk=getBks().find(b=>b.id===id);if(!bk)return;
+  const name=document.getElementById('sdRsName').value.trim();
+  const phone=document.getElementById('sdRsPhone').value.trim();
   const date=document.getElementById('sdRsDate').value;
   const time=document.getElementById('sdRsTime').value;
-  if(!date||!time){toast('請選擇日期與時段');return;}
-  if(date===bk.date&&time===bk.time){closeModal('mSdResched');return;}
-  const dur=parseDurMins(bk.duration||'60 分鐘');
+  const notes=document.getElementById('sdRsNotes').value.trim();
+  if(!name||!phone||!date||!time){toast('請填寫必要欄位');return;}
+  const styl=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
+  const svcs=styl?getSvcForStyl(styl):getSvcs();
+  const svcVal=document.getElementById('sdRsSvc').value;
+  const svc=svcs.find(s=>String(s.id)===String(svcVal));
+  const updates={name,phone,date,time,notes};
+  if(svc){updates.service=svc.name;updates.serviceId=svc.id;updates.price=svc.price;updates.duration=svc.duration;}
+  const dur=parseDurMins(updates.duration||bk.duration||'60 分鐘');
   const ns=toMins(time),ne=ns+dur;
   const conflict=getBks().find(b=>{
     if(b.id===id||b.date!==date||b.status!=='confirmed'||Number(b.stylistId)!==Number(_sdStylId))return false;
     const bs=toMins(b.time),be=bs+parseDurMins(b.duration||'60 分鐘');
     return ns<be&&ne>bs;
   });
-  if(conflict){if(!confirm(time+' 與「'+conflict.name+' '+conflict.time+' '+conflict.service+'」時段重疊，確定要強制改期嗎？'))return;}
-  await fbUpdateBooking(id,{date,time,rescheduledAt:new Date().toISOString()});
-  closeModal('mSdResched');sdRenderBookings();toast('已改期 ✦');
+  if(conflict){if(!confirm(time+' 與「'+conflict.name+' '+conflict.time+' '+conflict.service+'」時段重疊，確定要強制儲存嗎？'))return;}
+  if(bk.date!==date||bk.time!==time)updates.rescheduledAt=new Date().toISOString();
+  await fbUpdateBooking(id,updates);
+  closeModal('mSdResched');sdRenderBookings();toast('預約已更新 ✦');
 }
 async function sdCancelBk(id){
   if(!confirm('確定要取消此預約？'))return;
