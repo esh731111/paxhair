@@ -598,7 +598,7 @@ html{scroll-behavior:smooth}
   [id="atab-stats"] > div:nth-child(2){grid-template-columns:1fr}
 
   /* ── ADMIN BOOKINGS PANEL ── */
-  #atab-bookings > div:first-of-type{flex-direction:column}
+  #atab-bookings > .a-phdr + div{flex-direction:column}
 
   /* ── STYLIST GRID ── */
   .sa-grid{grid-template-columns:1fr}
@@ -1047,6 +1047,36 @@ html{scroll-behavior:smooth}
   .styl-specs{display:none!important}
   .styl-view{top:10px;left:10px}
 }
+
+/* —— 後台預約表格:精簡欄位後不需橫向捲動,保留安全捲軸 —— */
+@media(min-width:1101px){
+  .a-tbl-wrap{overflow-x:auto}
+  .a-tbl-wrap th,.a-tbl-wrap td{white-space:nowrap}
+}
+/* 中等寬度:日曆堆疊到表格上方 + 預約列表改卡片式(所有欄位直排可見) */
+@media(min-width:681px) and (max-width:1100px){
+  #atab-bookings > .a-phdr + div{flex-direction:column;align-items:stretch}
+}
+@media(min-width:681px) and (max-width:1100px){
+  #atab-bookings .a-tbl-wrap table thead{display:none}
+  #atab-bookings .a-tbl-wrap table tbody tr{
+    display:flex;flex-direction:column;
+    border-bottom:1px solid var(--aborder);
+    padding:12px 14px;gap:3px;
+  }
+  #atab-bookings .a-tbl-wrap table tbody td{
+    padding:0;border:none;font-size:13px;white-space:normal;
+    display:flex;align-items:baseline;gap:6px;
+  }
+  #atab-bookings .a-tbl-wrap table tbody td::before{
+    content:attr(data-label);
+    font-size:9px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--alight);font-weight:600;min-width:52px;flex-shrink:0;
+  }
+  #atab-bookings .a-tbl-wrap table tbody td:empty{display:none}
+  #atab-bookings .a-tbl-wrap table tbody td br{display:none}
+  #atab-bookings .a-tbl-wrap table tbody td span{margin-right:6px}
+}
 </style>
 </head>
 <body>
@@ -1150,6 +1180,11 @@ html{scroll-behavior:smooth}
       </div>
       <!-- step 3 -->
       <div class="f-page" id="fp3">
+        <div id="reschedBar" style="display:none;align-items:center;gap:14px;flex-wrap:wrap;background:#0F0D0B;color:#fff;padding:14px 20px;margin-bottom:32px">
+          <span style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,0.55);font-weight:600;flex-shrink:0">改期中</span>
+          <span id="reschedInfo" style="font-size:13px;letter-spacing:0.3px;color:rgba(255,255,255,0.85);flex:1;min-width:200px"></span>
+          <button onclick="fNewBooking()" style="background:none;border:1px solid rgba(255,255,255,0.4);color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:1.5px;padding:7px 14px;cursor:pointer;flex-shrink:0" onmouseover="this.style.borderColor='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,0.4)'">取消改期</button>
+        </div>
         <div class="sec-title">選擇<em>日期</em>與時段</div>
         <div class="sec-sub">灰點為設計師休假日</div>
         <div class="cal-layout">
@@ -1337,7 +1372,7 @@ html{scroll-behavior:smooth}
           </div>
           <div id="aBkDateLabel" style="font-size:12px;color:var(--amid);margin-bottom:8px;min-height:18px"></div>
           <div class="a-tbl-wrap">
-            <table><thead><tr><th>編號</th><th>客戶</th><th>服務</th><th>設計師</th><th>日期/時段</th><th>電話</th><th>狀態</th><th></th></tr></thead>
+            <table><thead><tr><th>客戶</th><th>服務</th><th>設計師</th><th>日期/時段</th><th>狀態</th><th></th></tr></thead>
             <tbody id="aBkTbl"></tbody></table>
           </div>
         </div>
@@ -1788,6 +1823,19 @@ html{scroll-behavior:smooth}
 </div>
 
 <!-- ══ BLOCK SLOT MODAL ══ -->
+<div class="modal-overlay" id="mSdResched">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">預約<em>改期</em></div>
+    <div id="sdRsInfo" style="font-size:12px;color:var(--amid);margin-bottom:14px;line-height:1.6"></div>
+    <div class="a-frow">
+      <div class="a-field"><label>新日期</label><input type="date" id="sdRsDate"></div>
+      <div class="a-field"><label>新時段</label><input type="time" id="sdRsTime" step="1800"></div>
+    </div>
+    <input type="hidden" id="sdRsId">
+    <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mSdResched')">取消</button><button class="a-btn a-btn-gold" onclick="sdSaveResched()">確認改期</button></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="mBlockSlot">
   <div class="modal" style="max-width:400px">
     <div class="modal-title">封鎖<em>時段</em></div>
@@ -2671,7 +2719,7 @@ async function fConfirm(){
   }
   // 4. Final check + 自動分配設計師（不指定時）— 用 transaction 把「檢查」與「寫入」包成原子操作，
   //    避免兩人幾乎同時送出同一時段時都通過檢查，造成雙重預約
-  const id='LM'+Date.now().toString().slice(-6);
+  const id=fst.reschedId||('LM'+Date.now().toString().slice(-6));
   const svcMins=parseDurMins(fst.svc.duration);
   const sStart=toMins(fst.time),sEnd=sStart+svcMins;
   function getBkDur(b){
@@ -2696,7 +2744,8 @@ async function fConfirm(){
         .get();
       // 只看「時段真正重疊」的預約，而不是只比對完全相同的開始時間
       const overlapping=snap.docs
-        .map(d=>d.data())
+        .map(d=>({...d.data(),id:d.id}))
+        .filter(b=>b.id!==id)
         .filter(b=>{
           const bStart=toMins(b.time),bEnd=bStart+getBkDur(b);
           return sStart<bEnd&&sEnd>bStart;
@@ -2736,7 +2785,8 @@ async function fConfirm(){
         stylistId:assignedStylId,stylistName:assignedStylName,
         date:fst.date,time:fst.time,name:fst.name,phone:fst.phone,
         email:fst.email,notes:fst.notes,
-        status:'confirmed',createdAt:new Date().toISOString()};
+        status:'confirmed',createdAt:fst.reschedCreatedAt||new Date().toISOString()};
+      if(fst.reschedId)bk.rescheduledAt=new Date().toISOString();
       tx.set(window.FB.db.collection('bookings').doc(id),bk);
       tx.set(lockRef,{touchedAt:Date.now()}); // 寫入鎖定文件，才能讓 Firestore 偵測到衝突並序列化
     });
@@ -2758,7 +2808,10 @@ async function fConfirm(){
     return;
   }
   // Keep local cache in sync (transaction writes directly to Firestore)
-  const bks=getBks();bks.unshift(bk);_cache.bks=bks;ss('lm_bks',bks);
+  const bks=getBks();const xi=bks.findIndex(x=>x.id===id);
+  if(xi>=0)bks[xi]=bk;else bks.unshift(bk);
+  _cache.bks=bks;ss('lm_bks',bks);
+  const rb2=document.getElementById('reschedBar');if(rb2)rb2.style.display='none';
   document.getElementById('fBkId').textContent='#'+id;
   renderVoucher(bk);
   fGoStep(6);
@@ -2770,6 +2823,7 @@ async function sendLine(token,msg){
 
 function fNewBooking(){
   fst={step:1,svc:null,styl:null,date:null,time:null,name:'',phone:'',email:'',notes:'',calY:today.getFullYear(),calM:today.getMonth()};
+  const rb=document.getElementById('reschedBar');if(rb)rb.style.display='none';
   ['fName','fPhone','fEmail','fNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['fbtn1','fbtn2','fbtn3'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=true;});
   const b4=document.getElementById('fbtn4');if(b4){b4.dataset.ready='0';b4.style.opacity='0.45';}
@@ -2827,9 +2881,10 @@ function fRenderMyBk(phone){
     <div class="bk-item">
       <div class="bk-info">
         <div class="bk-name">${esc(b.name)} <span style="font-size:11px;color:var(--light);margin-left:6px">${b.id}</span></div>
-        <div class="bk-details">${dspDate(b.date)} · ${b.time} · ${esc(b.stylistName)}</div>
+        <div class="bk-details">${dspDate(b.date)} · ${b.time} · ${esc(b.stylistName)}${b.rescheduledAt?' <span style="font-size:9px;letter-spacing:1px;color:var(--pax-graphite);border:1px solid var(--pax-line);padding:1px 6px;margin-left:4px">已改期</span>':''}</div>
       </div>
       <div class="bk-svc">${esc(b.service)}</div>
+      ${(b.date>=fmt(new Date()))?`<button class="btn-cancel-sm" onclick="fReschedBk('${b.id}')" style="border-color:var(--pax-ink);color:var(--pax-ink)">改期</button>`:''}
       <button class="btn-cancel-sm" onclick="fRepeatBk('${b.id}')" style="border-color:var(--gold-light);color:var(--gold)">再次預約</button>
       <button class="btn-cancel-sm" onclick="fCancelBk('${b.id}','${normPhone}')">取消</button>
     </div>`).join('');
@@ -2965,16 +3020,14 @@ function aRenderBk(){
   if(_aBkCal?.sel)bks=bks.filter(b=>b.date===_aBkCal.sel);
   document.getElementById('aBkTbl').innerHTML=bks.length
     ?bks.map(b=>`<tr>
-      <td data-label="編號" style="font-size:10px;color:var(--amid)">${b.id}</td>
-      <td data-label="客戶">${esc(b.name)}${getCustNotes()[b.phone]?`<br><span style="font-size:10px;color:var(--red)">📌 ${esc(getCustNotes()[b.phone])}</span>`:''}</td>
+      <td data-label="客戶">${esc(b.name)}<br><span style="font-size:11px;color:var(--amid)">${esc(b.phone)}</span><br><span style="font-size:10px;color:var(--alight)">${b.id}</span>${getCustNotes()[b.phone]?`<br><span style="font-size:10px;color:var(--red)">📌 ${esc(getCustNotes()[b.phone])}</span>`:''}</td>
       <td data-label="服務">${esc(b.service)}</td>
       <td data-label="設計師">${esc(b.stylistName)}</td>
-      <td data-label="日期時段" style="font-size:12px">${b.date} ${b.time}</td>
-      <td data-label="電話" style="font-size:12px;color:var(--amid)">${esc(b.phone)}</td>
+      <td data-label="日期時段" style="font-size:12px">${b.date}<br><span>${b.time}</span>${b.rescheduledAt?' <span style="font-size:9px;letter-spacing:1px;color:var(--gold);border:1px solid var(--agold-border);padding:1px 6px;margin-left:4px">已改期</span>':''}</td>
       <td data-label="狀態"><span class="badge ${b.status==='confirmed'?'badge-ok':'badge-cancel'}">${b.status==='confirmed'?'已確認':'已取消'}</span></td>
       <td>${b.status==='confirmed'?`<button class="a-btn a-btn-outline a-btn-sm" onclick="aOpenEditBk('${b.id}')">編輯</button>`:''}</td>
     </tr>`).join('')
-    :'<tr><td colspan="8" style="text-align:center;color:var(--alight);padding:24px">無預約紀錄</td></tr>';
+    :'<tr><td colspan="6" style="text-align:center;color:var(--alight);padding:24px">無預約紀錄</td></tr>';
 }
 function aOpenEditBk(id){
   const bk=getBks().find(b=>b.id===id);
@@ -3023,6 +3076,8 @@ async function aSaveEditBk(){
       if(!confirm(`${updates.time} 與「${conflict.name} ${conflict.time} ${conflict.service}」時段重疊，確定要強制更新嗎？`))return;
     }
   }
+  const _orig=getBks().find(b=>b.id===id);
+  if(_orig&&(_orig.date!==updates.date||_orig.time!==updates.time))updates.rescheduledAt=new Date().toISOString();
   await fbUpdateBooking(id,updates);
   closeModal('mEditBk');aRenderBk();toast('預約已更新 ✦');
 }
@@ -3723,11 +3778,12 @@ function _sdRenderBkList(){
         <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--apanel);border:1px solid var(--aborder);border-radius:4px;margin-bottom:6px">
           <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);width:50px;flex-shrink:0">${b.time}</div>
           <div style="flex:1">
-            <div style="font-size:13px;color:var(--atext)">${esc(b.name)} <span style="font-size:11px;color:var(--amid)">${esc(b.phone)}</span></div>
+            <div style="font-size:13px;color:var(--atext)">${esc(b.name)} <span style="font-size:11px;color:var(--amid)">${esc(b.phone)}</span>${b.rescheduledAt?' <span style="font-size:9px;letter-spacing:1px;color:var(--gold);border:1px solid var(--agold-border);padding:1px 6px;margin-left:4px">已改期</span>':''}</div>
             <div style="font-size:11px;color:var(--amid)">${esc(b.service)}${b.notes?` · ${esc(b.notes)}`:''}</div>
             ${getCustNotes()[b.phone]?`<div style="font-size:11px;color:var(--red);margin-top:2px">📌 ${esc(getCustNotes()[b.phone])}</div>`:''}
           </div>
           <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold)">${dspPrice(b.price)}</span>
+          <button class="a-btn a-btn-outline a-btn-sm" onclick="sdOpenResched('${b.id}')">改期</button>
           <button class="a-btn a-btn-danger a-btn-sm" onclick="sdCancelBk('${b.id}')">取消</button>
         </div>`).join('')}
       ${dayBls.map(bl=>`
@@ -3810,6 +3866,32 @@ async function sdSaveAddBk(){
   closeModal('mSdAddBk');
   sdRenderBookings();
   toast('預約已新增 ✦');
+}
+function sdOpenResched(id){
+  const bk=getBks().find(b=>b.id===id);if(!bk)return;
+  document.getElementById('sdRsId').value=id;
+  document.getElementById('sdRsInfo').textContent=bk.name+' · '+bk.service+'　原：'+dspDate(bk.date)+' '+bk.time;
+  document.getElementById('sdRsDate').value=bk.date;
+  document.getElementById('sdRsTime').value=bk.time;
+  openModal('mSdResched');
+}
+async function sdSaveResched(){
+  const id=document.getElementById('sdRsId').value;
+  const bk=getBks().find(b=>b.id===id);if(!bk)return;
+  const date=document.getElementById('sdRsDate').value;
+  const time=document.getElementById('sdRsTime').value;
+  if(!date||!time){toast('請選擇日期與時段');return;}
+  if(date===bk.date&&time===bk.time){closeModal('mSdResched');return;}
+  const dur=parseDurMins(bk.duration||'60 分鐘');
+  const ns=toMins(time),ne=ns+dur;
+  const conflict=getBks().find(b=>{
+    if(b.id===id||b.date!==date||b.status!=='confirmed'||Number(b.stylistId)!==Number(_sdStylId))return false;
+    const bs=toMins(b.time),be=bs+parseDurMins(b.duration||'60 分鐘');
+    return ns<be&&ne>bs;
+  });
+  if(conflict){if(!confirm(time+' 與「'+conflict.name+' '+conflict.time+' '+conflict.service+'」時段重疊，確定要強制改期嗎？'))return;}
+  await fbUpdateBooking(id,{date,time,rescheduledAt:new Date().toISOString()});
+  closeModal('mSdResched');sdRenderBookings();toast('已改期 ✦');
 }
 async function sdCancelBk(id){
   if(!confirm('確定要取消此預約？'))return;
@@ -4447,6 +4529,31 @@ function renderVoucher(bk){
 }
 
 // ══ REPEAT BOOKING ═════════════════════════════════════════
+function fReschedBk(id){
+  const bk=getBks().find(b=>b.id===id);if(!bk)return;
+  switchFrontTab('book');
+  fNewBooking();
+  const styl=getStyls().find(s=>Number(s.id)===Number(bk.stylistId))||{id:0,name:'不指定',holidays:[],services:[]};
+  const svc=getSvcForStyl(styl).find(s=>String(s.id)===String(bk.serviceId))||{id:bk.serviceId,name:bk.service,price:bk.price,duration:bk.duration};
+  fst.styl=styl;fst.svc=svc;
+  fst.reschedId=bk.id;
+  fst.reschedCreatedAt=bk.createdAt;
+  fst.name=bk.name;fst.phone=bk.phone;fst.email=bk.email||'';fst.notes=bk.notes||'';
+  setTimeout(()=>{
+    document.getElementById('fName').value=bk.name;
+    document.getElementById('fPhone').value=bk.phone;
+    if(bk.email)document.getElementById('fEmail').value=bk.email;
+    if(bk.notes)document.getElementById('fNotes').value=bk.notes;
+    document.getElementById('fbtn1').disabled=false;
+    document.getElementById('fbtn2').disabled=false;
+    const b4=document.getElementById('fbtn4');if(b4){b4.dataset.ready='1';b4.style.opacity='1';}
+    try{fMarkStylSelection();fMarkSvcSelection();}catch(e){}
+    fRenderCal();fGoStep(3);
+    const rb=document.getElementById('reschedBar');
+    if(rb){rb.style.display='flex';document.getElementById('reschedInfo').textContent='原預約：'+dspDate(bk.date)+' '+bk.time+'　'+bk.stylistName+' · '+bk.service;}
+    toast('請選擇新的日期與時段');
+  },120);
+}
 function fRepeatBk(id){
   const bk=getBks().find(b=>b.id===id);if(!bk)return;
   // Pre-fill customer info and go to step 1
