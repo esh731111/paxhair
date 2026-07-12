@@ -1049,15 +1049,15 @@ html{scroll-behavior:smooth}
 }
 
 /* —— 後台預約表格:精簡欄位後不需橫向捲動,保留安全捲軸 —— */
-@media(min-width:1401px){
+@media(min-width:1101px){
   .a-tbl-wrap{overflow-x:auto}
   .a-tbl-wrap th,.a-tbl-wrap td{white-space:nowrap}
 }
 /* 中等寬度:日曆堆疊到表格上方 + 預約列表改卡片式(所有欄位直排可見) */
-@media(min-width:681px) and (max-width:1400px){
+@media(min-width:681px) and (max-width:1100px){
   #atab-bookings > .a-phdr + div{flex-direction:column;align-items:stretch}
 }
-@media(min-width:681px) and (max-width:1400px){
+@media(min-width:681px) and (max-width:1100px){
   #atab-bookings .a-tbl-wrap table thead{display:none}
   #atab-bookings .a-tbl-wrap table tbody tr{
     display:flex;flex-direction:column;
@@ -1334,7 +1334,6 @@ html{scroll-behavior:smooth}
     <div class="a-sitem" data-tab="stylists" onclick="aShowTab('stylists')"><span class="a-sicon">✦</span>設計師管理</div>
     <div class="a-sitem" data-tab="hours" onclick="aShowTab('hours')"><span class="a-sicon">○</span>營業時間</div>
     <div class="a-sitem" data-tab="services" onclick="aShowTab('services')"><span class="a-sicon">◇</span>服務項目</div>
-    <div class="a-sitem" data-tab="line" onclick="aShowTab('line')"><span class="a-sicon">◉</span>Line 通知</div>
     <div style="flex:1"></div>
     <div class="a-sitem" onclick="adminLogout()" style="color:var(--alight);margin-top:auto"><span class="a-sicon">⇤</span>登出</div>
   </div>
@@ -1475,32 +1474,6 @@ html{scroll-behavior:smooth}
       <div class="a-tbl-wrap">
         <table><thead><tr><th style="width:30px"></th><th>名稱</th><th>說明</th><th>時長</th><th>費用</th><th></th></tr></thead>
         <tbody id="aSvcTbl"></tbody></table>
-      </div>
-    </div>
-
-    <!-- line -->
-    <div class="a-panel" id="atab-line">
-      <div class="a-phdr"><div class="a-ptitle">Line<em>通知設定</em></div></div>
-      <div class="line-setup">
-        <div class="line-hdr">
-          <div class="line-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg></div>
-          <div><div class="line-title">Line Notify 整合</div><div class="line-sub">預約確認時自動發送通知</div></div>
-        </div>
-        <div class="line-status line-no" id="aLineStatus"><span class="sdot sdot-r"></span>尚未設定</div>
-        <div class="a-frow s1"><div class="a-field"><label>Line Notify Token</label><input type="text" id="aLineToken" placeholder="貼上 Line Notify Access Token" oninput="aUpdateLineStatus()"></div></div>
-        <div class="a-frow s1"><div class="a-field"><label>說明</label>
-          <div style="font-size:12px;color:var(--amid);line-height:1.8;padding:9px 13px;background:var(--apanel2);border-radius:2px;border:1px solid var(--aborder)">
-            1. 前往 <strong style="color:var(--gold)">notify.line.me</strong> 登入<br>
-            2. 點選「發行 Token」→ 選擇通知群組或個人<br>
-            3. 複製 Token 貼入上方欄位儲存
-          </div>
-        </div></div>
-        <div class="a-btn-row"><button class="a-btn a-btn-gold" onclick="aSaveLineToken()">儲存 Token</button><button class="a-btn a-btn-outline" onclick="aTestLine()">發送測試</button></div>
-        <div class="notify-types" style="margin-top:16px">
-          <div class="nt"><div class="nt-ico">👤</div><div class="nt-lbl">客戶預約確認</div><div class="nt-st">✓ 啟用中</div></div>
-          <div class="nt"><div class="nt-ico">✂️</div><div class="nt-lbl">設計師新預約</div><div class="nt-st">✓ 啟用中</div></div>
-          <div class="nt"><div class="nt-ico">🏠</div><div class="nt-lbl">店家管理員</div><div class="nt-st">✓ 啟用中</div></div>
-        </div>
       </div>
     </div>
 
@@ -1824,19 +1797,15 @@ html{scroll-behavior:smooth}
 
 <!-- ══ BLOCK SLOT MODAL ══ -->
 <div class="modal-overlay" id="mSdResched">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-title">編輯<em>預約</em></div>
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">預約<em>改期</em></div>
     <div id="sdRsInfo" style="font-size:12px;color:var(--amid);margin-bottom:14px;line-height:1.6"></div>
-    <div class="a-frow"><div class="a-field"><label>客戶姓名</label><input type="text" id="sdRsName"></div>
-    <div class="a-field"><label>電話</label><input type="tel" id="sdRsPhone"></div></div>
-    <div class="a-frow s1"><div class="a-field"><label>服務項目</label><select id="sdRsSvc"></select></div></div>
     <div class="a-frow">
-      <div class="a-field"><label>日期</label><input type="date" id="sdRsDate"></div>
-      <div class="a-field"><label>時段</label><input type="time" id="sdRsTime" step="1800"></div>
+      <div class="a-field"><label>新日期</label><input type="date" id="sdRsDate"></div>
+      <div class="a-field"><label>新時段</label><input type="time" id="sdRsTime" step="1800"></div>
     </div>
-    <div class="a-frow s1"><div class="a-field"><label>備註</label><textarea id="sdRsNotes" style="height:56px"></textarea></div></div>
     <input type="hidden" id="sdRsId">
-    <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mSdResched')">取消</button><button class="a-btn a-btn-gold" onclick="sdSaveResched()">儲存</button></div>
+    <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mSdResched')">取消</button><button class="a-btn a-btn-gold" onclick="sdSaveResched()">確認改期</button></div>
   </div>
 </div>
 
@@ -1966,19 +1935,10 @@ async function syncFromFirebase(){
     if(styls.length){const st=[...styls].sort((a,b)=>(a.order??999)-(b.order??999)||Number(a.id)-Number(b.id));_cache.styls=st;ss('lm_styls',st);}
     _cache.blocks=blocks;ss('lm_blocks',blocks);
 
-    // Realtime bookings listener
-    window.FB.db.collection('bookings').orderBy('createdAt','desc').onSnapshot(snap=>{
-      const bks=snap.docs.map(d=>({...d.data(),id:d.id}));
-      _cache.bks=bks;ss('lm_bks',bks);
-      const activeTab=document.querySelector('.a-panel.active');
-      if(activeTab&&document.getElementById('viewAdmin').style.display!=='none'){
-        const tid=activeTab.id.replace('atab-','');
-        const _origABk=()=>{aRenderBk();renderABkCal();};
-const map={dashboard:aRenderDash,bookings:_origABk,calendar:aRenderCalView,
-          stylschedule:aRenderCalView,customers:aRenderCustomers,stats:aRenderStats};
-        if(map[tid])map[tid]();
-      }
-    });
+    // 注意：全店「預約」歷史的即時監聽不在這裡啟動。
+    // 前台顧客訂位只需要單一日期的查詢（見 fRenderSlots/fAddCalDots/fConfirm），不需要下載全部歷史，
+    // 所以把 bookings 的完整同步延後到「登入後台或設計師」時才觸發（見 startBookingsSync()），
+    // 避免匿名訪客的瀏覽器把全店所有顧客的姓名/電話/備註都抓下來。
     // Load stylist passwords
     const styls2=getStyls();
     for(const s of styls2){
@@ -1995,6 +1955,29 @@ const map={dashboard:aRenderDash,bookings:_origABk,calendar:aRenderCalView,
     console.warn('Firebase error:',e);
     document.getElementById('dbStatus').innerHTML='<span style="color:#C0614A">● 離線模式</span>';
   }
+}
+
+// ── 預約全量同步：只在登入後台／設計師後才啟動 ──────────────
+// （見 switchMain() 呼叫處）避免匿名前台訪客的瀏覽器下載全店所有歷史預約。
+let _bkSyncStarted=false;
+function startBookingsSync(){
+  if(_bkSyncStarted||!window.FB)return;
+  _bkSyncStarted=true;
+  window.FB.db.collection('bookings').orderBy('createdAt','desc').onSnapshot(snap=>{
+    const bks=snap.docs.map(d=>({...d.data(),id:d.id}));
+    _cache.bks=bks;ss('lm_bks',bks);
+    const activeTab=document.querySelector('.a-panel.active');
+    if(activeTab&&document.getElementById('viewAdmin').style.display!=='none'){
+      const tid=activeTab.id.replace('atab-','');
+      const _origABk=()=>{aRenderBk();renderABkCal();};
+      const map={dashboard:aRenderDash,bookings:_origABk,calendar:aRenderCalView,
+        stylschedule:aRenderCalView,customers:aRenderCustomers,stats:aRenderStats};
+      if(map[tid])map[tid]();
+    }
+    if(document.getElementById('viewStylist').style.display!=='none'){
+      sdRenderBookings();
+    }
+  },e=>{console.warn('bookings sync error:',e);});
 }
 
 // ── FIREBASE WRITE HELPERS ─────────────────────────────────
@@ -2057,7 +2040,7 @@ function getSvcForStyl(styl){
   const customs=(s.customServices||[]).filter(sv=>sv.enabled!==false);
   return [...globals,...customs];
 }
-const getSet=()=>{const s=_cache.set||gs('lm_set',{openTime:'10:00',closeTime:'19:00',slotMinutes:30,closedDays:[0],lineToken:'',shopHolidays:[]});if(!s.shopHolidays)s.shopHolidays=[];return s;};
+const getSet=()=>{const s=_cache.set||gs('lm_set',{openTime:'10:00',closeTime:'19:00',slotMinutes:30,closedDays:[0],shopHolidays:[]});if(!s.shopHolidays)s.shopHolidays=[];return s;};
 const getShop=()=>_cache.shop||gs('lm_shop',{name:'Pax Hair Salon',tagline:'Hair & Beauty',welcome:'每項服務皆由資深造型師親自操作',phone:'',email:'',address:'',ig:'',fb:'',noticeTitle:'',noticeContent:'',noticeStart:'',noticeEnd:''});
 
 // ══ 品牌開場 ════════════════════════════════════════════
@@ -2108,6 +2091,7 @@ function switchMain(v, stylId){
     stylBtn.textContent='設計師';stylBtn.onclick=askStylLogin;stylBtn.style.opacity='0.7';stylBtn.style.color='#1A1208';
   }
 
+  if(v==='admin'||v==='stylist') startBookingsSync();
   if(v==='admin') aRenderDash();
   if(v==='front') applyShop();
   if(v==='stylist'&&stylId) requestAnimationFrame(()=>setTimeout(()=>sdInit(stylId),50));
@@ -2295,6 +2279,8 @@ function applyShop(){
   if(footerName) footerName.textContent=s.name||'';
   const nameEl=document.getElementById('frontShopName');
   if(nameEl) nameEl.textContent=s.name||'';
+  const loadingNameEl=document.getElementById('loadingShopName');
+  if(loadingNameEl) loadingNameEl.textContent=s.name||'Pax Hair Salon';
   const phoneEl=document.getElementById('frontShopPhone');
   const phoneTxt=document.getElementById('frontShopPhoneText');
   if(phoneEl&&s.phone){
@@ -2470,9 +2456,16 @@ async function fAddCalDots(){
   if(!window.FB) return;
   try{
     const monthStr=`${fst.calY}-${String(fst.calM+1).padStart(2,'0')}`;
+    // 只查「這個月」的日期區間（YYYY-MM-DD 字串可直接用大小比較），
+    // 避免每次翻月曆就把全店所有歷史預約都抓下來。
+    // 這裡刻意只用單一欄位（date）的範圍查詢，不再疊加 status 的等於條件，
+    // 這樣就只需要 Firestore 每個欄位預設就有的索引，不用手動建立複合索引；
+    // 「是否已確認」的篩選改成抓回資料後在這裡做（單月資料量小，多抓幾筆已取消的可忽略不計）。
     const snap=await window.FB.db.collection('bookings')
-      .where('status','==','confirmed').get();
-    let bks=snap.docs.map(d=>d.data()).filter(b=>b.date?.startsWith(monthStr));
+      .where('date','>=',monthStr+'-01')
+      .where('date','<=',monthStr+'-32')
+      .get();
+    let bks=snap.docs.map(d=>d.data()).filter(b=>b.status==='confirmed');
     const set=getSet();
     const oh=toMins(set.openTime),ch=toMins(set.closeTime);
     const slotMin=set.slotMinutes||30;
@@ -2821,10 +2814,6 @@ async function fConfirm(){
   fGoStep(6);
 }
 
-async function sendLine(token,msg){
-  try{await fetch('https://notify-api.line.me/api/notify',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({message:msg})});}catch(e){console.warn(e)}
-}
-
 function fNewBooking(){
   fst={step:1,svc:null,styl:null,date:null,time:null,name:'',phone:'',email:'',notes:'',calY:today.getFullYear(),calM:today.getMonth()};
   const rb=document.getElementById('reschedBar');if(rb)rb.style.display='none';
@@ -2909,7 +2898,7 @@ function aShowTab(id){
   document.getElementById('atab-'+id).classList.add('active');
   document.querySelectorAll('.a-sitem[data-tab]').forEach(s=>s.classList.toggle('active',s.dataset.tab===id));
   const _origABk=()=>{aRenderBk();renderABkCal();};
-const map={dashboard:aRenderDash,bookings:_origABk,customers:aRenderCustomers,stats:aRenderStats,shop:aRenderShop,stylists:aRenderStyls,hours:aRenderHours,services:aRenderSvcs,line:aRenderLine};
+const map={dashboard:aRenderDash,bookings:_origABk,customers:aRenderCustomers,stats:aRenderStats,shop:aRenderShop,stylists:aRenderStyls,hours:aRenderHours,services:aRenderSvcs};
   if(map[id])map[id]();
   if(id==='calendar'||id==='stylschedule'){
     setTimeout(()=>aRenderCalView(),50);
@@ -3185,7 +3174,7 @@ function aRenderShop(){
 }
 function aSaveShop(){
   const s={
-    name:document.getElementById('sShopName').value.trim()||'Lumière',
+    name:document.getElementById('sShopName').value.trim()||'Pax Hair Salon',
     tagline:document.getElementById('sShopTagline').value.trim(),
     welcome:document.getElementById('sShopWelcome').value.trim(),
     heroImg:document.getElementById('sHeroImg').value.trim(),
@@ -3609,23 +3598,6 @@ function aDelSvc(id){
   aRenderSvcs();toast('已刪除');
 }
 
-function aRenderLine(){
-  const s=getSet();document.getElementById('aLineToken').value=s.lineToken||'';aUpdateLineStatus();
-}
-function aUpdateLineStatus(){
-  const val=document.getElementById('aLineToken').value.trim();
-  const el=document.getElementById('aLineStatus');
-  el.className='line-status '+(val?'line-ok':'line-no');
-  el.innerHTML=val?'<span class="sdot sdot-g"></span>已設定 Token':'<span class="sdot sdot-r"></span>尚未設定';
-}
-function aSaveLineToken(){const s=getSet();s.lineToken=document.getElementById('aLineToken').value.trim();ss('lm_set',s);aUpdateLineStatus();toast('Line Token 已儲存');}
-async function aTestLine(){
-  const s=getSet();if(!s.lineToken){toast('請先儲存 Token');return;}
-  const shop=getShop();
-  const msg=`✦ ${shop.name} 測試通知\n────────────\n這是一則測試訊息。\n時間：${new Date().toLocaleString('zh-TW')}`;
-  try{await sendLine(s.lineToken,msg);toast('測試通知已發送！');}catch{toast('發送失敗，請確認 Token');}
-}
-
 // ══ STYLIST DASHBOARD ═════════════════════════════════════
 let _sdStylId=null;
 let _sdBkSel=null;
@@ -3787,7 +3759,7 @@ function _sdRenderBkList(){
             ${getCustNotes()[b.phone]?`<div style="font-size:11px;color:var(--red);margin-top:2px">📌 ${esc(getCustNotes()[b.phone])}</div>`:''}
           </div>
           <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold)">${dspPrice(b.price)}</span>
-          <button class="a-btn a-btn-outline a-btn-sm" onclick="sdOpenResched('${b.id}')">編輯</button>
+          <button class="a-btn a-btn-outline a-btn-sm" onclick="sdOpenResched('${b.id}')">改期</button>
           <button class="a-btn a-btn-danger a-btn-sm" onclick="sdCancelBk('${b.id}')">取消</button>
         </div>`).join('')}
       ${dayBls.map(bl=>`
@@ -3874,46 +3846,28 @@ async function sdSaveAddBk(){
 function sdOpenResched(id){
   const bk=getBks().find(b=>b.id===id);if(!bk)return;
   document.getElementById('sdRsId').value=id;
-  document.getElementById('sdRsInfo').textContent='編號 '+bk.id+'　原：'+dspDate(bk.date)+' '+bk.time;
-  document.getElementById('sdRsName').value=bk.name||'';
-  document.getElementById('sdRsPhone').value=bk.phone||'';
-  document.getElementById('sdRsNotes').value=bk.notes||'';
+  document.getElementById('sdRsInfo').textContent=bk.name+' · '+bk.service+'　原：'+dspDate(bk.date)+' '+bk.time;
   document.getElementById('sdRsDate').value=bk.date;
   document.getElementById('sdRsTime').value=bk.time;
-  const styl=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
-  const svcs=styl?getSvcForStyl(styl):getSvcs();
-  const hasCur=svcs.some(s=>String(s.id)===String(bk.serviceId));
-  document.getElementById('sdRsSvc').innerHTML=
-    (hasCur?'':`<option value="${esc(String(bk.serviceId))}" selected>${esc(bk.service)}（目前）</option>`)+
-    svcs.map(s=>`<option value="${esc(String(s.id))}" ${String(s.id)===String(bk.serviceId)?'selected':''}>${esc(s.name)}</option>`).join('');
   openModal('mSdResched');
 }
 async function sdSaveResched(){
   const id=document.getElementById('sdRsId').value;
   const bk=getBks().find(b=>b.id===id);if(!bk)return;
-  const name=document.getElementById('sdRsName').value.trim();
-  const phone=document.getElementById('sdRsPhone').value.trim();
   const date=document.getElementById('sdRsDate').value;
   const time=document.getElementById('sdRsTime').value;
-  const notes=document.getElementById('sdRsNotes').value.trim();
-  if(!name||!phone||!date||!time){toast('請填寫必要欄位');return;}
-  const styl=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
-  const svcs=styl?getSvcForStyl(styl):getSvcs();
-  const svcVal=document.getElementById('sdRsSvc').value;
-  const svc=svcs.find(s=>String(s.id)===String(svcVal));
-  const updates={name,phone,date,time,notes};
-  if(svc){updates.service=svc.name;updates.serviceId=svc.id;updates.price=svc.price;updates.duration=svc.duration;}
-  const dur=parseDurMins(updates.duration||bk.duration||'60 分鐘');
+  if(!date||!time){toast('請選擇日期與時段');return;}
+  if(date===bk.date&&time===bk.time){closeModal('mSdResched');return;}
+  const dur=parseDurMins(bk.duration||'60 分鐘');
   const ns=toMins(time),ne=ns+dur;
   const conflict=getBks().find(b=>{
     if(b.id===id||b.date!==date||b.status!=='confirmed'||Number(b.stylistId)!==Number(_sdStylId))return false;
     const bs=toMins(b.time),be=bs+parseDurMins(b.duration||'60 分鐘');
     return ns<be&&ne>bs;
   });
-  if(conflict){if(!confirm(time+' 與「'+conflict.name+' '+conflict.time+' '+conflict.service+'」時段重疊，確定要強制儲存嗎？'))return;}
-  if(bk.date!==date||bk.time!==time)updates.rescheduledAt=new Date().toISOString();
-  await fbUpdateBooking(id,updates);
-  closeModal('mSdResched');sdRenderBookings();toast('預約已更新 ✦');
+  if(conflict){if(!confirm(time+' 與「'+conflict.name+' '+conflict.time+' '+conflict.service+'」時段重疊，確定要強制改期嗎？'))return;}
+  await fbUpdateBooking(id,{date,time,rescheduledAt:new Date().toISOString()});
+  closeModal('mSdResched');sdRenderBookings();toast('已改期 ✦');
 }
 async function sdCancelBk(id){
   if(!confirm('確定要取消此預約？'))return;
@@ -4753,7 +4707,7 @@ setTimeout(()=>{
 </div>
 
 <div id="loadingOverlay" style="display:none !important;position:fixed;inset:0;z-index:-1">
-  <div style="font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--gold);letter-spacing:6px">Lumière</div>
+  <div id="loadingShopName" style="font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--gold);letter-spacing:6px">Pax Hair Salon</div>
   <div style="display:flex;gap:6px">
     <div style="width:8px;height:8px;background:var(--gold);border-radius:50%;animation:ldot 1.2s ease infinite 0s"></div>
     <div style="width:8px;height:8px;background:var(--gold);border-radius:50%;animation:ldot 1.2s ease infinite 0.2s"></div>
