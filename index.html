@@ -2751,8 +2751,9 @@ async function fRenderSlots(){
   const slots=[];let cur=oh;
   while(cur+slotMin<=ch){slots.push(fromMins(cur));cur+=slotMin;}
 
-  // Current service duration in minutes
-  const svcMins=fst.svc?parseDurMins(fst.svc.duration):slotMin;
+  // Current service duration in minutes（多人預約要用「合併緩衝後」的總時長，不能只算第1位的服務時間，
+  // 不然這裡顯示可預約、送出時卻被交易檢查判定衝突，兩邊會對不上）
+  const svcMins=fst.svc?computeGroupDuration([fst.svc,...(fst.extraSvcs||[])].filter(Boolean)):slotMin;
 
   // Always fetch latest bookings from Firebase for accurate slot blocking
   let bks=getBks();
