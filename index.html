@@ -80,6 +80,16 @@ body{font-family:'DM Sans',sans-serif;margin:0;font-size:16px;font-weight:400;co
 .f-tab{padding:12px 20px;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;background:none;color:#999;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;font-family:'DM Sans',sans-serif;font-weight:500}
 .f-tab.active{color:#111;border-bottom-color:#111;font-weight:700}
 
+/* guest-count card picker */
+.gc-cards{display:flex;gap:10px}
+.gc-card{flex:1;aspect-ratio:1/0.85;border:1px solid #E8E1D5;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:#FDFBF8;transition:border-color 0.2s,box-shadow 0.2s,transform 0.15s}
+.gc-card:hover{border-color:#D9BD98;transform:translateY(-1px)}
+.gc-card.selected{border-color:#B8885A;box-shadow:0 0 0 1.5px #B8885A,0 8px 20px rgba(184,136,90,0.18);background:#FFFDFA}
+.gc-num{font-family:'Cormorant Garamond',serif;font-size:34px;color:#3a3028;font-weight:500;line-height:1}
+.gc-card.selected .gc-num{color:#B8885A}
+.gc-label{font-size:11px;color:#999;letter-spacing:1px;margin-top:4px}
+@media (max-width:480px){.gc-num{font-size:28px}}
+
 /* service menu list */
 .svc-list{margin-bottom:40px}
 .svc-row{display:flex;align-items:baseline;padding:18px 6px;border-bottom:1px solid #EDE8E1;cursor:pointer;position:relative;transition:background 0.2s,padding-left 0.2s}
@@ -561,12 +571,17 @@ html{scroll-behavior:smooth}
   .a-stat{padding:14px}
   .a-stat-val{font-size:30px}
 
-  /* ── ADMIN TABLES → CARD LIST ── */
+  /* ── ADMIN TABLES → CARD LIST（每一筆都框起來，不是只有底線分隔）── */
+  .a-tbl-wrap{background:transparent;border:none;box-shadow:none;overflow:visible;padding:0}
   .a-tbl-wrap table thead{display:none}
+  .a-tbl-wrap table tbody{display:flex;flex-direction:column;gap:10px}
   .a-tbl-wrap table tbody tr{
     display:flex;flex-direction:column;
-    border-bottom:1px solid var(--aborder);
-    padding:12px 14px;gap:3px;
+    background:var(--bg-card);
+    border:1px solid var(--aborder);
+    border-radius:6px;
+    box-shadow:0 1px 5px rgba(100,80,60,0.05);
+    padding:14px 16px;gap:5px;
   }
   .a-tbl-wrap table tbody td{
     padding:0;border:none;font-size:13px;
@@ -831,7 +846,9 @@ html{scroll-behavior:smooth}
 .styl-title{font-size:8px!important;letter-spacing:2px!important;margin-top:4px!important}
 
 /* —— 黏底操作列 —— */
-.pax-sticky{position:sticky;bottom:0;z-index:20;background:rgba(248,247,244,0.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--pax-line);margin:28px -48px 0;padding:14px 48px}
+/* position:sticky 疊加 backdrop-filter 在部分瀏覽器（尤其 Safari／macOS Chrome）會讓「畫出來的位置」跟「可點擊判定的位置」兜不起來，
+   常見症狀就是黏底列下半部點不到。加 transform 強制它獨立一層合成層，讓判定跟著畫面走，不會脫節 */
+.pax-sticky{position:sticky;bottom:0;z-index:20;background:rgba(248,247,244,0.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--pax-line);margin:28px -48px 0;padding:14px 48px;transform:translateZ(0);-webkit-transform:translateZ(0);will-change:transform}
 .bar-sel{flex:1;font-size:12.5px;color:var(--pax-graphite);letter-spacing:0.5px;text-align:left;padding:0 14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #barSel1{padding-left:0}
 @media(max-width:680px){
@@ -1048,21 +1065,32 @@ html{scroll-behavior:smooth}
   .styl-view{top:10px;left:10px}
 }
 
-/* —— 後台預約表格:精簡欄位後不需橫向捲動,保留安全捲軸 —— */
+/* —— 後台預約表格:欄位寬度固定分配，讓整列（含最後的編輯按鈕）永遠在可視範圍內，不用橫拉 —— */
 @media(min-width:1101px){
-  .a-tbl-wrap{overflow-x:auto}
-  .a-tbl-wrap th,.a-tbl-wrap td{white-space:nowrap}
+  #atab-bookings .a-tbl-wrap table{table-layout:fixed}
+  #atab-bookings .a-tbl-wrap th:nth-child(1),#atab-bookings .a-tbl-wrap td:nth-child(1){width:18%}
+  #atab-bookings .a-tbl-wrap th:nth-child(2),#atab-bookings .a-tbl-wrap td:nth-child(2){width:26%}
+  #atab-bookings .a-tbl-wrap th:nth-child(3),#atab-bookings .a-tbl-wrap td:nth-child(3){width:12%}
+  #atab-bookings .a-tbl-wrap th:nth-child(4),#atab-bookings .a-tbl-wrap td:nth-child(4){width:16%}
+  #atab-bookings .a-tbl-wrap th:nth-child(5),#atab-bookings .a-tbl-wrap td:nth-child(5){width:13%}
+  #atab-bookings .a-tbl-wrap th:nth-child(6),#atab-bookings .a-tbl-wrap td:nth-child(6){width:15%}
+  #atab-bookings .a-tbl-wrap td{white-space:normal;word-break:break-word}
 }
 /* 中等寬度:日曆堆疊到表格上方 + 預約列表改卡片式(所有欄位直排可見) */
 @media(min-width:681px) and (max-width:1100px){
   #atab-bookings > .a-phdr + div{flex-direction:column;align-items:stretch}
 }
 @media(min-width:681px) and (max-width:1100px){
+  #atab-bookings .a-tbl-wrap{background:transparent;border:none;box-shadow:none;overflow:visible;padding:0}
   #atab-bookings .a-tbl-wrap table thead{display:none}
+  #atab-bookings .a-tbl-wrap table tbody{display:flex;flex-direction:column;gap:10px}
   #atab-bookings .a-tbl-wrap table tbody tr{
     display:flex;flex-direction:column;
-    border-bottom:1px solid var(--aborder);
-    padding:12px 14px;gap:3px;
+    background:var(--bg-card);
+    border:1px solid var(--aborder);
+    border-radius:6px;
+    box-shadow:0 1px 5px rgba(100,80,60,0.05);
+    padding:14px 16px;gap:5px;
   }
   #atab-bookings .a-tbl-wrap table tbody td{
     padding:0;border:none;font-size:13px;white-space:normal;
@@ -1171,7 +1199,15 @@ html{scroll-behavior:smooth}
       <div class="f-page" id="fp2">
         <div class="sec-title">選擇<em>服務項目</em></div>
         <div class="sec-sub" id="svcSubText">請選擇您想要的服務</div>
-        <div class="svc-list" id="svcGrid"></div>
+        <div style="margin-bottom:24px">
+          <div style="font-size:16px;letter-spacing:1px;color:#3a3028;font-weight:600;margin-bottom:12px">預約人數<span style="font-size:12px;color:#999;font-weight:400;margin-left:6px">（同一位設計師、同一時段）</span></div>
+          <div class="gc-cards" id="gcCards"></div>
+        </div>
+        <div id="svcPickWrap" style="display:none">
+          <div id="svc1Label" style="display:none;font-size:13px;letter-spacing:1px;color:#555;margin-bottom:10px;font-weight:600">第1位客人的服務</div>
+          <div class="svc-list" id="svcGrid"></div>
+          <div id="extraSvcWrap"></div>
+        </div>
         <div class="btn-row pax-sticky">
           <button class="btn btn-secondary" onclick="fGoStep(1)">← 返回</button>
           <span class="bar-sel" id="barSel2"></span>
@@ -1465,6 +1501,7 @@ html{scroll-behavior:smooth}
             </select>
           </div>
         </div>
+        <div style="font-size:12px;color:var(--alight);margin-top:4px">同一時段預約多位客人時，總時長＝最長服務時間＋其他每個服務各自的「多人緩衝時間」相加（在「服務項目」裡設定，未設定則視為0＝沒有空檔）。同一種服務被多位客人重複選、且該服務緩衝為0時，第1位以外每一位都會把完整服務時間加總進去。</div>
       </div>
     </div>
 
@@ -1635,6 +1672,9 @@ html{scroll-behavior:smooth}
           <div class="a-field"><label>時長</label><input type="text" id="sdNewSvcDur" placeholder="例：60"></div>
           <div class="a-field"><label>說明（選填）</label><input type="text" id="sdNewSvcDesc" placeholder="例：專業護髮療程"></div>
         </div>
+        <div class="a-frow">
+          <div class="a-field"><label>多人緩衝(分鐘，選填)</label><input type="number" id="sdNewSvcBuf" min="0" step="5" placeholder="留空＝0（無空檔）"></div>
+        </div>
         <div class="a-btn-row" style="margin-top:8px">
           <button class="a-btn a-btn-outline" onclick="sdCloseAddSvc()">取消</button>
           <button class="a-btn a-btn-gold" onclick="sdConfirmAddSvc()">新增</button>
@@ -1730,7 +1770,8 @@ html{scroll-behavior:smooth}
     <div class="modal-title" id="mSvcTitle">新增<em>服務項目</em></div>
     <div class="a-frow"><div class="a-field"><label>服務名稱 *</label><input type="text" id="mVName" placeholder="例：剪髮造型"></div>
     <div class="a-field"><label>費用 *</label><input type="text" id="mVPrice" placeholder="例：800"></div></div>
-    <div class="a-frow"><div class="a-field"><label>時長</label><input type="text" id="mVDur" placeholder="例：60"></div><div class="a-field"></div></div>
+    <div class="a-frow"><div class="a-field"><label>時長</label><input type="text" id="mVDur" placeholder="例：60"></div>
+    <div class="a-field"><label>多人緩衝(分鐘)</label><input type="number" id="mVBuffer" min="0" step="5" placeholder="留空＝視為0（無空檔）"></div></div>
     <div class="a-frow s1"><div class="a-field"><label>服務說明</label><textarea id="mVDesc" placeholder="簡短描述此服務"></textarea></div></div>
     <input type="hidden" id="mVId">
     <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mSvc')">取消</button><button class="a-btn a-btn-gold" onclick="aSaveSvc()">儲存</button></div>
@@ -1762,6 +1803,7 @@ html{scroll-behavior:smooth}
     <div class="a-field"><label>電話</label><input type="tel" id="eBkPhone"></div></div>
     <div class="a-frow s1"><div class="a-field"><label>Email</label><input type="email" id="eBkEmail"></div></div>
     <div class="a-frow s1"><div class="a-field"><label>服務項目</label><select id="eBkSvc"></select></div></div>
+    <div id="eBkGroupNote" style="display:none;font-size:12px;color:var(--amid);background:var(--apanel2);border:1px solid var(--aborder);border-radius:2px;padding:8px 12px;margin:-6px 0 12px"></div>
     <div class="a-frow s1"><div class="a-field"><label>設計師</label><select id="eBkStyl"></select></div></div>
     <div class="a-frow"><div class="a-field"><label>日期</label><input type="date" id="eBkDate"></div>
     <div class="a-field"><label>時段</label><input type="time" id="eBkTime"></div></div>
@@ -1781,7 +1823,11 @@ html{scroll-behavior:smooth}
     <div class="a-frow"><div class="a-field"><label>客戶姓名 *</label><input type="text" id="sdBName" placeholder="姓名"></div>
     <div class="a-field"><label>電話 *</label><input type="tel" id="sdBPhone" placeholder="電話"></div></div>
     <div class="a-frow s1"><div class="a-field"><label>Email（選填）</label><input type="email" id="sdBEmail" placeholder="寄送確認信用"></div></div>
-    <div class="a-frow s1"><div class="a-field"><label>服務項目</label><select id="sdBSvc"></select></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>預約人數（同時段一起服務）</label><select id="sdBGuestCount" onchange="sdBSetGuestCount(this.value)">
+      <option value="1">1 位</option><option value="2">2 位</option><option value="3">3 位</option><option value="4">4 位</option>
+    </select></div></div>
+    <div class="a-frow s1"><div class="a-field"><label id="sdBSvcLabel">服務項目</label><select id="sdBSvc"></select></div></div>
+    <div id="sdBExtraSvcWrap"></div>
     <div class="a-frow"><div class="a-field"><label>日期 *</label><input type="date" id="sdBDate"></div>
     <div class="a-field"><label>時段 *</label><select id="sdBTime"><option value="">選擇時段</option></select></div></div>
     <div class="a-frow s1"><div class="a-field"><label>備註</label><textarea id="sdBNotes" placeholder="選填" style="height:60px"></textarea></div></div>
@@ -1795,17 +1841,24 @@ html{scroll-behavior:smooth}
   </div>
 </div>
 
-<!-- ══ BLOCK SLOT MODAL ══ -->
-<div class="modal-overlay" id="mSdResched">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-title">預約<em>改期</em></div>
-    <div id="sdRsInfo" style="font-size:12px;color:var(--amid);margin-bottom:14px;line-height:1.6"></div>
-    <div class="a-frow">
-      <div class="a-field"><label>新日期</label><input type="date" id="sdRsDate"></div>
-      <div class="a-field"><label>新時段</label><input type="time" id="sdRsTime" step="1800"></div>
+<!-- ══ STYLIST EDIT BOOKING MODAL（跟後台的編輯視窗同一套邏輯，只是服務清單/時段衝突檢查都鎖定在自己名下）══ -->
+<div class="modal-overlay" id="mSdEditBk">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">編輯<em>預約</em></div>
+    <input type="hidden" id="sdEBkId">
+    <div class="a-frow"><div class="a-field"><label>客戶姓名</label><input type="text" id="sdEBkName"></div>
+    <div class="a-field"><label>電話</label><input type="tel" id="sdEBkPhone"></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>Email</label><input type="email" id="sdEBkEmail"></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>服務項目</label><select id="sdEBkSvc"></select></div></div>
+    <div id="sdEBkGroupNote" style="display:none;font-size:12px;color:var(--amid);background:var(--apanel2);border:1px solid var(--aborder);border-radius:2px;padding:8px 12px;margin:-6px 0 12px"></div>
+    <div class="a-frow"><div class="a-field"><label>日期</label><input type="date" id="sdEBkDate"></div>
+    <div class="a-field"><label>時段</label><input type="time" id="sdEBkTime" step="1800"></div></div>
+    <div class="a-frow s1"><div class="a-field"><label>備註</label><textarea id="sdEBkNotes" style="height:60px"></textarea></div></div>
+    <div class="modal-footer">
+      <button class="a-btn a-btn-outline" onclick="closeModal('mSdEditBk')">取消</button>
+      <button class="a-btn a-btn-danger" onclick="sdCancelBkFromEdit()">取消預約</button>
+      <button class="a-btn a-btn-gold" onclick="sdSaveEditBk()">儲存</button>
     </div>
-    <input type="hidden" id="sdRsId">
-    <div class="modal-footer"><button class="a-btn a-btn-outline" onclick="closeModal('mSdResched')">取消</button><button class="a-btn a-btn-gold" onclick="sdSaveResched()">確認改期</button></div>
   </div>
 </div>
 
@@ -2268,7 +2321,7 @@ function confirmRoleLogin(){
 
 // ══ FRONT ══════════════════════════════════════════════════
 const today=new Date();
-let fst={step:1,svc:null,styl:null,date:null,time:null,name:'',phone:'',email:'',notes:'',calY:today.getFullYear(),calM:today.getMonth()};
+let fst={step:1,svc:null,styl:null,date:null,time:null,name:'',phone:'',email:'',notes:'',guestCount:1,extraSvcs:[],gcPicked:false,calY:today.getFullYear(),calM:today.getMonth()};
 
 function applyShop(){
   const s=getShop();
@@ -2335,7 +2388,14 @@ function fGoStep(n){
   document.getElementById('fp'+n).classList.add('active');
   fst.step=n;fUpdProg();
   if(n===1)fRenderStyls();
-  if(n===2)fRenderSvcs();
+  if(n===2){
+    fRenderGuestCountCards();
+    const wrap=document.getElementById('svcPickWrap');
+    if(wrap)wrap.style.display=fst.gcPicked?'block':'none';
+    const lbl=document.getElementById('svc1Label');
+    if(lbl)lbl.style.display=(fst.guestCount||1)>1?'block':'none';
+    fRenderSvcs();fRenderExtraSvcs();fCheckSvcStepReady();
+  }
   if(n===5)fRenderSummary();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -2376,8 +2436,113 @@ function fSelSvc(id){
   const svcs=getSvcForStyl(fst.styl);
   // Match by string first (custom services), then by number (global services)
   fst.svc=svcs.find(s=>String(s.id)===String(id))||svcs.find(s=>Number(s.id)===Number(id));
-  fMarkSvcSelection();document.getElementById('fbtn2').disabled=false;
+  fMarkSvcSelection();fCheckSvcStepReady();
   var b2=document.getElementById('barSel2');if(b2)b2.textContent=fst.svc?('已選：'+fst.svc.name+'　'+(fst.svc.price||'')):'';
+  // 多人預約：選（或重選）完第1位的服務後，只要有第2位就自動捲過去（guestNum=2 才是第2位客人的區塊）
+  if((fst.guestCount||1)>1){
+    setTimeout(()=>fScrollToGuestSvcSection(2),150);
+  }
+}
+
+// ── 多人預約：人數卡片選擇 ─────────────────────────────────
+function fRenderGuestCountCards(){
+  const wrap=document.getElementById('gcCards');
+  if(!wrap)return;
+  const cur=fst.gcPicked?fst.guestCount:0;
+  wrap.innerHTML=[1,2,3,4].map(n=>`
+    <div class="gc-card ${cur===n?'selected':''}" data-gcn="${n}" onclick="fSetGuestCount(${n})">
+      <div class="gc-num">${n}</div><div class="gc-label">位</div>
+    </div>`).join('');
+}
+// 選人數後才顯示服務清單；已選過的話直接把清單捲動到可視範圍內
+function fSetGuestCount(n){
+  fst.guestCount=Math.max(1,Math.min(4,parseInt(n)||1));
+  fst.gcPicked=true;
+  const need=fst.guestCount-1;
+  fst.extraSvcs=(fst.extraSvcs||[]).slice(0,need);
+  while(fst.extraSvcs.length<need)fst.extraSvcs.push(null);
+  document.querySelectorAll('#gcCards [data-gcn]').forEach(el=>{
+    el.classList.toggle('selected',Number(el.dataset.gcn)===fst.guestCount);
+  });
+  const lbl=document.getElementById('svc1Label');
+  if(lbl)lbl.style.display=fst.guestCount>1?'block':'none';
+  const wrap=document.getElementById('svcPickWrap');
+  if(wrap)wrap.style.display='block';
+  fRenderExtraSvcs();fCheckSvcStepReady();
+  // 每次選（或改）人數都自動捲到第1位的服務清單
+  setTimeout(()=>fScrollToGuestSvcSection(1),150);
+}
+// 每位客人的服務清單，跟第1位用同一套卡片式排版，只是各自獨立一份
+function fRenderExtraSvcs(){
+  const wrap=document.getElementById('extraSvcWrap');
+  if(!wrap)return;
+  const n=(fst.guestCount||1)-1;
+  if(n<=0){wrap.innerHTML='';return;}
+  const svcs=getSvcForStyl(fst.styl);
+  let html='';
+  for(let i=0;i<n;i++){
+    const sel=fst.extraSvcs[i];
+    if(!svcs.length){
+      html+=`<div id="extraSvcSection-${i}" style="margin-top:24px;padding-top:16px;border-top:1px dashed #E8E8E8">
+        <div style="font-size:13px;letter-spacing:1px;color:#555;margin-bottom:10px;font-weight:600">第${i+2}位客人的服務</div>
+        <div style="padding:24px 6px;color:#bbb;font-size:13px;text-align:center">此設計師目前沒有提供可預約的服務項目</div>
+      </div>`;
+      continue;
+    }
+    html+=`<div id="extraSvcSection-${i}" style="margin-top:24px;padding-top:16px;border-top:1px dashed #E8E8E8">
+      <div style="font-size:13px;letter-spacing:1px;color:#555;margin-bottom:10px;font-weight:600">第${i+2}位客人的服務</div>
+      <div class="svc-list">
+        ${svcs.map(s=>`
+        <div class="svc-row ${sel&&String(sel.id)===String(s.id)?'selected':''}" data-svcid="${esc(String(s.id))}" onclick="fSelExtraSvc(${i},'${esc(String(s.id))}')">
+          <div class="svc-row-info">
+            <div class="svc-name">${esc(s.name)}</div>
+            <div class="svc-desc">${esc(s.desc)}${s.desc?' · ':''}${dspDur(s.duration)}</div>
+          </div>
+          <div class="svc-dots"></div>
+          <div class="svc-price">${dspPrice(s.price)}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+  wrap.innerHTML=html;
+}
+// 只更新選中狀態，不重新產生整批DOM（跟第1位的 fMarkSvcSelection 邏輯一致，避免跳動感）
+function fMarkExtraSvcSelection(idx){
+  const sec=document.getElementById('extraSvcSection-'+idx);
+  if(!sec)return;
+  const sel=fst.extraSvcs[idx];
+  sec.querySelectorAll('[data-svcid]').forEach(el=>{
+    el.classList.toggle('selected',!!sel&&String(sel.id)===el.dataset.svcid);
+  });
+}
+function fSelExtraSvc(idx,val){
+  const svcs=getSvcForStyl(fst.styl);
+  fst.extraSvcs[idx]=svcs.find(s=>String(s.id)===String(val))||svcs.find(s=>Number(s.id)===Number(val))||null;
+  fMarkExtraSvcSelection(idx);fCheckSvcStepReady();
+  // 選（或重選）完後，只要還有下一位就自動捲過去
+  // extraSvcs[idx] 對應第(idx+2)位客人，所以「下一位」是第(idx+3)位
+  const total=(fst.guestCount||1)-1;
+  if(idx+1<total){
+    setTimeout(()=>fScrollToGuestSvcSection(idx+3),150);
+  }
+}
+// guestNum: 1=第1位(svcGrid區塊)，2以上對應 extraSvcSection-(guestNum-2)
+// 手動計算捲動位置（而非用 scrollIntoView 的 block:'center'），
+// 把清單上緣捲到視窗上方一小段距離，讓下方有足夠空間至少能看到4個服務項目
+function fScrollToGuestSvcSection(guestNum){
+  const el=guestNum<=1?document.getElementById('svcGrid'):document.getElementById('extraSvcSection-'+(guestNum-2));
+  if(!el)return;
+  // 第2、3位客人的區塊直接把上緣切齊視窗最上方；第1位保留一點空間讓人數卡片還看得到一小部分
+  const offset=guestNum<=1?70:0;
+  const rect=el.getBoundingClientRect();
+  const targetY=window.scrollY+rect.top-offset;
+  window.scrollTo({top:Math.max(0,targetY),behavior:'smooth'});
+}
+function fCheckSvcStepReady(){
+  const btn=document.getElementById('fbtn2');
+  if(!btn)return;
+  const ok=!!fst.svc&&(fst.extraSvcs||[]).every(s=>!!s);
+  btn.disabled=!ok;
 }
 
 function fRenderStyls(){
@@ -2413,6 +2578,8 @@ function fMarkStylSelection(){
 function fSelStyl(id){
   fst.styl=id===0?{id:0,name:'不指定',holidays:[],services:[]}:getStyls().find(s=>Number(s.id)===Number(id));
   fst.svc=null;fst.date=null;fst.time=null;
+  // 換設計師後，服務清單可能不同，連同「預約人數」一起重置，讓客人在服務選擇頁重新選過
+  fst.guestCount=1;fst.gcPicked=false;fst.extraSvcs=[];
   fMarkStylSelection();document.getElementById('fbtn1').disabled=false;
   var b1=document.getElementById('barSel1');if(b1)b1.textContent=fst.styl?('已選：'+fst.styl.name):'';
   var b2s=document.getElementById('barSel2');if(b2s)b2s.textContent='';
@@ -2531,6 +2698,49 @@ function parseDurMins(str){
 function toMins(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
 // Convert minutes-since-midnight to "HH:MM"
 function fromMins(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+
+// ── 多人預約：時長計算 ──────────────────────────────────────
+// 某服務自己的「多人緩衝時間」；沒設定就是0（保守預設＝視為沒有空檔，避免低估佔用時間）
+function getSvcBuffer(svc){
+  if(!svc)return 0;
+  return svc.groupBufferMins==null?0:svc.groupBufferMins;
+}
+// 多人預約總時長計算：
+// 1) 不同服務：取最長服務的時間，加上「其他每一個服務」各自的緩衝時間相加
+//    （緩衝代表該服務本身有多少空檔可以順便兼顧別人；緩衝=0代表完全沒有空檔）
+// 2) 同一種服務被多位客人重複選：
+//    - 該服務緩衝=0（沒空檔）→ 除了算進上面比較的那1位，其餘每一位都把完整服務時間老實加總
+//    - 該服務緩衝>0（有空檔，例如燙髮/染髮的等待時間）→ 不特別處理，直接當成多筆服務丟進①的比較邏輯
+// 只有1人（或沒有其他服務）時，就是該服務本身的時間，跟原本單人預約行為一致。
+function computeGroupDuration(svcList){
+  const list=(svcList||[]).filter(Boolean);
+  if(list.length<=1)return list[0]?parseDurMins(list[0].duration):(getSet().slotMinutes||30);
+  // 依服務分組，算出每種服務被選了幾次
+  const groups={};
+  list.forEach(s=>{
+    const key=String(s.id);
+    if(!groups[key])groups[key]={svc:s,count:0};
+    groups[key].count++;
+  });
+  let extraAdditive=0; // 緩衝=0的重複服務，第1位以外老實加總的部分
+  const compList=[]; // 真正拿去比「最長 + 其他緩衝」的清單
+  Object.values(groups).forEach(g=>{
+    const dur=parseDurMins(g.svc.duration);
+    const buf=getSvcBuffer(g.svc);
+    if(buf===0&&g.count>1){
+      // 完全沒空檔：只留1位參與比較，其餘每一位老實加總
+      compList.push({duration:dur,buffer:buf});
+      extraAdditive+=dur*(g.count-1);
+    }else{
+      // 有空檔可用，或只選了1位：全部照實列入比較清單
+      for(let i=0;i<g.count;i++)compList.push({duration:dur,buffer:buf});
+    }
+  });
+  compList.sort((a,b)=>b.duration-a.duration);
+  const base=compList[0].duration;
+  const othersBufferSum=compList.slice(1).reduce((sum,x)=>sum+x.buffer,0);
+  return base+othersBufferSum+extraAdditive;
+}
 
 async function fRenderSlots(){
   const set=getSet();
@@ -2672,21 +2882,33 @@ function fShowFormErrors(){
   document.getElementById('fEmailErr').style.display=emailOk?'none':'block';
 }
 
+// 把 fst.svc + fst.extraSvcs 整理成陣列，並計算彙總後的服務名稱/總費用/總時長
+function fBuildGuestSvcs(){
+  const list=[fst.svc,...(fst.extraSvcs||[])].filter(Boolean);
+  const dur=computeGroupDuration(list);
+  const sumPrice=list.reduce((tot,s)=>{const n=parseInt(String(s.price||'').replace(/[^0-9]/g,''))||0;return tot+n;},0);
+  const nameJoined=list.length>1?`${list.map(s=>s.name).join('、')}（共${list.length}位）`:(list[0]?.name||'');
+  return{list,dur,sumPrice,nameJoined};
+}
 function fRenderSummary(){
   fst.name=document.getElementById('fName').value.trim();
   fst.phone=document.getElementById('fPhone').value.trim();
   fst.email=document.getElementById('fEmail').value.trim();
   fst.notes=document.getElementById('fNotes').value.trim();
+  const g=fBuildGuestSvcs();
+  const svcRows=g.list.length>1
+    ?g.list.map((s,i)=>`<div class="sum-row"><span class="sum-lbl">第${i+1}位</span><span class="sum-val">${esc(s.name)}（${dspDur(s.duration)}）</span></div>`).join('')
+    :`<div class="sum-row"><span class="sum-lbl">服務項目</span><span class="sum-val">${esc(fst.svc.name)}</span></div>`;
   document.getElementById('fSummary').innerHTML=`
     <div class="sum-head"><span class="sh-t">Reservation</span><span class="sh-n">Pax Hair Salon</span></div>
-    <div class="sum-row"><span class="sum-lbl">服務項目</span><span class="sum-val">${esc(fst.svc.name)}</span></div>
+    ${svcRows}
     <div class="sum-row"><span class="sum-lbl">指定設計師</span><span class="sum-val">${esc(fst.styl?.name||'不指定')}</span></div>
     <div class="sum-row"><span class="sum-lbl">預約日期</span><span class="sum-val">${dspDate(fst.date)}</span></div>
     <div class="sum-row"><span class="sum-lbl">預約時段</span><span class="sum-val">${fst.time}</span></div>
     <div class="sum-row"><span class="sum-lbl">客戶姓名</span><span class="sum-val">${esc(fst.name)}</span></div>
     <div class="sum-row"><span class="sum-lbl">聯絡電話</span><span class="sum-val">${esc(fst.phone)}</span></div>
     ${fst.notes?`<div class="sum-row"><span class="sum-lbl">備註</span><span class="sum-val" style="font-size:12px">${esc(fst.notes)}</span></div>`:''}
-    <div class="sum-row sum-price"><span class="sum-lbl">費用</span><span class="sum-val">${esc(fst.svc.price)}</span></div>`;
+    <div class="sum-row sum-price"><span class="sum-lbl">費用</span><span class="sum-val">${g.list.length>1?fmtPrice(g.sumPrice):esc(fst.svc.price)}</span></div>`;
 }
 
 async function fConfirm(){
@@ -2717,7 +2939,8 @@ async function fConfirm(){
   // 4. Final check + 自動分配設計師（不指定時）— 用 transaction 把「檢查」與「寫入」包成原子操作，
   //    避免兩人幾乎同時送出同一時段時都通過檢查，造成雙重預約
   const id=fst.reschedId||('LM'+Date.now().toString().slice(-6));
-  const svcMins=parseDurMins(fst.svc.duration);
+  const guestSvcs=fBuildGuestSvcs(); // {list, dur, sumPrice, nameJoined} — 多人時取「最長服務時間＋最短服務的緩衝時間」
+  const svcMins=guestSvcs.dur;
   const sStart=toMins(fst.time),sEnd=sStart+svcMins;
   function getBkDur(b){
     if(b.duration)return parseDurMins(b.duration);
@@ -2778,7 +3001,15 @@ async function fConfirm(){
           throw {code:'CONFLICT'};
         }
       }
-      bk={id,service:fst.svc.name,serviceId:fst.svc.id,price:fst.svc.price,duration:fst.svc.duration,
+      // 多人時，service/price/duration 存「彙總後」的值（讓後台表格、CSV、統計、日曆點數等既有邏輯不用改），
+      // 明細另外存在 services / guestCount，供憑證、摘要、後台編輯顯示逐位資料
+      bk={id,
+        service:guestSvcs.list.length>1?guestSvcs.nameJoined:fst.svc.name,
+        serviceId:fst.svc.id,
+        price:guestSvcs.list.length>1?fmtPrice(guestSvcs.sumPrice):fst.svc.price,
+        duration:svcMins+'分鐘',
+        guestCount:guestSvcs.list.length,
+        services:guestSvcs.list.map(s=>({serviceId:s.id,name:s.name,price:s.price,duration:s.duration})),
         stylistId:assignedStylId,stylistName:assignedStylName,
         date:fst.date,time:fst.time,name:fst.name,phone:fst.phone,
         email:fst.email,notes:fst.notes,
@@ -2815,7 +3046,7 @@ async function fConfirm(){
 }
 
 function fNewBooking(){
-  fst={step:1,svc:null,styl:null,date:null,time:null,name:'',phone:'',email:'',notes:'',calY:today.getFullYear(),calM:today.getMonth()};
+  fst={step:1,svc:null,styl:null,date:null,time:null,name:'',phone:'',email:'',notes:'',guestCount:1,extraSvcs:[],gcPicked:false,calY:today.getFullYear(),calM:today.getMonth()};
   const rb=document.getElementById('reschedBar');if(rb)rb.style.display='none';
   ['fName','fPhone','fEmail','fNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['fbtn1','fbtn2','fbtn3'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=true;});
@@ -3018,7 +3249,7 @@ function aRenderBk(){
       <td data-label="設計師">${esc(b.stylistName)}</td>
       <td data-label="日期時段" style="font-size:12px">${b.date}<br><span>${b.time}</span>${b.rescheduledAt?' <span style="font-size:9px;letter-spacing:1px;color:var(--gold);border:1px solid var(--agold-border);padding:1px 6px;margin-left:4px">已改期</span>':''}</td>
       <td data-label="狀態"><span class="badge ${b.status==='confirmed'?'badge-ok':'badge-cancel'}">${b.status==='confirmed'?'已確認':'已取消'}</span></td>
-      <td>${b.status==='confirmed'?`<button class="a-btn a-btn-outline a-btn-sm" onclick="aOpenEditBk('${b.id}')">編輯</button>`:''}</td>
+      <td ${b.status==='confirmed'?'data-label="操作"':''}>${b.status==='confirmed'?`<button class="a-btn a-btn-outline a-btn-sm" onclick="aOpenEditBk('${b.id}')">編輯</button>`:''}</td>
     </tr>`).join('')
     :'<tr><td colspan="6" style="text-align:center;color:var(--alight);padding:24px">無預約紀錄</td></tr>';
 }
@@ -3034,6 +3265,17 @@ function aOpenEditBk(id){
   document.getElementById('eBkNotes').value=bk.notes||'';
   // 填服務下拉
   document.getElementById('eBkSvc').innerHTML=getSvcs().map(s=>`<option value="${s.id}" ${Number(s.id)===Number(bk.serviceId)?'selected':''}>${esc(s.name)}</option>`).join('');
+  // 多人預約：這裡沒辦法個別編輯每一位的服務，先鎖住服務下拉，避免不小心改壞總時長
+  const grpNote=document.getElementById('eBkGroupNote');
+  const svcSel=document.getElementById('eBkSvc');
+  if(bk.guestCount>1){
+    svcSel.disabled=true;
+    grpNote.style.display='block';
+    grpNote.textContent=`此為多人預約（共${bk.guestCount}位：${(bk.services||[]).map(s=>s.name).join('、')}），服務明細請取消後重新預約，這裡只能改日期/時段/客戶資料。`;
+  }else{
+    svcSel.disabled=false;
+    grpNote.style.display='none';
+  }
   // 填設計師下拉
   document.getElementById('eBkStyl').innerHTML=`<option value="0">不指定</option>`+getStyls().map(s=>`<option value="${s.id}" ${Number(s.id)===Number(bk.stylistId)?'selected':''}>${esc(s.name)}</option>`).join('');
   openModal('mEditBk');
@@ -3044,6 +3286,8 @@ async function aSaveEditBk(){
   const svc=getSvcs().find(s=>s.id===svcId)||getSvcs()[0];
   const stylId=parseInt(document.getElementById('eBkStyl').value);
   const styl=getStyls().find(s=>Number(s.id)===stylId);
+  const _orig=getBks().find(b=>b.id===id);
+  const isGroup=_orig&&_orig.guestCount>1;
   const updates={
     name:document.getElementById('eBkName').value.trim(),
     phone:document.getElementById('eBkPhone').value.trim(),
@@ -3051,9 +3295,15 @@ async function aSaveEditBk(){
     date:document.getElementById('eBkDate').value,
     time:document.getElementById('eBkTime').value,
     notes:document.getElementById('eBkNotes').value.trim(),
-    service:svc.name,serviceId:svc.id,price:svc.price,duration:svc.duration,
     stylistId:stylId,stylistName:styl?.name||'不指定',
   };
+  if(isGroup){
+    // 多人預約：這個編輯視窗一次只能選一個服務，沒辦法正確改動每一位的服務明細，
+    // 所以保留原本的彙總 service/price/duration（人數與逐位服務不受這裡影響），只改期/改資料
+    updates.service=_orig.service;updates.serviceId=_orig.serviceId;updates.price=_orig.price;updates.duration=_orig.duration;
+  }else{
+    updates.service=svc.name;updates.serviceId=svc.id;updates.price=svc.price;updates.duration=svc.duration;
+  }
   if(!updates.name||!updates.phone||!updates.date||!updates.time){toast('請填寫必要欄位');return;}
   if(stylId!==0){
     // 檢查時段衝突（排除自己原本這一筆）
@@ -3069,7 +3319,6 @@ async function aSaveEditBk(){
       if(!confirm(`${updates.time} 與「${conflict.name} ${conflict.time} ${conflict.service}」時段重疊，確定要強制更新嗎？`))return;
     }
   }
-  const _orig=getBks().find(b=>b.id===id);
   if(_orig&&(_orig.date!==updates.date||_orig.time!==updates.time))updates.rescheduledAt=new Date().toISOString();
   await fbUpdateBooking(id,updates);
   closeModal('mEditBk');aRenderBk();toast('預約已更新 ✦');
@@ -3357,9 +3606,13 @@ function toggleStylistSvc(id){
 }
 function collectStylistSvcs(){
   const globalSvcs=getSvcs();
+  // 這個編輯器沒有「多人緩衝」欄位（那是設計師自己在個人後台設定的），
+  // 所以儲存時要把原本已存在的 groupBufferMins 原封不動保留，避免被這邊悄悄清空
+  const prevMap={};(mcSt.svcs||[]).forEach(s=>prevMap[Number(s.id)]=s);
   return globalSvcs.map(gs=>{
     const cb=document.getElementById('ssc-'+gs.id);
     const enabled=cb&&cb.checked;
+    const prev=prevMap[Number(gs.id)];
     return{
       id:gs.id,
       enabled,
@@ -3367,6 +3620,7 @@ function collectStylistSvcs(){
       price:enabled?(document.getElementById('ssprice-'+gs.id)?.value.trim()||gs.price):gs.price,
       duration:enabled?(document.getElementById('ssdur-'+gs.id)?.value.trim()||gs.duration):gs.duration,
       desc:enabled?(document.getElementById('ssdesc-'+gs.id)?.value.trim()||gs.desc):gs.desc,
+      groupBufferMins:prev&&prev.groupBufferMins!=null?prev.groupBufferMins:null,
     };
   });
 }
@@ -3564,11 +3818,12 @@ function aOpenSvc(svcId){
     document.getElementById('mVName').value=s.name;
     document.getElementById('mVPrice').value=s.price||'';
     document.getElementById('mVDur').value=(s.duration||'');
+    document.getElementById('mVBuffer').value=(s.groupBufferMins??'');
     document.getElementById('mVDesc').value=s.desc;
     document.getElementById('mVId').value=s.id;
     document.getElementById('mSvcTitle').innerHTML='編輯<em>服務項目</em>';
   }else{
-    ['mVName','mVPrice','mVDur','mVDesc'].forEach(fid=>document.getElementById(fid).value='');
+    ['mVName','mVPrice','mVDur','mVBuffer','mVDesc'].forEach(fid=>document.getElementById(fid).value='');
     document.getElementById('mVId').value='';
     document.getElementById('mSvcTitle').innerHTML='新增<em>服務項目</em>';
   }
@@ -3579,7 +3834,10 @@ function aSaveSvc(){
   if(!name){toast('請輸入服務名稱');return;}
   const svcs=getSvcs();
   const idVal=document.getElementById('mVId').value;
-  const data={name,price:document.getElementById('mVPrice').value.trim(),duration:document.getElementById('mVDur').value.trim(),desc:document.getElementById('mVDesc').value.trim()};
+  const bufVal=document.getElementById('mVBuffer').value.trim();
+  const data={name,price:document.getElementById('mVPrice').value.trim(),duration:document.getElementById('mVDur').value.trim(),
+    groupBufferMins:bufVal===''?null:Math.max(0,parseInt(bufVal)||0),
+    desc:document.getElementById('mVDesc').value.trim()};
   if(idVal!==''){
     const sid=Number(idVal);
     const idx=svcs.findIndex(s=>Number(s.id)===sid);
@@ -3759,7 +4017,7 @@ function _sdRenderBkList(){
             ${getCustNotes()[b.phone]?`<div style="font-size:11px;color:var(--red);margin-top:2px">📌 ${esc(getCustNotes()[b.phone])}</div>`:''}
           </div>
           <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold)">${dspPrice(b.price)}</span>
-          <button class="a-btn a-btn-outline a-btn-sm" onclick="sdOpenResched('${b.id}')">改期</button>
+          <button class="a-btn a-btn-outline a-btn-sm" onclick="sdOpenEditBk('${b.id}')">編輯</button>
           <button class="a-btn a-btn-danger a-btn-sm" onclick="sdCancelBk('${b.id}')">取消</button>
         </div>`).join('')}
       ${dayBls.map(bl=>`
@@ -3774,11 +4032,12 @@ function _sdRenderBkList(){
   }).join('');
 }
 
+let _sdBExtraSvcs=[];
 function sdOpenAddBk(){
   const today=fmt(new Date());
   const styl=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
   const svcs=getSvcForStyl(styl);
-  document.getElementById('sdBSvc').innerHTML=svcs.map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.price)}</option>`).join('');
+  document.getElementById('sdBSvc').innerHTML=svcs.map(s=>`<option value="${esc(String(s.id))}">${esc(s.name)} — ${esc(s.price)}</option>`).join('');
   ['sdBName','sdBPhone','sdBEmail','sdBNotes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('sdBDate').value=_sdBkSel||today;
   // 產生時段選項（依營業時間，每30分鐘）
@@ -3793,7 +4052,33 @@ function sdOpenAddBk(){
   timeSel.innerHTML='<option value="">選擇時段</option>'+slots.map(t=>`<option value="${t}">${t}</option>`).join('');
   timeSel.value='';
   document.getElementById('sdBForce').checked=false;
+  document.getElementById('sdBGuestCount').value='1';
+  _sdBExtraSvcs=[];
+  sdBRenderExtraSvcSelects();
   openModal('mSdAddBk');
+}
+// 跟前台一樣可以選同時段的預約人數，每一位各自選服務；用同一套 computeGroupDuration 算總時長
+function sdBSetGuestCount(n){
+  const cnt=Math.max(1,Math.min(4,parseInt(n)||1));
+  const need=cnt-1;
+  _sdBExtraSvcs=_sdBExtraSvcs.slice(0,need);
+  while(_sdBExtraSvcs.length<need)_sdBExtraSvcs.push('');
+  document.getElementById('sdBSvcLabel').textContent=cnt>1?'第1位服務':'服務項目';
+  sdBRenderExtraSvcSelects();
+}
+function sdBRenderExtraSvcSelects(){
+  const wrap=document.getElementById('sdBExtraSvcWrap');
+  if(!wrap)return;
+  const styl=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
+  const svcs=getSvcForStyl(styl);
+  wrap.innerHTML=_sdBExtraSvcs.map((val,i)=>`
+    <div class="a-frow s1"><div class="a-field"><label>第${i+2}位服務</label>
+      <select onchange="_sdBExtraSvcs[${i}]=this.value">
+        ${svcs.map(s=>`<option value="${esc(String(s.id))}" ${String(val)===String(s.id)?'selected':''}>${esc(s.name)} — ${esc(s.price)}</option>`).join('')}
+      </select>
+    </div></div>`).join('');
+  // 預設把每個新出現的下拉選到清單第一項，並同步存回 _sdBExtraSvcs
+  wrap.querySelectorAll('select').forEach((sel,i)=>{ if(!_sdBExtraSvcs[i]&&svcs[0])_sdBExtraSvcs[i]=String(svcs[0].id); sel.value=_sdBExtraSvcs[i]; });
 }
 async function sdSaveAddBk(){
   const name=document.getElementById('sdBName').value.trim();
@@ -3802,19 +4087,23 @@ async function sdSaveAddBk(){
   const date=document.getElementById('sdBDate').value;
   const time=document.getElementById('sdBTime').value;
   if(!date||!time){toast('請填寫日期與時段');return;}
+  const styl=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
+  const svcs=getSvcForStyl(styl);
+  const svcId=document.getElementById('sdBSvc').value;
+  const svc1=svcs.find(s=>String(s.id)===String(svcId))||svcs[0];
+  const extraSvcs=_sdBExtraSvcs.map(val=>svcs.find(s=>String(s.id)===String(val))).filter(Boolean);
+  const guestSvcList=[svc1,...extraSvcs].filter(Boolean);
+  if(!guestSvcList.length){toast('請選擇服務項目');return;}
+  const dur=computeGroupDuration(guestSvcList);
   const force=document.getElementById('sdBForce').checked;
   if(!force){
-    // 檢查時段衝突
+    // 檢查時段衝突（用多人合併後的總時長）
     const existing=getBks().filter(b=>
       b.date===date&&b.status==='confirmed'&&
       Number(b.stylistId)===Number(_sdStylId)
     );
-    const styl2=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
-    const svcs2=getSvcForStyl(styl2);
-    const svcId2=parseInt(document.getElementById('sdBSvc').value);
-    const svc2=svcs2.find(s=>s.id===svcId2)||svcs2[0];
     const newStart=toMins(time);
-    const newEnd=newStart+parseDurMins(svc2?.duration||'60分鐘');
+    const newEnd=newStart+dur;
     const conflict=existing.find(b=>{
       const bStart=toMins(b.time);
       const bEnd=bStart+parseDurMins(b.duration||'60分鐘');
@@ -3824,14 +4113,17 @@ async function sdSaveAddBk(){
       if(!confirm(`${time} 與「${conflict.name} ${conflict.time} ${conflict.service}」時段重疊，確定要強制新增嗎？`))return;
     }
   }
-  const svcId=parseInt(document.getElementById('sdBSvc').value);
-  const styl2=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
-  const svcs2=getSvcForStyl(styl2);
-  const svc=svcs2.find(s=>s.id===svcId)||svcs2[0];
-  const styl=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
+  const sumPrice=guestSvcList.reduce((tot,s)=>{const n=parseInt(String(s.price||'').replace(/[^0-9]/g,''))||0;return tot+n;},0);
+  const nameJoined=guestSvcList.length>1?`${guestSvcList.map(s=>s.name).join('、')}（共${guestSvcList.length}位）`:guestSvcList[0].name;
   const id='LM'+Date.now().toString().slice(-6);
   const bk={
-    id,service:svc.name,serviceId:svc.id,price:svc.price,duration:svc.duration,
+    id,
+    service:guestSvcList.length>1?nameJoined:svc1.name,
+    serviceId:svc1.id,
+    price:guestSvcList.length>1?fmtPrice(sumPrice):svc1.price,
+    duration:guestSvcList.length>1?(dur+'分鐘'):svc1.duration,
+    guestCount:guestSvcList.length,
+    services:guestSvcList.map(s=>({serviceId:s.id,name:s.name,price:s.price,duration:s.duration})),
     stylistId:Number(_sdStylId),stylistName:styl?.name||'',
     date,time,name,phone,
     email:document.getElementById('sdBEmail').value.trim(),
@@ -3843,31 +4135,76 @@ async function sdSaveAddBk(){
   sdRenderBookings();
   toast('預約已新增 ✦');
 }
-function sdOpenResched(id){
+// 設計師自己後台的「編輯預約」，邏輯跟後台管理員的 aOpenEditBk/aSaveEditBk 對齊：
+// 可以改客戶資料、服務、日期時段；多人預約一樣鎖住服務下拉，避免改壞總時長。
+// 差別只在於服務清單用 getSvcForStyl(自己)、衝突檢查也只比對自己名下的預約。
+function sdOpenEditBk(id){
   const bk=getBks().find(b=>b.id===id);if(!bk)return;
-  document.getElementById('sdRsId').value=id;
-  document.getElementById('sdRsInfo').textContent=bk.name+' · '+bk.service+'　原：'+dspDate(bk.date)+' '+bk.time;
-  document.getElementById('sdRsDate').value=bk.date;
-  document.getElementById('sdRsTime').value=bk.time;
-  openModal('mSdResched');
+  document.getElementById('sdEBkId').value=id;
+  document.getElementById('sdEBkName').value=bk.name||'';
+  document.getElementById('sdEBkPhone').value=bk.phone||'';
+  document.getElementById('sdEBkEmail').value=bk.email||'';
+  document.getElementById('sdEBkDate').value=bk.date||'';
+  document.getElementById('sdEBkTime').value=bk.time||'';
+  document.getElementById('sdEBkNotes').value=bk.notes||'';
+  const styl=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
+  const svcs=getSvcForStyl(styl);
+  document.getElementById('sdEBkSvc').innerHTML=svcs.map(s=>`<option value="${esc(String(s.id))}" ${String(s.id)===String(bk.serviceId)?'selected':''}>${esc(s.name)}</option>`).join('');
+  const grpNote=document.getElementById('sdEBkGroupNote');
+  const svcSel=document.getElementById('sdEBkSvc');
+  if(bk.guestCount>1){
+    svcSel.disabled=true;
+    grpNote.style.display='block';
+    grpNote.textContent=`此為多人預約（共${bk.guestCount}位：${(bk.services||[]).map(s=>s.name).join('、')}），服務明細請取消後重新預約，這裡只能改日期/時段/客戶資料。`;
+  }else{
+    svcSel.disabled=false;
+    grpNote.style.display='none';
+  }
+  openModal('mSdEditBk');
 }
-async function sdSaveResched(){
-  const id=document.getElementById('sdRsId').value;
-  const bk=getBks().find(b=>b.id===id);if(!bk)return;
-  const date=document.getElementById('sdRsDate').value;
-  const time=document.getElementById('sdRsTime').value;
-  if(!date||!time){toast('請選擇日期與時段');return;}
-  if(date===bk.date&&time===bk.time){closeModal('mSdResched');return;}
-  const dur=parseDurMins(bk.duration||'60 分鐘');
-  const ns=toMins(time),ne=ns+dur;
+async function sdSaveEditBk(){
+  const id=document.getElementById('sdEBkId').value;
+  const _orig=getBks().find(b=>b.id===id);if(!_orig)return;
+  const isGroup=_orig.guestCount>1;
+  const styl=getStyls().find(s=>Number(s.id)===Number(_sdStylId));
+  const svcs=getSvcForStyl(styl);
+  const svcVal=document.getElementById('sdEBkSvc').value;
+  const svc=svcs.find(s=>String(s.id)===String(svcVal))||svcs.find(s=>Number(s.id)===Number(svcVal))||svcs[0];
+  const updates={
+    name:document.getElementById('sdEBkName').value.trim(),
+    phone:document.getElementById('sdEBkPhone').value.trim(),
+    email:document.getElementById('sdEBkEmail').value.trim(),
+    date:document.getElementById('sdEBkDate').value,
+    time:document.getElementById('sdEBkTime').value,
+    notes:document.getElementById('sdEBkNotes').value.trim(),
+  };
+  if(isGroup){
+    updates.service=_orig.service;updates.serviceId=_orig.serviceId;updates.price=_orig.price;updates.duration=_orig.duration;
+  }else if(svc){
+    updates.service=svc.name;updates.serviceId=svc.id;updates.price=svc.price;updates.duration=svc.duration;
+  }
+  if(!updates.name||!updates.phone||!updates.date||!updates.time){toast('請填寫必要欄位');return;}
+  const dur=parseDurMins(updates.duration||_orig.duration||'60分鐘');
+  const newStart=toMins(updates.time);
+  const newEnd=newStart+dur;
   const conflict=getBks().find(b=>{
-    if(b.id===id||b.date!==date||b.status!=='confirmed'||Number(b.stylistId)!==Number(_sdStylId))return false;
-    const bs=toMins(b.time),be=bs+parseDurMins(b.duration||'60 分鐘');
-    return ns<be&&ne>bs;
+    if(b.id===id||b.date!==updates.date||b.status!=='confirmed'||Number(b.stylistId)!==Number(_sdStylId))return false;
+    const bStart=toMins(b.time);
+    const bEnd=bStart+parseDurMins(b.duration||'60分鐘');
+    return newStart<bEnd&&newEnd>bStart;
   });
-  if(conflict){if(!confirm(time+' 與「'+conflict.name+' '+conflict.time+' '+conflict.service+'」時段重疊，確定要強制改期嗎？'))return;}
-  await fbUpdateBooking(id,{date,time,rescheduledAt:new Date().toISOString()});
-  closeModal('mSdResched');sdRenderBookings();toast('已改期 ✦');
+  if(conflict){
+    if(!confirm(`${updates.time} 與「${conflict.name} ${conflict.time} ${conflict.service}」時段重疊，確定要強制更新嗎？`))return;
+  }
+  if(_orig.date!==updates.date||_orig.time!==updates.time)updates.rescheduledAt=new Date().toISOString();
+  await fbUpdateBooking(id,updates);
+  closeModal('mSdEditBk');sdRenderBookings();toast('預約已更新 ✦');
+}
+async function sdCancelBkFromEdit(){
+  const id=document.getElementById('sdEBkId').value;
+  if(!confirm('確定要取消此預約？'))return;
+  await fbUpdateBooking(id,{status:'cancelled'});
+  closeModal('mSdEditBk');sdRenderBookings();toast('預約已取消');
 }
 async function sdCancelBk(id){
   if(!confirm('確定要取消此預約？'))return;
@@ -3936,6 +4273,7 @@ function sdRenderServices(){
         <div class="a-field"><label>名稱</label><input type="text" id="sdsname-${gs.id}" value="${esc(ov&&ov.enabled?ov.name:gs.name)}" placeholder="${esc(gs.name)}"></div>
         <div class="a-field"><label>價格</label><input type="text" id="sdsprice-${gs.id}" value="${(ov&&ov.enabled?ov.price:gs.price)}" placeholder="${gs.price}"></div>
         <div class="a-field"><label>時長</label><input type="text" id="sdsdur-${gs.id}" value="${(ov&&ov.enabled?ov.duration:gs.duration)}" placeholder="${gs.duration}"></div>
+        <div class="a-field"><label>多人緩衝(分鐘)</label><input type="number" id="sdsbuf-${gs.id}" min="0" step="5" value="${ov&&ov.groupBufferMins!=null?ov.groupBufferMins:''}" placeholder="留空＝0"></div>
       </div>
     </div>`;
   }).join('');
@@ -3943,7 +4281,7 @@ function sdRenderServices(){
 function sdTogSvc(id){const cb=document.getElementById('sdsc-'+id);document.getElementById('sdsfields-'+id).style.display=cb.checked?'grid':'none';}
 function sdOpenAddSvc(){
   document.getElementById('sdAddSvcForm').style.display='block';
-  ['sdNewSvcName','sdNewSvcPrice','sdNewSvcDur','sdNewSvcDesc'].forEach(id=>document.getElementById(id).value='');
+  ['sdNewSvcName','sdNewSvcPrice','sdNewSvcDur','sdNewSvcDesc','sdNewSvcBuf'].forEach(id=>document.getElementById(id).value='');
   setTimeout(()=>document.getElementById('sdNewSvcName').focus(),100);
 }
 function sdCloseAddSvc(){
@@ -3954,12 +4292,14 @@ function sdConfirmAddSvc(){
   const price=document.getElementById('sdNewSvcPrice').value.trim();
   const dur=document.getElementById('sdNewSvcDur').value.trim();
   const desc=document.getElementById('sdNewSvcDesc').value.trim();
+  const bufRaw=document.getElementById('sdNewSvcBuf').value.trim();
+  const groupBufferMins=bufRaw===''?null:Math.max(0,parseInt(bufRaw)||0);
   if(!name||!price||!dur){toast('請填寫名稱、價格和時長');return;}
   const styls=getStyls();
   const idx=styls.findIndex(x=>Number(x.id)===Number(_sdStylId));
   if(idx<0)return;
   if(!styls[idx].customServices) styls[idx].customServices=[];
-  styls[idx].customServices.push({id:'cs_'+Date.now(),name,price:fmtPrice(price),duration:fmtDur(dur),desc,enabled:true,custom:true});
+  styls[idx].customServices.push({id:'cs_'+Date.now(),name,price:fmtPrice(price),duration:fmtDur(dur),desc,groupBufferMins,enabled:true,custom:true});
   ss('lm_styls',styls);_cache.styls=styls;
   if(window.FB)(async()=>{await fbSaveList('stylists',styls);})();
   sdCloseAddSvc();
@@ -3992,6 +4332,9 @@ function sdRenderCustomSvcs(){
           <div class="a-field"><label>時長</label><input type="text" id="sdEDur-${sv.id}" value="${esc(sv.duration)}"></div>
           <div class="a-field"><label>說明</label><input type="text" id="sdEDesc-${sv.id}" value="${esc(sv.desc||'')}"></div>
         </div>
+        <div class="a-frow">
+          <div class="a-field"><label>多人緩衝(分鐘)</label><input type="number" id="sdEBuf-${sv.id}" min="0" step="5" value="${sv.groupBufferMins!=null?sv.groupBufferMins:''}" placeholder="留空＝0"></div>
+        </div>
         <div class="a-btn-row" style="margin-top:6px">
           <button class="a-btn a-btn-outline" onclick="sdTogEditSvc('${sv.id}')">取消</button>
           <button class="a-btn a-btn-gold" onclick="sdSaveEditSvc('${sv.id}')">儲存</button>
@@ -4008,13 +4351,15 @@ async function sdSaveEditSvc(svcId){
   const price=document.getElementById('sdEPrice-'+svcId)?.value.trim();
   const dur=document.getElementById('sdEDur-'+svcId)?.value.trim();
   const desc=document.getElementById('sdEDesc-'+svcId)?.value.trim();
+  const bufRaw=document.getElementById('sdEBuf-'+svcId)?.value.trim();
+  const groupBufferMins=(!bufRaw)?null:Math.max(0,parseInt(bufRaw)||0);
   if(!name||!price||!dur){toast('請填寫名稱、價格和時長');return;}
   const styls=getStyls();
   const idx=styls.findIndex(x=>Number(x.id)===Number(_sdStylId));
   if(idx<0)return;
   const svcIdx=(styls[idx].customServices||[]).findIndex(s=>s.id===svcId);
   if(svcIdx<0)return;
-  styls[idx].customServices[svcIdx]={...styls[idx].customServices[svcIdx],name,price:fmtPrice(price),duration:fmtDur(dur),desc};
+  styls[idx].customServices[svcIdx]={...styls[idx].customServices[svcIdx],name,price:fmtPrice(price),duration:fmtDur(dur),desc,groupBufferMins};
   ss('lm_styls',styls);_cache.styls=styls;
   if(window.FB)(async()=>{await fbSaveList('stylists',styls);})();
   sdRenderCustomSvcs();
@@ -4038,10 +4383,13 @@ async function sdSaveServices(){
   const services=globalSvcs.map(gs=>{
     const cb=document.getElementById('sdsc-'+gs.id);
     const enabled=cb&&cb.checked;
+    const bufRaw=document.getElementById('sdsbuf-'+gs.id)?.value.trim();
+    const groupBufferMins=(!bufRaw)?null:Math.max(0,parseInt(bufRaw)||0);
     return{id:gs.id,enabled,
       name:enabled?(document.getElementById('sdsname-'+gs.id)?.value.trim()||gs.name):gs.name,
       price:enabled?fmtPrice(document.getElementById('sdsprice-'+gs.id)?.value.trim()||gs.price):gs.price,
       duration:enabled?fmtDur(document.getElementById('sdsdur-'+gs.id)?.value.trim()||gs.duration):gs.duration,
+      groupBufferMins,
       desc:gs.desc};
   });
   const styls=getStyls();
@@ -4496,8 +4844,11 @@ function renderVoucher(bk){
   const shop=getShop();
   document.getElementById('vShopName').textContent=shop.name||'Pax';
   document.getElementById('vId').textContent=bk.id;
+  const svcRow=(bk.services&&bk.services.length>1)
+    ?`<div class="voucher-row"><span class="vk">服務</span><span class="vv">${esc(bk.guestCount)}位・${bk.services.map(s=>esc(s.name)).join('、')}</span></div>`
+    :`<div class="voucher-row"><span class="vk">服務</span><span class="vv">${esc(bk.service)}</span></div>`;
   document.getElementById('vDetails').innerHTML=`
-    <div class="voucher-row"><span class="vk">服務</span><span class="vv">${esc(bk.service)}</span></div>
+    ${svcRow}
     <div class="voucher-row"><span class="vk">設計師</span><span class="vv">${esc(bk.stylistName)}</span></div>
     <div class="voucher-row"><span class="vk">日期</span><span class="vv big">${dspDate(bk.date)}</span></div>
     <div class="voucher-row"><span class="vk">時段</span><span class="vv big">${bk.time}</span></div>
@@ -4510,8 +4861,14 @@ function fReschedBk(id){
   switchFrontTab('book');
   fNewBooking();
   const styl=getStyls().find(s=>Number(s.id)===Number(bk.stylistId))||{id:0,name:'不指定',holidays:[],services:[]};
-  const svc=getSvcForStyl(styl).find(s=>String(s.id)===String(bk.serviceId))||{id:bk.serviceId,name:bk.service,price:bk.price,duration:bk.duration};
+  const svcList=getSvcForStyl(styl);
+  // 多人預約時，bk.services 是逐位客人的服務明細；第1位對應 fst.svc，其餘對應 fst.extraSvcs
+  const guestSvcData=(bk.services&&bk.services.length)?bk.services:[{serviceId:bk.serviceId,name:bk.service,price:bk.price,duration:bk.duration}];
+  const svc=svcList.find(s=>String(s.id)===String(guestSvcData[0].serviceId))||{id:guestSvcData[0].serviceId,name:guestSvcData[0].name,price:guestSvcData[0].price,duration:guestSvcData[0].duration};
   fst.styl=styl;fst.svc=svc;
+  fst.guestCount=guestSvcData.length;
+  fst.extraSvcs=guestSvcData.slice(1).map(gs=>svcList.find(s=>String(s.id)===String(gs.serviceId))||{id:gs.serviceId,name:gs.name,price:gs.price,duration:gs.duration});
+  fst.gcPicked=true;
   fst.reschedId=bk.id;
   fst.reschedCreatedAt=bk.createdAt;
   fst.name=bk.name;fst.phone=bk.phone;fst.email=bk.email||'';fst.notes=bk.notes||'';
