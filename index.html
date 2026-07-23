@@ -4509,7 +4509,9 @@ function aRenderCalView(){
   for(let day=1;day<=dInM;day++){
     const ds=fmt(new Date(y,m,day));
     const dayBks=allBks.filter(b=>b.date===ds&&b.status==='confirmed'&&(!filterStylId||String(b.stylistId)===String(filterStylId)));
-    const dayBlocks=blocks.filter(b=>b.date===ds);
+    // 封鎖時段要跟預約一樣，只算「跟目前篩選的設計師有關」的那些（全店封鎖 或 這位設計師自己的封鎖），
+    // 不然選了A設計師的篩選，卻把B設計師的封鎖也一起算進來，會看起來A的日期被誤標成滿/封鎖
+    const dayBlocks=blocks.filter(b=>b.date===ds&&(!filterStylId||!b.stylistId||String(b.stylistId)===String(filterStylId)));
     const isToday=ds===todStr;
     const isSel=ds===aCalState.selDate;
     const isPast=ds<todStr;
@@ -4567,7 +4569,10 @@ function aCalSelectDay(ds){
 function aCalShowDayDetail(ds){
   const filterStylId=aCalState.stylId;
   const bks=getBks().filter(b=>b.date===ds&&b.status==='confirmed'&&(!filterStylId||String(b.stylistId)===String(filterStylId))).sort((a,b)=>a.time.localeCompare(b.time));
-  const blocks=getBlocks().filter(b=>b.date===ds);
+  // 跟月曆格子同一套規則：只看跟目前篩選的設計師有關的封鎖（全店封鎖 或 這位設計師自己的），
+  // 並且每一筆都標出是哪位設計師／還是全店，不然看起來會像「封鎖一位、大家都被封鎖」
+  const blocks=getBlocks().filter(b=>b.date===ds&&(!filterStylId||!b.stylistId||String(b.stylistId)===String(filterStylId)))
+    .sort((a,b)=>a.start.localeCompare(b.start));
   document.getElementById('aCalDetailTitle').textContent=dspDate(ds);
   document.getElementById('mBlkDate').value=ds;
   let html='';
@@ -4581,9 +4586,10 @@ function aCalShowDayDetail(ds){
     </div>`;
   });
   blocks.forEach(bl=>{
+    const stylLabel=bl.stylistId?(getStyls().find(s=>String(s.id)===String(bl.stylistId))?.name||'未知設計師'):'全店';
     html+=`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--aborder)">
       <div style="font-size:12px;color:var(--red);width:48px;flex-shrink:0">${bl.start}–${bl.end}</div>
-      <div style="flex:1;font-size:12px;color:var(--red)">封鎖時段 ${bl.reason?'· '+esc(bl.reason):''}</div>
+      <div style="flex:1;font-size:12px;color:var(--red)">封鎖時段 · ${esc(stylLabel)} ${bl.reason?'· '+esc(bl.reason):''}</div>
       <button class="a-btn a-btn-danger a-btn-sm" onclick="aDelBlock('${bl.id}');aCalShowDayDetail('${ds}')">刪除</button>
     </div>`;
   });
